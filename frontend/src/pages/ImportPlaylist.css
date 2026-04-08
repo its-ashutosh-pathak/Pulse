@@ -1,0 +1,292 @@
+/* ImportPlaylist.css — mobile-first bottom sheet */
+
+/* ── Overlay ────────────────────────────────────────────────────────────── */
+.import-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  animation: ip-fade 0.2s ease;
+}
+@keyframes ip-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Sheet ──────────────────────────────────────────────────────────────── */
+.import-sheet {
+  width: 100%;
+  border-radius: 24px 24px 0 0;
+  padding: 8px 16px env(safe-area-inset-bottom, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 88vh;
+  overflow: hidden;
+  animation: ip-rise 0.3s cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+@keyframes ip-rise {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* drag handle */
+.import-sheet::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 8px auto 14px;
+  flex-shrink: 0;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.import-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.import-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.import-close:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* ── Tabs ───────────────────────────────────────────────────────────────── */
+.import-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.import-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 8px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.18s;
+}
+.import-tab img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  opacity: 0.5;
+  transition: opacity 0.18s;
+}
+.import-tab.active {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.09);
+}
+.import-tab.active img { opacity: 1; }
+
+/* ── Body (scrollable) ──────────────────────────────────────────────────── */
+.import-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+/* ── Hint ───────────────────────────────────────────────────────────────── */
+.import-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── URL input card ─────────────────────────────────────────────────────── */
+.import-url-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 4px 14px;
+  transition: border-color 0.18s;
+}
+.import-url-card:focus-within { border-color: var(--accent-cyan); }
+
+.import-url-icon { color: rgba(255, 255, 255, 0.35); flex-shrink: 0; }
+
+.import-url-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  padding: 14px 0;
+  min-width: 0;
+}
+.import-url-input::placeholder { color: rgba(255, 255, 255, 0.22); font-size: 13px; }
+
+/* ── Error ──────────────────────────────────────────────────────────────── */
+.import-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #ff6b6b;
+  font-size: 13px;
+  line-height: 1.45;
+  background: rgba(255, 80, 80, 0.1);
+  border-radius: 12px;
+  padding: 10px 13px;
+}
+.import-error svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── CTA button ─────────────────────────────────────────────────────────── */
+.import-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 15px 20px;
+  border-radius: 50px;
+  width: 100%;
+  transition: opacity 0.18s, transform 0.15s;
+}
+.import-action-btn:disabled { opacity: 0.28; pointer-events: none; }
+.import-action-btn:active   { transform: scale(0.97); }
+
+/* ── Loading center ─────────────────────────────────────────────────────── */
+.import-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0 12px;
+  text-align: center;
+}
+.import-loading p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.import-spin { animation: spin 0.85s linear infinite; color: var(--accent-cyan); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+.import-progress-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.import-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink, #ff6bce));
+  border-radius: 5px;
+  transition: width 0.35s ease;
+  min-width: 2%;
+}
+
+/* ── Preview: sketch layout ─────────────────────────────────────────────── */
+
+/* Row: info box left, save button right */
+.import-preview-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* Info box (left) */
+.import-preview-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
+}
+.import-preview-icon { color: var(--accent-cyan); flex-shrink: 0; }
+.import-preview-info h3 {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.import-preview-info p {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.import-match-note {
+  display: block;
+  font-size: 10px;
+  opacity: 0.55;
+  margin-top: 1px;
+}
+
+/* Save button (right of info) — rounded rectangle */
+.import-save-btn {
+  flex-shrink: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: var(--accent-cyan);
+  color: #000;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.35;
+  transition: opacity 0.18s, transform 0.15s;
+}
+.import-save-btn:active { transform: scale(0.96); }
+
+/* Full-width Back pill */
+.import-back-wide {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  transition: background 0.18s;
+}
+.import-back-wide:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Done ───────────────────────────────────────────────────────────────── */
+.import-done-icon { color: #4caf89; }

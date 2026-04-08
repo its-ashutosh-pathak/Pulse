@@ -1,0 +1,315 @@
+.artist-view {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: var(--page-padding-bottom);
+}
+
+/* ── Hero Banner ── */
+.artist-hero {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+}
+
+.artist-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: brightness(0.75);
+}
+
+.artist-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(208,28,255,0.15));
+}
+
+.artist-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    rgba(5,5,5,0.7) 75%,
+    var(--bg-color) 100%
+  );
+}
+
+.artist-back-fab {
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  left: var(--page-padding);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.artist-hero-info {
+  position: absolute;
+  bottom: var(--space-lg);
+  left: var(--page-padding);
+  right: var(--page-padding);
+}
+
+.artist-subscribers {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.artist-name {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: var(--space-md);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+
+.artist-play-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-gradient);
+  color: #050505;
+  font-size: var(--font-base);
+  font-weight: 800;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.artist-play-all:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Body ── */
+.artist-body {
+  padding: 0 var(--page-padding);
+}
+
+.artist-section {
+  margin-bottom: var(--space-xl);
+}
+
+.artist-section-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+  color: var(--text-primary);
+}
+
+/* ── Bio ── */
+.artist-bio {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+/* ── Top Songs ── */
+.artist-song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.artist-song-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 8px 6px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.artist-song-row:hover { background: rgba(255,255,255,0.05); }
+.artist-song-row.now-playing { background: rgba(0,240,255,0.06); }
+
+.artist-song-rank {
+  min-width: 24px;
+  text-align: center;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.artist-song-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--surface-color);
+}
+
+.artist-song-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.artist-song-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.artist-song-meta p {
+  font-size: var(--font-base);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.artist-song-meta p.accent { color: var(--accent-cyan); }
+
+.artist-song-meta span {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.artist-song-duration {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ── Albums Grid ── */
+.artist-albums-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin: 0 calc(-1 * var(--page-padding));
+  padding-left: var(--page-padding);
+  scrollbar-width: none;
+}
+.artist-albums-scroll::-webkit-scrollbar { display: none; }
+
+.artist-album-card {
+  min-width: 130px;
+  max-width: 130px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.artist-album-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-color);
+  position: relative;
+}
+
+.artist-album-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.artist-album-card:hover .artist-album-art img { transform: scale(1.04); }
+
+.artist-album-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.18s;
+  border-radius: var(--radius-md);
+}
+
+.artist-album-card:hover .artist-album-overlay { opacity: 1; }
+
+.artist-album-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-album-year {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+/* ── Loading / Error states ── */
+.artist-loading,
+.artist-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: var(--page-padding);
+}
+
+.artist-error p {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.artist-error button {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-primary);
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.artist-back-btn {
+  padding: env(safe-area-inset-top, 16px) var(--page-padding) 0;
+}
+
+.artist-back-btn button {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}

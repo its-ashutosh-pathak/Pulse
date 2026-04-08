@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline — Pulse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0d0d14;
+      color: #e8e8f0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78de8, #865AA4, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      color: rgba(232, 232, 240, 0.55);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 280px;
+      margin-bottom: 2rem;
+    }
+
+    .tip {
+      background: rgba(134, 90, 164, 0.12);
+      border: 1px solid rgba(134, 90, 164, 0.25);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      color: rgba(232, 232, 240, 0.65);
+      max-width: 300px;
+      line-height: 1.5;
+    }
+
+    .tip strong {
+      color: #a78de8;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #865AA4, #a78de8);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <img src="/pwa-512x512.png" class="icon" alt="Pulse logo" />
+  <h1>You're Offline</h1>
+  <p>No internet connection. But your downloaded songs are still available in the Downloads tab.</p>
+  <div class="tip">
+    <strong>Tip:</strong> Songs you've downloaded in Pulse are available offline anytime — no connection needed.
+  </div>
+  <button onclick="window.location.reload()">Try Again</button>
+</body>
+</html>

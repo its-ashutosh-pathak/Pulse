@@ -1,0 +1,169 @@
+/* ── SongActionMenu — Pulse Unified Action Sheet ─────────────────────────── */
+
+.pam-sheet {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 240px;
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 2000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: pamSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@keyframes pamSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Track preview header */
+.pam-track-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+}
+
+.pam-thumb-wrap {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a2a;
+  flex-shrink: 0;
+}
+
+.pam-thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.pam-track-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.pam-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.pam-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Thin separator line */
+.pam-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 14px;
+}
+
+/* Action rows */
+.pam-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.pam-item:hover,
+.pam-item:active {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.pam-item svg {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.pam-item:hover svg {
+  opacity: 1;
+}
+
+/* Danger variant (Remove from Playlist) */
+.pam-danger {
+  color: #ff5a5a;
+}
+
+.pam-danger svg {
+  color: #ff5a5a;
+  opacity: 0.8;
+}
+
+.pam-danger:hover {
+  background: rgba(255, 90, 90, 0.08);
+  color: #ff7070;
+}
+
+/* Download variant */
+.pam-download {
+  color: var(--accent-cyan, #00f0ff);
+}
+
+.pam-download svg {
+  color: var(--accent-cyan, #00f0ff);
+  opacity: 0.8;
+}
+
+.pam-download:hover {
+  background: rgba(0, 240, 255, 0.06);
+  color: #00f0ff;
+}
+
+.pam-download--done {
+  color: #4ade80;
+  opacity: 0.85;
+}
+
+.pam-download--done svg {
+  color: #4ade80;
+}
+
+.pam-download--error {
+  color: #ff5a5a;
+}
+
+.pam-download--error svg {
+  color: #ff5a5a;
+}
+
+.pam-download--error svg {
+  color: #ff5a5a;
+}

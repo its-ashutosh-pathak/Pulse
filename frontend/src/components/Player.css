@@ -1,0 +1,149 @@
+.player-container {
+  position: fixed;
+  bottom: 80px;
+  left: 10px;
+  right: 10px;
+  height: 60px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-md);
+  z-index: 1000;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.player-track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  /* Important for ellipsis/marquee to work in flex */
+}
+
+.cover-art {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background-color: #222;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+.cover-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.track-details {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  /* Vintage fading shadow at both starting and ending */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15px, black calc(100% - 15px), transparent);
+  mask-image: linear-gradient(to right, transparent, black 15px, black calc(100% - 15px), transparent);
+}
+
+.track-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  color: var(--accent-cyan);
+}
+
+.track-artist {
+  font-size: 11px;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 7px;
+}
+
+/* Floating/Marquee Text Effect for long names */
+.animate-marquee {
+  display: inline-block;
+  min-width: 100%;
+}
+
+/* Seamless "Close Loop" Marquee: Scrolls 50% only because text is duplicated in JSX */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.player-container:hover .animate-marquee,
+.animate-marquee.always-scroll {
+  animation: marquee 8s linear infinite;
+}
+
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+  /* Don't let controls be squeezed */
+}
+
+.play-btn-pulse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transform: translateY(-2px);
+  /* Shifted slightly upward */
+}
+
+/* .hover-scale is a global utility defined in index.css */
+
+
+/* NEW ACCENT TRACKING LINE (BOTTOM) */
+.player-lining {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  /* Dim background track */
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
+}
+
+.lining-fill {
+  height: 100%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+  transition: width 0.3s linear;
+}
+
+/* Progress bar and time displays are hidden to respect finalized UI */
+.player-progress-bar,
+.time-display {
+  display: none;
+}

@@ -1,0 +1,20 @@
+.dl-overlay-container {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+.dl-overlay-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--accent-cyan, #00f0ff);
+  opacity: 0.55;
+  transition: height 0.25s linear;
+  backdrop-filter: blur(2px);
+}

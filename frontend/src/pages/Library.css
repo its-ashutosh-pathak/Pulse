@@ -1,0 +1,686 @@
+/* Shared slide-in animation for context menus */
+@keyframes pamSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lib-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.lib-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Downloads icon button in Library header */
+.lib-downloads-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.lib-downloads-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.view-mode-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.view-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.library-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.sort-wrapper {
+  position: relative;
+}
+
+.sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.sort-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 170px;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+.sort-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.sort-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.sort-option.active {
+  color: var(--accent-cyan);
+}
+
+/* Click-outside listener overlay */
+.dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  background: transparent;
+}
+
+/* 
+   GRID VIEW (V2) 
+   Perfect Squares & Centered Labels
+*/
+.library-content.grid-view {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.grid-view .lib-playlist-row {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  /* FULL CENTER */
+  padding: 0;
+  background: transparent !important;
+  border: none;
+  text-align: center;
+  width: 100%;
+}
+
+.grid-view .lib-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  /* PERFECT SQUARE */
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.grid-view .lib-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #111;
+}
+
+.grid-view .lib-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grid-view .lib-info h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: white;
+}
+
+.grid-view .lib-info p {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* Action Dots (Grid Position) */
+.options-dots-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  opacity: 1 !important;
+  padding: 8px;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.grid-view .options-dots-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.lib-playlist-row:hover .options-dots-btn {
+  transform: scale(1.1);
+}
+
+/* Glass Context Menu */
+.playlist-context-menu {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+  width: 160px;
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  /* Consistent glass style */
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  animation: pamSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playlist-context-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.playlist-context-menu button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.playlist-context-menu .del-opt {
+  color: #ff4d4d;
+}
+
+/* LIST VIEW (V2) - CLEANER & REFINED */
+.library-content.list-view {
+  display: flex;
+  flex-direction: column;
+  padding: 0 5px;
+}
+
+.list-view .lib-playlist-row {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  /* Restored Card Background */
+  border-radius: 12px;
+  gap: 15px;
+  margin-bottom: 12px;
+  transition: transform 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.list-view .lib-playlist-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.01);
+}
+
+
+.list-view .lib-cover {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  background: #111;
+  flex-shrink: 0;
+}
+
+.lib-cover-quad {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.lib-cover-quad img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-view .lib-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.list-view .lib-info h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 2px;
+}
+
+.list-view .lib-info p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.list-view .options-dots-btn {
+  margin-left: auto;
+  /* PERFECT ALIGNMENT */
+  opacity: 0.5;
+}
+
+.list-view .lib-playlist-row:hover .options-dots-btn {
+  opacity: 1;
+}
+
+.active-z {
+  z-index: 1100 !important;
+}
+
+
+
+/* Collaborative Badge (List Only) */
+.collaborator-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--accent-cyan);
+  background: rgba(0, 240, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+
+/* EDIT SONGS MODAL (Translucent List) */
+.edit-songs-card {
+  width: 100%;
+  max-width: 400px;
+  max-height: 80vh;
+  padding: 25px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-songs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.save-all-btn {
+  background: var(--accent-gradient);
+  color: #050505;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-songs-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-song-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+}
+
+.edit-song-item img {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #111;
+}
+
+.edit-song-item .s-info {
+  flex: 1;
+}
+
+.edit-song-item .s-info p {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.edit-song-item .s-info span {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.edit-song-item button {
+  color: #ff4d4d;
+  padding: 10px;
+  opacity: 0.6;
+}
+
+.edit-song-item button:hover {
+  opacity: 1;
+}
+
+/* RENAME / MODAL OVERRIDES */
+.rename-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  margin: 15px 0;
+  outline: none;
+}
+
+.modal-actions-edit {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.modal-actions-edit button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.save-pill {
+  background: var(--accent-gradient);
+  color: #050505;
+}
+
+.cancel-pill {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+/* Floating Action Button — restored to pill shape with text */
+.fab-create {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--player-height) + 30px);
+  right: 20px;
+  background: var(--accent-gradient);
+  border-radius: 14px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+  color: #050505;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fab-create span {
+  font-size: 14px;
+}
+
+.fab-create.active {
+  background: white;
+}
+
+/* ADD OPTIONS CARD */
+.add-options-card {
+  width: 95%;
+  max-width: 380px;
+  padding: 30px;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.add-options-header {
+  text-align: center;
+}
+
+.add-options-header h3 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.add-options-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.add-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-option-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.add-option-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
+}
+
+.option-icon-box {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.option-icon-box.brand {
+  background: white;
+}
+
+.brand-logo-bw {
+  width: 24px;
+  height: 24px;
+  /* Removed grayscale for vibrant brand colors */
+  object-fit: contain;
+}
+
+.option-text h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.option-text span {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Specific Close Button for Add Menu */
+.add-options-card .cancel-pill {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 800;
+  color: white;
+  margin-top: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-options-card .cancel-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* 
+   UNIFIED MODAL SYSTEM (V3)
+   Consistent Across: Create, Rename, Delete
+*/
+.standard-modal {
+  width: 95%;
+  max-width: 360px;
+  padding: 30px;
+  border-radius: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.standard-modal h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+}
+
+.standard-modal p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+
+.standard-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px 18px;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  margin: 10px 0;
+  outline: none;
+}
+
+.standard-input:focus {
+  border-color: var(--accent-cyan);
+}
+
+.modal-actions-unified {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.modal-actions-unified button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+/* cancel-pill and confirm-pill are now global utilities in index.css */
+
+
+.trash-icon-unified {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 77, 77, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 5px;
+}

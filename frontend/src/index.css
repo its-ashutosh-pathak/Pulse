@@ -1,0 +1,458 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@300;400;500;600;700;900&display=swap');
+
+:root {
+  /* ── Core Colors ── */
+  --bg-color: #050505;
+  --surface-color: rgba(255, 255, 255, 0.05);
+  --surface-hover: rgba(255, 255, 255, 0.1);
+  --text-primary: #FFFFFF;
+  --text-secondary: #AAAAAA;
+  --accent-cyan: #00f0ff;
+  --accent-pink: #d01cff;
+  --accent-gradient: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+  --danger: #ff4d4d;
+
+  /* ── Layout ── */
+  --nav-height: 80px;
+  --player-height: 70px;
+  --page-padding: 20px;
+  --page-padding-bottom: calc(var(--nav-height) + var(--player-height) + 20px);
+
+  /* ── Spacing ── */
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 30px;
+  --space-xl: 40px;
+
+  /* ── Border Radius ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-pill: 50px;
+
+  /* ── Typography ── */
+  --font-xs: 10px;
+  --font-sm: 12px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 18px;
+  --font-xl: 22px;
+  --font-xxl: 26px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ── Base Button Reset ── */
+button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+/* ── Micro-animations ── */
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-scale:active {
+  transform: scale(0.95);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus {
+  outline: none !important;
+}
+
+.active-z {
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ══════════════════════════════════════════
+   SHARED UTILITIES — used across all pages
+   ══════════════════════════════════════════ */
+
+/* ── Skeleton Loading ── */
+@keyframes skeleton-pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.skeleton {
+  background: rgba(255, 255, 255, 0.08);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Page Container ── */
+.page-container {
+  padding: var(--page-padding);
+  min-height: 100vh;
+  padding-bottom: var(--page-padding-bottom);
+}
+
+/* ── Unified Page Header ── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-lg);
+}
+
+.page-title {
+  font-size: var(--font-xxl);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* ── Section Heading — icon + uppercase label ── */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: var(--font-base);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+}
+
+/* ── Section Title — simple bold label (Home-style) ── */
+.section-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: var(--space-md);
+  animation: overlay-fade 0.3s ease;
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Modal Card Base ── */
+.modal-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: modal-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ── Shared Pill Buttons ── */
+.cancel-pill {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: var(--font-base);
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.cancel-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.confirm-pill {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-gradient);
+  color: #050505;
+  font-size: var(--font-base);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.confirm-pill.delete-variant {
+  background: var(--danger);
+  color: white;
+}
+
+/* ── Shared Add to Playlist Modal Button ── */
+.add-to-pl-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-to-pl-btn:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.add-to-pl-btn.added {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  cursor: default;
+}
+
+.add-to-pl-btn .pl-icon {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.add-to-pl-btn.added .pl-icon {
+  color: var(--accent-cyan);
+}
+
+.add-to-pl-btn span {
+  flex: 1;
+  font-size: var(--font-base);
+  font-weight: 600;
+}
+
+.add-to-pl-btn .arrow-hint {
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.add-to-pl-btn:hover .arrow-hint {
+  opacity: 0.8;
+}
+
+/* ── Shared Branding Footer ── */
+.brand-footer {
+  text-align: center;
+  padding-top: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-footer-logo {
+  width: 68px;
+  margin-bottom: -4px;
+}
+
+.brand-footer h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.brand-footer p {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.brand-footer .made-by {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.brand-footer .made-by a {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ══════════════════════════════════════════
+   UNIVERSAL LOADING RING
+   ══════════════════════════════════════════ */
+.universal-loader-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  width: 100%;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.universal-ring {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  box-shadow: none;
+}
+
+/* ══════════════════════════════════════════
+   UNIVERSAL NOW PLAYING ANIMATION
+   ══════════════════════════════════════════ */
+.playing-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+
+.playing-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+
+.playing-bars span {
+  display: block;
+  width: 3px;
+  background: var(--accent-cyan);
+  border-radius: 2px;
+  animation: bar-pulse 0.8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.playing-bars span:nth-child(1) {
+  height: 60%;
+  animation-delay: 0s;
+}
+
+.playing-bars span:nth-child(2) {
+  height: 100%;
+  animation-delay: 0.15s;
+}
+
+.playing-bars span:nth-child(3) {
+  height: 70%;
+  animation-delay: 0.3s;
+}
+
+@keyframes bar-pulse {
+
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
