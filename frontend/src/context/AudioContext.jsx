@@ -371,10 +371,6 @@ export function AudioProvider({ children }) {
     });
   }, [playSong, baseQueue, isShuffled]);
 
-  // Keep playNextRef and playPrevRef in sync so crossfade/MediaSession handlers are never stale
-  useEffect(() => { playNextRef.current = playNext; }, [playNext]);
-  useEffect(() => { playPrevRef.current = playPrev; }, [playPrev]);
-
   const playPrev = useCallback(() => {
     // If >3s into a song, restart it. Otherwise go to previous.
     if (audioRef.current.currentTime > 3) {
@@ -398,6 +394,10 @@ export function AudioProvider({ children }) {
       return prev;
     });
   }, [playSong]);
+
+  // Keep playNextRef and playPrevRef in sync so crossfade/MediaSession handlers are never stale
+  useEffect(() => { playNextRef.current = playNext; }, [playNext]);
+  useEffect(() => { playPrevRef.current = playPrev; }, [playPrev]);
 
   // Add to queue — prepend (Play Next), same as Spotify / YT Music
   const addToQueue = useCallback((song) => {
