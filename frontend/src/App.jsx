@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlaylistProvider } from './context/PlaylistContext';
+import { AudioProvider } from './context/AudioContext';
 
 // Components & Pages
 import Layout from './components/Layout';
@@ -112,8 +113,6 @@ function AppRoutes() {
     </Routes>
   );
 }
-
-import { AudioProvider } from './context/AudioContext';
 
 // ... (existing code)
 
