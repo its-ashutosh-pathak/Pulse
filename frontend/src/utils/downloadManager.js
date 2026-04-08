@@ -127,7 +127,7 @@ export async function downloadSong(song, contextPlaylist = null, authToken = '')
 
   try {
     const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-    const audioRes = await fetch(`http://localhost:5000/api/download/${videoId}`, { headers });
+    const audioRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/download/${videoId}`, { headers });
     if (!audioRes.ok) throw new Error(`Could not download stream (${audioRes.status})`);
 
     // Read stream chunks for progress

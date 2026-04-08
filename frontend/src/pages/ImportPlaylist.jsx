@@ -12,7 +12,7 @@ import { usePlaylists } from '../context/PlaylistContext';
 import { useAuth } from '../context/AuthContext';
 import './ImportPlaylist.css';
 
-const API = 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // ── URL parsing ───────────────────────────────────────────────────────────────
 

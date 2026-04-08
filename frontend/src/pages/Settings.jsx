@@ -136,7 +136,7 @@ export default function Settings() {
       if (user) {
         try {
           const t = await user.getIdToken();
-          await fetch('http://localhost:5000/settings', {
+          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
             body: JSON.stringify({ accentColor })
@@ -158,7 +158,7 @@ export default function Settings() {
     const timer = setTimeout(async () => {
       try {
         const t = await user.getIdToken();
-        await fetch('http://localhost:5000/settings', {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
           body: JSON.stringify({
@@ -178,7 +178,7 @@ export default function Settings() {
     if (!user) return;
     let isMounted = true;
     user.getIdToken().then(t => {
-      fetch('http://localhost:5000/settings', {
+      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
         headers: { Authorization: `Bearer ${t}` }
       })
       .then(r => r.json())
@@ -335,22 +335,25 @@ export default function Settings() {
               <div className="integrated-picker-container">
                 <div 
                   className="sv-palette"
-                  style={{ backgroundColor: `hsl(${hsv.h}, 100%, 50%)` }}
-                  onMouseDown={(e) => {
+                  style={{ backgroundColor: `hsl(${hsv.h}, 100%, 50%)`, touchAction: 'none' }}
+                  onPointerDown={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
+                    const target = e.currentTarget;
                     const update = (me) => {
                       const s = Math.max(0, Math.min(100, ((me.clientX - rect.left) / rect.width) * 100));
                       const v = Math.max(0, Math.min(100, (1 - (me.clientY - rect.top) / rect.height) * 100));
                       updateColorFromHsv(hsv.h, s, v);
                     };
+                    target.setPointerCapture(e.pointerId);
                     update(e);
                     const onMove = (m) => update(m);
-                    const onUp = () => {
-                      window.removeEventListener('mousemove', onMove);
-                      window.removeEventListener('mouseup', onUp);
+                    const onUp = (u) => {
+                      target.releasePointerCapture(u.pointerId);
+                      target.removeEventListener('pointermove', onMove);
+                      target.removeEventListener('pointerup', onUp);
                     };
-                    window.addEventListener('mousemove', onMove);
-                    window.addEventListener('mouseup', onUp);
+                    target.addEventListener('pointermove', onMove);
+                    target.addEventListener('pointerup', onUp);
                   }}
                 >
                   <div className="sv-gradient-white" />

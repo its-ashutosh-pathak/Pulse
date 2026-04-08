@@ -131,7 +131,7 @@ export default function Home() {
   useEffect(() => {
     setLoadingHome(true);
     setHomeError(false);
-    fetch('http://localhost:5000/api/home')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/home`)
       .then(res => res.json())
       .then(json => {
         if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -159,7 +159,7 @@ export default function Home() {
       const collectionId = song.playlistId || song.browseId || song.id;
       if (!collectionId) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/playlist/${collectionId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/playlist/${collectionId}`);
         const data = await res.json();
         const tracks = data.tracks || [];
         if (tracks.length > 0) {

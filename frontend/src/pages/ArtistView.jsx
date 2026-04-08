@@ -5,7 +5,7 @@ import { useAudio } from '../context/AudioContext';
 import { getHighResThumb } from '../utils';
 import './ArtistView.css';
 
-const API = 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function ArtistView() {
   const { id }    = useParams();

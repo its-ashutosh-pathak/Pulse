@@ -54,12 +54,14 @@ export function AuthProvider({ children }) {
     return result;
   };
 
-  const updateUserProfile = async (displayName, photoURL) => {
+  const updateUserProfile = async (updates) => {
     if (!auth.currentUser) return;
     
-    await updateProfile(auth.currentUser, { displayName, photoURL });
+    const cleanUpdates = Object.fromEntries(Object.entries(updates).filter(([_, v]) => v !== undefined));
+    
+    await updateProfile(auth.currentUser, cleanUpdates);
     const userRef = doc(db, 'users', auth.currentUser.uid);
-    await setDoc(userRef, { displayName, photoURL, lastUpdated: serverTimestamp() }, { merge: true });
+    await setDoc(userRef, { ...cleanUpdates, lastUpdated: serverTimestamp() }, { merge: true });
     setUser({ ...auth.currentUser });
   };
 
@@ -77,7 +79,7 @@ export function AuthProvider({ children }) {
       const photoURL = await getDownloadURL(fileRef);
       
       // 4. Update Profile with new URL
-      await updateUserProfile(auth.currentUser.displayName, photoURL);
+      await updateUserProfile({ photoURL });
       return photoURL;
     } catch (error) {
       console.error("AuthContext: Upload Error:", error);
@@ -99,7 +101,7 @@ export function AuthProvider({ children }) {
         cover: song.thumbnail || song.cover || song.artworkUrl || ''
       };
       
-      await fetch('http://localhost:5000/stats/play', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/stats/play`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

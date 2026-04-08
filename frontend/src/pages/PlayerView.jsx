@@ -13,7 +13,7 @@ import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import DownloadOverlay from '../components/DownloadOverlay';
 import './PlayerView.css';
 
-const API = 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function PlayerView() {
   const navigate = useNavigate();

@@ -12,7 +12,7 @@ import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import DownloadOverlay from '../components/DownloadOverlay';
 import './Search.css';
 
-const API = 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const getThumb = (item, size = 200) =>
   getHighResThumb(item?.thumbnail || item?.cover || item?.artworkUrl || '', size);

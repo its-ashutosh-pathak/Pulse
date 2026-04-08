@@ -78,7 +78,7 @@ export default function PlaylistView() {
     setYtmLoading(true);
     setYtmError(false);
 
-    fetch(`http://localhost:5000/api/playlist/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/playlist/${id}`)
       .then(r => r.json())
       .then(json => {
         if (!json || !json.success) { setYtmError(true); return; }

@@ -14,10 +14,10 @@ export default defineConfig({
 
       // ── Web App Manifest ─────────────────────────────────────────────────────
       manifest: {
-        name: 'Pulse — Music Player',
+        name: 'Pulse',
         short_name: 'Pulse',
         description: 'A premium, self-hosted music streaming app powered by YouTube Music.',
-        theme_color: '#865AA4',
+        theme_color: '#0d0d14',
         background_color: '#0d0d14',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -98,7 +98,7 @@ export default defineConfig({
 
           // Our own API (metadata/search) — network-first, short cache
           {
-            urlPattern: ({ url }) => url.origin === 'http://localhost:5000' || url.pathname.startsWith('/api/'),
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pulse-api',
