@@ -1,51 +1,112 @@
 /**
  * import.controller.js
- * Handles playlist extraction and bulk importing into Firebase via the playlist.service.
+ * Handles playlist extraction and bulk importing into Firebase.
  * Utilizes a Hybrid Sync/Async model to prevent HTTP connection timeouts on massive playlists.
+ *
+ * IMPORTANT: Writes directly to Firestore using the frontend-compatible schema
+ * (members[], createdBy, songs[]) so PlaylistContext can find the playlist immediately.
  */
 const { successBody, createError } = require('../utils/errorResponse');
 const logger = require('../utils/logger');
 const spotifyService = require('../services/spotify.service');
-const playlistService = require('../services/playlist.service');
 const metadataService = require('../services/metadata.service');
-// using metadataService directly for playlist fetching
+const { db } = require('../config/firebase');
+const { FieldValue } = require('firebase-admin/firestore');
+
+/**
+ * Save a single song into the Firestore playlist's songs[] array.
+ * Uses the same schema as PlaylistContext (songs embedded in the playlist doc).
+ */
+async function appendSongToPlaylist(playlistId, song) {
+  await db.collection('playlists').doc(playlistId).update({
+    songs: FieldValue.arrayUnion({
+      videoId:   song.videoId,
+      id:        song.videoId,
+      title:     song.title || '',
+      artist:    song.artist || '',
+      thumbnail: song.cover || song.thumbnail || '',
+      duration:  song.duration || 0,
+    }),
+    lastUpdated: FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * For Spotify tracks that have no videoId yet, search YouTube Music to resolve one.
+ */
+async function resolveVideoId(track) {
+  if (track.videoId) return track.videoId;
+  try {
+    const results = await metadataService.searchSongs(`${track.title} ${track.artist}`);
+    return results[0]?.videoId || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Common Hybrid Execution Strategy for both sources.
- * @param {Express.Response} res 
- * @param {string} userId 
- * @param {Object} playlistData - { name, total, tracks: [{title, artist, duration, videoId?}...] }
+ * Writes directly to Firestore using the frontend-compatible schema so
+ * PlaylistContext (which queries by members[]) can see the playlist instantly.
  */
-async function executeHybridImport(res, userId, playlistData, source) {
-  // 1. Create a physical Pulse playlist
-  const newPlaylist = await playlistService.createPlaylist(userId, { name: playlistData.name });
-  const playlistId = newPlaylist.playlistId;
+async function executeHybridImport(res, userId, userDisplayName, playlistData, source) {
+  // 1. Create playlist with the schema PlaylistContext already understands
+  const docRef = db.collection('playlists').doc(); // auto-generated ID
+  const playlistId = docRef.id;
+  await docRef.set({
+    name:        playlistData.name,
+    createdBy:   userId,
+    ownerName:   userDisplayName || 'Pulse User',
+    members:     [userId],          // ← PlaylistContext queries this field
+    songs:       [],
+    visibility:  'Public',
+    importedFrom: source,
+    createdAt:   FieldValue.serverTimestamp(),
+    lastUpdated: FieldValue.serverTimestamp(),
+  });
 
   const total = playlistData.tracks.length;
   logger.info(`import_${source}_started`, { userId, playlistId, totalTracks: total });
 
+  // Helper: resolve + save one track, returns true on success
+  const processTrack = async (track) => {
+    const videoId = await resolveVideoId(track);
+    if (!videoId) return false;
+    await appendSongToPlaylist(playlistId, { ...track, videoId });
+    return true;
+  };
+
   // 2. Hybrid Split Strategy (Threshold: 50)
   if (total <= 50) {
-    // A. Synchronous Block: fast enough to not timeout
-    await playlistService.importTracks(playlistId, userId, playlistData.tracks);
-    logger.info(`import_${source}_completed_sync`, { userId, playlistId });
-    return res.json(successBody({ status: 'completed', playlistId, totalProcessed: total }));
+    // A. Synchronous: small playlist, finish completely before responding
+    let succeeded = 0;
+    for (const track of playlistData.tracks) {
+      if (await processTrack(track)) succeeded++;
+    }
+    logger.info(`import_${source}_completed_sync`, { userId, playlistId, succeeded });
+    return res.json(successBody({ status: 'completed', playlistId, totalProcessed: succeeded }));
   } else {
-    // B. Asynchronous Block: process first chunk so UI looks populated instantly, send 'processing', finish rest
+    // B. Asynchronous: process first 20 tracks synchronously so UI has content,
+    //    then release the HTTP response and finish the rest in background.
     const INITIAL_CHUNK_SIZE = 20;
-    const initialChunk = playlistData.tracks.slice(0, INITIAL_CHUNK_SIZE);
+    const initialChunk    = playlistData.tracks.slice(0, INITIAL_CHUNK_SIZE);
     const backgroundChunk = playlistData.tracks.slice(INITIAL_CHUNK_SIZE);
-    
-    // Sync execute the first chunk
-    await playlistService.importTracks(playlistId, userId, initialChunk);
-    
-    // Release the user instantly
+
+    for (const track of initialChunk) await processTrack(track);
+
+    // Respond immediately so the user can navigate to their playlist
     res.json(successBody({ status: 'processing', playlistId, totalExpected: total }));
-    
-    // Async execute the remaining chunk (completely decoupled from the request cycle)
-    playlistService.importTracks(playlistId, userId, backgroundChunk)
-      .then(stats => logger.info(`import_${source}_completed_async`, { playlistId, stats }))
-      .catch(err => logger.error(`import_${source}_failed_async`, { playlistId, error: err.message }));
+
+    // Fire-and-forget the remainder
+    (async () => {
+      let succeeded = INITIAL_CHUNK_SIZE;
+      for (const track of backgroundChunk) {
+        if (await processTrack(track)) succeeded++;
+      }
+      logger.info(`import_${source}_completed_async`, { playlistId, succeeded });
+    })().catch(err =>
+      logger.error(`import_${source}_failed_async`, { playlistId, error: err.message })
+    );
   }
 }
 
@@ -82,7 +143,7 @@ async function importSpotify(req, res, next) {
     playlistData.tracks = playlistData.tracks.filter(t => t.title && t.artist);
 
     // Pass off to the execution core
-    await executeHybridImport(res, req.user.uid, playlistData, 'spotify');
+    await executeHybridImport(res, req.user.userId, req.user.displayName, playlistData, 'spotify');
   } catch (e) {
     next(e);
   }
@@ -136,7 +197,7 @@ async function importYTMusic(req, res, next) {
     }
 
     // Pass off to execution core
-    await executeHybridImport(res, req.user.uid, playlistData, 'ytmusic');
+    await executeHybridImport(res, req.user.userId, req.user.displayName, playlistData, 'ytmusic');
   } catch (e) {
     logger.warn('import_ytmusic_failed', { error: e.message });
     next(createError(500, 'YTM_IMPORT_FAILED', 'Failed to fetch YouTube Music playlist. Make sure the playlist is Public.'));
