@@ -40,24 +40,7 @@ async function validateUrl(url) {
 async function _doExtract(videoId, quality) {
   const errors = [];
 
-  // Tier 1: Piped
-  try {
-    const data = await piped.extract(videoId, quality);
-    if (data?.url) {
-      const valid = await validateUrl(data.url);
-      if (valid) {
-        cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-        logger.info('stream_extracted', { videoId, source: 'piped' });
-        return data;
-      }
-      errors.push('piped: URL failed validation');
-    }
-  } catch (e) {
-    errors.push(`piped: ${e.message}`);
-    logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
-  }
-
-  // Tier 2: yt-dlp (with exactly one retry)
+  // Tier 1: yt-dlp (direct YouTube extraction — most reliable)
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const data = await ytdlp.extract(videoId, quality);
@@ -77,7 +60,7 @@ async function _doExtract(videoId, quality) {
     }
   }
 
-  // Tier 3: Innertube
+  // Tier 2: Innertube (pure Node.js — no binary required)
   try {
     const data = await innertube.extract(videoId, quality);
     if (data?.url) {
@@ -91,6 +74,24 @@ async function _doExtract(videoId, quality) {
     }
   } catch (e) {
     errors.push(`innertube: ${e.message}`);
+    logger.warn('stream_fallback', { videoId, failedSource: 'innertube', reason: e.message });
+  }
+
+  // Tier 3: Piped (external API — last resort)
+  try {
+    const data = await piped.extract(videoId, quality);
+    if (data?.url) {
+      const valid = await validateUrl(data.url);
+      if (valid) {
+        cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
+        logger.info('stream_extracted', { videoId, source: 'piped' });
+        return data;
+      }
+      errors.push('piped: URL failed validation');
+    }
+  } catch (e) {
+    errors.push(`piped: ${e.message}`);
+    logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
   }
 
   logger.error('stream_all_sources_failed', { videoId, errors });
