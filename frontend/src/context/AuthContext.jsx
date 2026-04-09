@@ -26,6 +26,14 @@ export function AuthProvider({ children }) {
                 photoURL: firebaseUser.photoURL || null,
                 createdAt: serverTimestamp(),
               });
+            } else {
+              const data = snap.data();
+              if (data.photoURL && data.photoURL !== firebaseUser.photoURL) {
+                Object.defineProperty(firebaseUser, 'photoURL', { value: data.photoURL, writable: true, configurable: true, enumerable: true });
+              }
+              if (data.displayName && data.displayName !== firebaseUser.displayName) {
+                Object.defineProperty(firebaseUser, 'displayName', { value: data.displayName, writable: true, configurable: true, enumerable: true });
+              }
             }
           } catch (firestoreError) {
             console.error("Firestore Profile Sync Error:", firestoreError);
@@ -59,10 +67,28 @@ export function AuthProvider({ children }) {
     
     const cleanUpdates = Object.fromEntries(Object.entries(updates).filter(([_, v]) => v !== undefined));
     
-    await updateProfile(auth.currentUser, cleanUpdates);
+    // Avoid "auth/invalid-profile-attribute" for large base64 images
+    const authUpdates = { ...cleanUpdates };
+    if (authUpdates.photoURL && authUpdates.photoURL.startsWith('data:image')) {
+      delete authUpdates.photoURL;
+    }
+    
+    if (Object.keys(authUpdates).length > 0) {
+      await updateProfile(auth.currentUser, authUpdates);
+    }
+
     const userRef = doc(db, 'users', auth.currentUser.uid);
     await setDoc(userRef, { ...cleanUpdates, lastUpdated: serverTimestamp() }, { merge: true });
-    setUser({ ...auth.currentUser });
+    
+    // Refresh local user state safely
+    const nextUser = Object.assign(Object.create(Object.getPrototypeOf(auth.currentUser)), auth.currentUser);
+    if (cleanUpdates.photoURL) {
+      Object.defineProperty(nextUser, 'photoURL', { value: cleanUpdates.photoURL, writable: true, configurable: true, enumerable: true });
+    }
+    if (cleanUpdates.displayName) {
+      Object.defineProperty(nextUser, 'displayName', { value: cleanUpdates.displayName, writable: true, configurable: true, enumerable: true });
+    }
+    setUser(nextUser);
   };
 
   const uploadProfilePhoto = async (file) => {

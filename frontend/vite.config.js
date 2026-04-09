@@ -92,13 +92,16 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'pulse-thumbnails',
+              cacheableResponse: {
+                statuses: [0, 200]
+              },
               expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 }, // 30 days
             },
           },
 
           // Our own API (metadata/search) — network-first, short cache
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/') && !url.pathname.includes('/api/download/'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pulse-api',
@@ -109,9 +112,9 @@ export default defineConfig({
             },
           },
 
-          // Audio streams — NEVER cache (too large, always network)
+          // Audio streams and downloads — NEVER cache (too large, always network)
           {
-            urlPattern: ({ url }) => url.pathname.includes('/play/') || url.hostname.includes('piped'),
+            urlPattern: ({ url }) => url.pathname.includes('/play/') || url.pathname.includes('/api/download/') || url.hostname.includes('piped'),
             handler: 'NetworkOnly',
           },
         ],
