@@ -69,21 +69,49 @@ export function AuthProvider({ children }) {
     if (!auth.currentUser || !file) return;
 
     try {
-      // 1. Create Storage Reference
-      const fileRef = ref(storage, `profile_pics/${auth.currentUser.uid}`);
-      
-      // 2. Upload Bytes
-      await uploadBytes(fileRef, file);
-      
-      // 3. Get Download URL
-      const photoURL = await getDownloadURL(fileRef);
-      
-      // 4. Update Profile with new URL
-      await updateUserProfile({ photoURL });
-      return photoURL;
+      // 1. Compress and convert to base64
+      const base64Photo = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+             const canvas = document.createElement('canvas');
+             const MAX_WIDTH = 256; // Keep it small for Firestore
+             const MAX_HEIGHT = 256;
+             let width = img.width;
+             let height = img.height;
+
+             if (width > height) {
+               if (width > MAX_WIDTH) {
+                 height *= MAX_WIDTH / width;
+                 width = MAX_WIDTH;
+               }
+             } else {
+               if (height > MAX_HEIGHT) {
+                 width *= MAX_HEIGHT / height;
+                 height = MAX_HEIGHT;
+               }
+             }
+             canvas.width = width;
+             canvas.height = height;
+             const ctx = canvas.getContext('2d');
+             ctx.drawImage(img, 0, 0, width, height);
+             // 2. Compress to 70% quality JPEG string (~10-20KB max)
+             resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+          };
+          img.onerror = reject;
+        };
+        reader.onerror = reject;
+      });
+
+      // 3. Update Auth Profile & Firestore with the base64 string
+      await updateUserProfile({ photoURL: base64Photo });
+      return base64Photo;
     } catch (error) {
       console.error("AuthContext: Upload Error:", error);
-      throw error; // Let Profile.jsx handle the UI alert/reset
+      throw error; 
     }
   };
 
