@@ -205,12 +205,11 @@
   transform: scale(1.1);
 }
 
-/* Glass Context Menu */
 .playlist-context-menu {
   position: absolute;
   top: 40px;
   right: 10px;
-  width: 160px;
+  width: 150px;
   border-radius: 12px;
   padding: 6px;
   z-index: 1001;
@@ -223,6 +222,21 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   animation: pamSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Grid View Menu Positioning (3 columns) */
+.grid-view .lib-playlist-row:nth-child(3n+1) .playlist-context-menu {
+  left: 5px;
+  right: auto;
+}
+.grid-view .lib-playlist-row:nth-child(3n+2) .playlist-context-menu {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+.grid-view .lib-playlist-row:nth-child(3n+3) .playlist-context-menu {
+  right: 5px;
+  left: auto;
 }
 
 .playlist-context-menu button {
