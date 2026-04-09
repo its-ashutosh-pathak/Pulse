@@ -311,7 +311,7 @@
   justify-content: center;
   color: #050505;
   margin-left: auto;
-  /* Force Play to the far right */
+  flex-shrink: 0;
 }
 
 /* Other icon buttons don't need fixed positions anymore */

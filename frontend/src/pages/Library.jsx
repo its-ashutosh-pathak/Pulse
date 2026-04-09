@@ -73,7 +73,7 @@ export default function Library() {
   const handleConfirmCreate = async (e) => {
     e.preventDefault();
     if (newPlaylistName.trim()) {
-      await createPlaylist(newPlaylistName.trim());
+      createPlaylist(newPlaylistName.trim()); // Fire and forget so modal closes instantly
       setNewPlaylistName('');
       setShowCreateModal(false);
     }
