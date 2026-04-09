@@ -15,7 +15,7 @@ required.forEach((key) => {
 module.exports = {
   PORT:               process.env.PORT || 5000,
   NODE_ENV:           process.env.NODE_ENV || 'development',
-  FRONTEND_URL:       process.env.FRONTEND_URL || '*',
+  FRONTEND_URL:       (process.env.FRONTEND_URL || '*').replace(/\/$/, ''),
 
   // Firebase
   FIREBASE_PROJECT_ID:    process.env.FIREBASE_PROJECT_ID,
