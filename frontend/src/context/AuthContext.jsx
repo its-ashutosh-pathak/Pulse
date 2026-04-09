@@ -64,22 +64,22 @@ export function AuthProvider({ children }) {
 
   const updateUserProfile = async (updates) => {
     if (!auth.currentUser) return;
-    
+
     const cleanUpdates = Object.fromEntries(Object.entries(updates).filter(([_, v]) => v !== undefined));
-    
+
     // Avoid "auth/invalid-profile-attribute" for large base64 images
     const authUpdates = { ...cleanUpdates };
     if (authUpdates.photoURL && authUpdates.photoURL.startsWith('data:image')) {
       delete authUpdates.photoURL;
     }
-    
+
     if (Object.keys(authUpdates).length > 0) {
       await updateProfile(auth.currentUser, authUpdates);
     }
 
     const userRef = doc(db, 'users', auth.currentUser.uid);
     await setDoc(userRef, { ...cleanUpdates, lastUpdated: serverTimestamp() }, { merge: true });
-    
+
     // Refresh local user state safely
     const nextUser = Object.assign(Object.create(Object.getPrototypeOf(auth.currentUser)), auth.currentUser);
     if (cleanUpdates.photoURL) {
@@ -103,29 +103,29 @@ export function AuthProvider({ children }) {
           const img = new Image();
           img.src = event.target.result;
           img.onload = () => {
-             const canvas = document.createElement('canvas');
-             const MAX_WIDTH = 256; // Keep it small for Firestore
-             const MAX_HEIGHT = 256;
-             let width = img.width;
-             let height = img.height;
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 256; // Keep it small for Firestore
+            const MAX_HEIGHT = 256;
+            let width = img.width;
+            let height = img.height;
 
-             if (width > height) {
-               if (width > MAX_WIDTH) {
-                 height *= MAX_WIDTH / width;
-                 width = MAX_WIDTH;
-               }
-             } else {
-               if (height > MAX_HEIGHT) {
-                 width *= MAX_HEIGHT / height;
-                 height = MAX_HEIGHT;
-               }
-             }
-             canvas.width = width;
-             canvas.height = height;
-             const ctx = canvas.getContext('2d');
-             ctx.drawImage(img, 0, 0, width, height);
-             // 2. Compress to 70% quality JPEG string (~10-20KB max)
-             resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            // 2. Compress to 70% quality JPEG string (~10-20KB max)
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
           };
           img.onerror = reject;
         };
@@ -137,7 +137,7 @@ export function AuthProvider({ children }) {
       return base64Photo;
     } catch (error) {
       console.error("AuthContext: Upload Error:", error);
-      throw error; 
+      throw error;
     }
   };
 
@@ -145,7 +145,7 @@ export function AuthProvider({ children }) {
     if (!auth.currentUser || !song) return;
     try {
       const token = await auth.currentUser.getIdToken();
-      
+
       const payload = {
         videoId: song.id || song.videoId,
         secondsListened: Math.round(milliseconds / 1000),
@@ -154,7 +154,7 @@ export function AuthProvider({ children }) {
         artist: song.artist,
         cover: song.thumbnail || song.cover || song.artworkUrl || ''
       };
-      
+
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/stats/play`, {
         method: 'POST',
         headers: {
