@@ -3,6 +3,7 @@ FROM node:20-slim
 
 # Install system dependencies (curl for yt-dlp download, python3 for yt-dlp runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     curl \
     python3 \
     && rm -rf /var/lib/apt/lists/*
