@@ -37,11 +37,13 @@ module.exports = {
   PIPED_INSTANCES: [
     'https://pipedapi.kavin.rocks',
     'https://pipedapi.reallyaweso.me',
+    'https://pipedapi.darkness.services',
     'https://piped-api.cfe.re',
     'https://watchapi.whatever.social',
     'https://api.piped.projectsegfau.lt',
     'https://piped-api.codeberg.page',
     'https://piped-api.hostux.net',
     'https://pa.il.ax',
+    'https://piped.adminforge.de/api',
   ],
 };
