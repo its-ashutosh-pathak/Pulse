@@ -18,11 +18,9 @@ import './Library.css';
 import './PlaylistView.css';
 import './Downloads.css';
 
-// ── Sort helpers ────────────────────────────────────────────────────────────
-
 const SORT_OPTIONS = [
-  { key: 'recent', label: 'Recently Added' },
-  { key: 'alpha', label: 'Alphabetical' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'alpha', label: 'A-Z' },
 ];
 
 function sortPlaylists(list, sortKey, sortOrder) {

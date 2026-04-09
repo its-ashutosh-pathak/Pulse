@@ -7,8 +7,8 @@ import ImportPlaylist from './ImportPlaylist';
 import './Library.css';
 
 const SORT_OPTIONS = [
-  { key: 'recent', label: 'Recently Added' },
-  { key: 'alpha', label: 'Alphabetical' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'alpha', label: 'A-Z' },
 ];
 
 export default function Library() {
