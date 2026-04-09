@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Offline — Pulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -18,70 +21,226 @@
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       text-align: center;
       padding: 2rem;
+      gap: 0;
     }
 
-    .icon {
-      width: 80px;
-      height: 80px;
+    /* Animated floating rings */
+    .rings {
+      position: relative;
+      width: 120px;
+      height: 120px;
       margin-bottom: 2rem;
-      opacity: 0.9;
+    }
+    .rings .logo {
+      position: absolute;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      z-index: 2;
+    }
+    .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid rgba(167, 141, 232, 0.2);
+      animation: pulse-ring 2.4s ease-out infinite;
+    }
+    .ring:nth-child(2) { animation-delay: 0.8s; }
+    .ring:nth-child(3) { animation-delay: 1.6s; }
+    @keyframes pulse-ring {
+      0%   { transform: scale(0.55); opacity: 0; }
+      40%  { opacity: 1; }
+      100% { transform: scale(1.1);  opacity: 0; }
+    }
+
+    /* Wifi slash icon */
+    .wifi-icon {
+      margin-bottom: 1.25rem;
+    }
+    .wifi-icon svg {
+      width: 52px;
+      height: 52px;
+      color: rgba(167, 141, 232, 0.5);
+      filter: drop-shadow(0 0 12px rgba(167, 141, 232, 0.2));
     }
 
     h1 {
-      font-size: 1.75rem;
+      font-size: 1.6rem;
       font-weight: 700;
       background: linear-gradient(135deg, #a78de8, #865AA4, #c084fc);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
     }
 
     p {
-      color: rgba(232, 232, 240, 0.55);
-      font-size: 0.95rem;
+      color: rgba(232, 232, 240, 0.5);
+      font-size: 0.9rem;
       line-height: 1.6;
-      max-width: 280px;
+      max-width: 260px;
       margin-bottom: 2rem;
     }
 
-    .tip {
-      background: rgba(134, 90, 164, 0.12);
-      border: 1px solid rgba(134, 90, 164, 0.25);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      font-size: 0.85rem;
-      color: rgba(232, 232, 240, 0.65);
+    /* Two-button row */
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
       max-width: 300px;
-      line-height: 1.5;
     }
 
-    .tip strong {
-      color: #a78de8;
-    }
-
-    button {
-      margin-top: 1.5rem;
-      padding: 0.75rem 2rem;
-      background: linear-gradient(135deg, #865AA4, #a78de8);
-      color: white;
+    .btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.9rem 0.5rem;
       border: none;
-      border-radius: 50px;
-      font-size: 0.95rem;
+      border-radius: 16px;
+      font-family: inherit;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
-    button:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.96); }
+
+    .btn-retry {
+      background: rgba(167, 141, 232, 0.12);
+      border: 1px solid rgba(167, 141, 232, 0.25);
+      color: #a78de8;
+    }
+    .btn-retry:hover { background: rgba(167, 141, 232, 0.2); }
+
+    .btn-downloads {
+      background: linear-gradient(135deg, #865AA4, #a78de8);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(134, 90, 164, 0.4);
+    }
+    .btn-downloads:hover { opacity: 0.88; }
+
+    .btn svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* Error toast */
+    .toast {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 0.6rem 1rem;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #f87171;
+      max-width: 300px;
+    }
+    .toast.show { display: block; }
   </style>
 </head>
 <body>
-  <img src="/pwa-512x512.png" class="icon" alt="Pulse logo" />
-  <h1>You're Offline</h1>
-  <p>No internet connection. But your downloaded songs are still available in the Downloads tab.</p>
-  <div class="tip">
-    <strong>Tip:</strong> Songs you've downloaded in Pulse are available offline anytime — no connection needed.
+
+  <!-- Animated logo rings -->
+  <div class="rings">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <img src="/pwa-512x512.png" class="logo" alt="Pulse" />
   </div>
-  <button onclick="window.location.reload()">Try Again</button>
+
+  <!-- Wifi off icon -->
+  <div class="wifi-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="1" y1="1" x2="23" y2="23"/>
+      <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+      <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+      <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+      <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+      <circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  </div>
+
+  <h1>You're Offline</h1>
+  <p>No internet connection. You can still listen to everything you've downloaded.</p>
+
+  <!-- Two action buttons side by side -->
+  <div class="actions">
+
+    <!-- Retry button -->
+    <button class="btn btn-retry" id="retryBtn" onclick="handleRetry()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+      Retry
+    </button>
+
+    <!-- Downloads button -->
+    <button class="btn btn-downloads" onclick="goToDownloads()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Downloads
+    </button>
+  </div>
+
+  <!-- Error toast shown only when retry fails -->
+  <div class="toast" id="errorToast">
+    ⚠️ Still no internet connection. Try again later.
+  </div>
+
+  <script>
+    async function handleRetry() {
+      const btn = document.getElementById('retryBtn');
+      const toast = document.getElementById('errorToast');
+
+      // Disable button + spin while checking
+      btn.style.opacity = '0.5';
+      btn.style.pointerEvents = 'none';
+      toast.classList.remove('show');
+
+      try {
+        // Lightweight connectivity check using cache-busting query
+        const res = await fetch('/?_retry=' + Date.now(), {
+          method: 'HEAD',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000),
+        });
+
+        if (res.ok || res.type === 'opaqueredirect') {
+          // Connection is back — reload the PWA
+          window.location.href = '/';
+          return;
+        }
+      } catch { /* Still offline */ }
+
+      // Still offline — show error
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+      toast.classList.add('show');
+
+      // Auto-hide the error after 4s
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function goToDownloads() {
+      // Navigate to the Downloads section inside the PWA
+      // The PWA is cached, so this works even offline
+      window.location.href = '/downloads';
+    }
+  </script>
+
 </body>
 </html>
