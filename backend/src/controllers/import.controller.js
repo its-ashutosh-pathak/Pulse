@@ -111,6 +111,40 @@ async function executeHybridImport(res, userId, userDisplayName, playlistData, s
 }
 
 /**
+ * GET /api/import/spotify/preview?url=...
+ * Lightweight: returns { name, total } for the preview card.
+ * No auth needed — just validates the playlist is public.
+ */
+async function importSpotifyPreview(req, res, next) {
+  try {
+    const { url } = req.query;
+    if (!url) return next(createError(400, 'MISSING_URL', 'url query param is required'));
+
+    // Extract Base62 ID (same logic as the POST)
+    let id = url.trim();
+    const uriMatch = id.match(/^spotify:playlist:([A-Za-z0-9]+)/);
+    if (uriMatch) {
+      id = uriMatch[1];
+    } else {
+      try {
+        const u = new URL(id);
+        const m = u.pathname.match(/\/playlist\/([A-Za-z0-9]+)/);
+        if (m) id = m[1];
+      } catch { }
+    }
+
+    if (id.length < 10 || id.length > 30 || /[^A-Za-z0-9]/.test(id)) {
+      return next(createError(400, 'INVALID_URL', 'Not a valid Spotify playlist URL.'));
+    }
+
+    const meta = await spotifyService.getPlaylistMeta(id);
+    return res.json(successBody({ id, name: meta.name, total: meta.total }));
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
  * POST /api/import/spotify
  * Body: { url: 'https://open.spotify.com/playlist/...' }
  */
@@ -205,6 +239,7 @@ async function importYTMusic(req, res, next) {
 }
 
 module.exports = { 
+  importSpotifyPreview,
   importSpotify,
   importYTMusic
 };

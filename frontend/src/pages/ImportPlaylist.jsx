@@ -96,11 +96,30 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
         setPhase('preview');
 
       } else {
-        // Spotify: single-shot backend POST (hybrid sync/async engine)
+        // Spotify: Step 1 — lightweight preview (name + total only)
         const id = extractSpotifyPlaylistId(url);
         if (!id) throw new Error('Could not find a Spotify playlist ID in that URL.');
 
-        setPhase('importing'); // skip preview for Spotify — backend handles everything
+        const r = await fetch(`${API}/api/import/spotify/preview?url=${encodeURIComponent(url)}`);
+        const json = await r.json();
+        if (!r.ok || !json.success) throw new Error(json.message || 'Playlist not found or is private.');
+
+        setPreview({ name: json.data.name, total: json.data.total, tracks: [] });
+        setPhase('preview');
+      }
+    } catch (e) {
+      setErrorMsg(e.message || 'Something went wrong — check the URL and try again.');
+      setPhase('error');
+    }
+  }, [tab, url, user]);
+
+  const handleImport = useCallback(async () => {
+    if (!preview || !user) return;
+    setPhase('importing');
+    setProgress(0);
+    try {
+      if (tab === 'spotify') {
+        // Spotify: fire backend POST (hybrid sync/async)
         const token = await user.getIdToken();
         const r = await fetch(`${API}/api/import/spotify`, {
           method: 'POST',
@@ -110,25 +129,12 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           },
           body: JSON.stringify({ url }),
         });
-
         const json = await r.json();
-        if (!r.ok || !json.success) throw new Error(json.message || 'Import failed. Verify the URL and try again.');
-
+        if (!r.ok || !json.success) throw new Error(json.message || 'Import failed.');
         setImportedPlaylistId(json.data.playlistId);
         setPhase('done');
+        return;
       }
-    } catch (e) {
-      setErrorMsg(e.message || 'Something went wrong — check the URL and try again.');
-      setPhase('error');
-    }
-  }, [tab, url, user]);
-
-  // ── Step 2 (YTM only): save tracks to Firestore via PlaylistContext ────────
-  const handleImport = useCallback(async () => {
-    if (!preview || !user) return;
-    setPhase('importing');
-    setProgress(0);
-    try {
       const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('../firebase');
 
@@ -158,7 +164,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
       setErrorMsg(e.message || 'Import failed — please try again.');
       setPhase('error');
     }
-  }, [preview, user, addSongToPlaylist]);
+  }, [preview, tab, url, user, addSongToPlaylist]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -228,7 +234,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
                 disabled={!url.trim()}
                 onClick={handleFetch}
               >
-                {tab === 'ytm' ? 'Preview Playlist' : 'Import Playlist'} <ArrowRight size={16} />
+                Preview Playlist <ArrowRight size={16} />
               </button>
             </>
           )}
@@ -250,6 +256,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
                   <div>
                     <h3>{preview.name}</h3>
                     <p>{preview.total} track{preview.total !== 1 ? 's' : ''}</p>
+                    {tab === 'spotify' && <span className="import-match-note">Will be matched on YouTube Music</span>}
                   </div>
                 </div>
                 <button className="import-save-btn" onClick={handleImport}>

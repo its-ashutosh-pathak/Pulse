@@ -89,6 +89,38 @@ async function fetchSpotifyAPI(url, params = {}) {
 }
 
 /**
+ * Lightweight preview fetch — only name + total track count.
+ * Used for the preview card step before the user confirms the import.
+ */
+async function getPlaylistMeta(id) {
+  try {
+    const meta = await fetchSpotifyAPI(`${SPOTIFY_API}/playlists/${id}`, {
+      fields: 'name,tracks.total,public,collaborative'
+    });
+
+    if (meta.public === false && !meta.collaborative) {
+      throw createError(403, 'SPOTIFY_FORBIDDEN', 'This playlist is private. Open it in Spotify → ⋯ → Make public, then retry.');
+    }
+
+    return {
+      name:  meta.name  || 'Spotify Playlist',
+      total: meta.tracks?.total || 0,
+    };
+  } catch (e) {
+    const status = e.response?.status;
+    const msg    = e.response?.data?.error?.message || '';
+    if (e.statusCode === 403) throw e;
+    if (status === 404) throw createError(404, 'NOT_FOUND', 'Playlist not found. Check the URL.');
+    if (status === 429) throw createError(429, 'SPOTIFY_RATE_LIMITED', 'Spotify rate limit hit. Wait 30s and retry.');
+    if (status === 403 && msg.toLowerCase().includes('premium'))
+      throw createError(503, 'SPOTIFY_QUOTA_EXCEEDED', 'Spotify API quota exceeded.');
+    if (status === 403)
+      throw createError(403, 'SPOTIFY_FORBIDDEN', 'Cannot access this playlist. It may be private.');
+    throw createError(502, 'SPOTIFY_META_ERROR', `Failed to fetch playlist info: ${e.message}`);
+  }
+}
+
+/**
  * Fetches the entire playlist including Name, Total Count, and beautifully parsed tracks.
  */
 async function getFullPlaylist(id) {
@@ -182,5 +214,6 @@ async function getFullPlaylist(id) {
 
 module.exports = {
   getSpotifyToken,
+  getPlaylistMeta,
   getFullPlaylist
 };
