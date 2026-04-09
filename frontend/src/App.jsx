@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlaylistProvider } from './context/PlaylistContext';
@@ -16,6 +16,23 @@ import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import ArtistView from './pages/ArtistView';
 import Downloads from './pages/Downloads';
+import OfflineScreen from './pages/OfflineScreen';
+
+// Hook: tracks real-time online/offline status
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const on  = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online',  on);
+    window.addEventListener('offline', off);
+    return () => {
+      window.removeEventListener('online',  on);
+      window.removeEventListener('offline', off);
+    };
+  }, []);
+  return isOnline;
+}
 
 // Wraps any route — redirects to /login if not authenticated
 function ProtectedRoute({ children }) {
@@ -25,6 +42,7 @@ function ProtectedRoute({ children }) {
 
 function AppRoutes() {
   const { pathname } = useLocation();
+  const isOnline = useOnlineStatus();
 
   // Scroll to top on route change
   useEffect(() => {
@@ -35,14 +53,11 @@ function AppRoutes() {
   useEffect(() => {
     const savedColor = localStorage.getItem('pulse_accent_color') || '#865AA4';
     
-    // Function to shift hue for secondary color
     const getSecondaryColor = (hex) => {
-      // Hex to RGB
       let r = parseInt(hex.slice(1, 3), 16) / 255;
       let g = parseInt(hex.slice(3, 5), 16) / 255;
       let b = parseInt(hex.slice(5, 7), 16) / 255;
 
-      // RGB to HSL
       let max = Math.max(r, g, b), min = Math.min(r, g, b);
       let h, s, l = (max + min) / 2;
       if (max === min) h = s = 0;
@@ -58,12 +73,10 @@ function AppRoutes() {
         h /= 6;
       }
 
-      // Shift Hue (approx 40 degrees) and adjust saturation
-      h = (h + 0.11) % 1; 
+      h = (h + 0.11) % 1;
       s = Math.min(1, s * 1.1);
       l = Math.max(0.1, Math.min(0.9, l * 0.9));
 
-      // HSL to RGB
       const hue2rgb = (p, q, t) => {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
@@ -71,14 +84,13 @@ function AppRoutes() {
         if (t < 1/2) return q;
         if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
         return p;
-      }
+      };
       let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       let p = 2 * l - q;
       r = hue2rgb(p, q, h + 1/3);
       g = hue2rgb(p, q, h);
       b = hue2rgb(p, q, h - 1/3);
 
-      // RGB back to HEX
       const toHex = x => {
         const hexVal = Math.round(x * 255).toString(16);
         return hexVal.length === 1 ? '0' + hexVal : hexVal;
@@ -90,6 +102,14 @@ function AppRoutes() {
     document.documentElement.style.setProperty('--accent-cyan', savedColor);
     document.documentElement.style.setProperty('--accent-pink', secondary);
   }, []);
+
+  // If fully offline AND not on the downloads page (which works via IndexedDB),
+  // show the offline screen so user can navigate to downloads or retry.
+  // NOTE: This must come AFTER all hooks — conditional returns before hooks violate Rules of Hooks.
+  const isDownloadsRoute = pathname.startsWith('/downloads');
+  if (!isOnline && !isDownloadsRoute) {
+    return <OfflineScreen />;
+  }
 
   return (
     <Routes>

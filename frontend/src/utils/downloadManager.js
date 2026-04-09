@@ -12,7 +12,7 @@
  */
 
 const DB_NAME = 'PulseOffline';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // v2: added 'lyrics' object store
 
 // ── IndexedDB bootstrap ───────────────────────────────────────────────────────
 
@@ -32,6 +32,9 @@ function openDB() {
       }
       if (!db.objectStoreNames.contains('playlists')) {
         db.createObjectStore('playlists', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('lyrics')) {
+        db.createObjectStore('lyrics', { keyPath: 'videoId' });
       }
     };
     req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
@@ -113,6 +116,29 @@ function emitDl(videoId, progress, status) {
   downloadEvents.dispatchEvent(new CustomEvent('download', { detail: { videoId, progress, status } }));
 }
 
+// ── Lyrics cache helpers ─────────────────────────────────────────────────────
+
+/**
+ * Store raw lyrics API response alongside a downloaded song.
+ * @param {string} videoId
+ * @param {Object} lyricsData  - The full `json.data` object from /api/lyrics/:id
+ */
+export async function saveLyricsCache(videoId, lyricsData) {
+  if (!videoId || !lyricsData) return;
+  await idbPut('lyrics', { videoId, data: lyricsData, cachedAt: Date.now() });
+}
+
+/**
+ * Retrieve cached lyrics for a downloaded song.
+ * Returns null if not found.
+ * @param {string} videoId
+ * @returns {Promise<Object|null>}
+ */
+export async function getCachedLyrics(videoId) {
+  const entry = await idbGet('lyrics', videoId);
+  return entry?.data || null;
+}
+
 /**
  * Download a single song.
  * @param {Object} song            - Standard Pulse song object
@@ -176,6 +202,13 @@ export async function downloadSong(song, contextPlaylist = null, authToken = '')
       const plName = contextPlaylist.name || 'Playlist';
       await addTrackToPlaylist(plId, plName, videoId);
     }
+
+    // 7. Cache lyrics in the background (fire-and-forget — never blocks the download)
+    const lyricsApi = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    fetch(`${lyricsApi}/api/lyrics/${videoId}`, { headers })
+      .then(r => r.json())
+      .then(json => { if (json?.success && json.data) saveLyricsCache(videoId, json.data); })
+      .catch(() => { /* Lyrics are optional — silently skip if unavailable */ });
 
     emitDl(videoId, 1, 'done');
     return trackMeta;
@@ -280,6 +313,7 @@ export async function getAudioObjectURL(videoId) {
 export async function removeDownload(videoId) {
   await idbDelete('audio', videoId);
   await idbDelete('tracks', videoId);
+  await idbDelete('lyrics', videoId); // clean up cached lyrics too
 
   // Remove from every playlist that contains it
   const playlists = await idbGetAll('playlists');

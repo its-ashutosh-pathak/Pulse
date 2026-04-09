@@ -11,6 +11,7 @@ import { getHighResThumb } from '../utils';
 import SongActionMenu from '../components/SongActionMenu';
 import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import DownloadOverlay from '../components/DownloadOverlay';
+import { getCachedLyrics } from '../utils/downloadManager';
 import './PlayerView.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -92,57 +93,64 @@ export default function PlayerView() {
     }
   }, [activeLineIndex, showLyrics]);
 
-  // Fetch lyrics when song changes (or lyricsKey bumped for retry)
+  // Fetch lyrics when song changes — check IndexedDB cache first, fall back to network
   useEffect(() => {
     if (!currentSong?.videoId) { setLyrics(null); setLyricsState('idle'); return; }
     if (!user) return;
     setLyrics(null);
     setLyricsState('loading');
 
-    user.getIdToken().then(token => {
-      const url = `${API}/api/lyrics/${currentSong.videoId}`;
-      fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(r => r.json())
-        .then(json => {
-          if (!json?.success) { setLyricsState('error'); return; }
-          const data = json.data;
-          const rawText = data?.syncedLyrics || data?.plainLyrics || data?.lyrics || null;
-
-          if (rawText) {
-            let parsedLines = [];
-            if (data?.syncedLyrics || rawText.match(/\[\d+:\d+\.\d+\]/)) {
-              // Synced LRC format — parse timestamps
-              rawText.split('\n').forEach((line, idx) => {
-                const match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
-                if (match) {
-                  const time = parseInt(match[1], 10) * 60 + parseFloat(match[2]);
-                  const text = match[3].trim();
-                  parsedLines.push({ id: idx, time, text, isEmpty: text === '' });
-                } else {
-                  const text = line.trim();
-                  parsedLines.push({ id: idx, time: null, text, isEmpty: text === '' });
-                }
-              });
+    const parseLyrics = (data) => {
+      const rawText = data?.syncedLyrics || data?.plainLyrics || data?.lyrics || null;
+      if (rawText) {
+        let parsedLines = [];
+        if (data?.syncedLyrics || rawText.match(/\[\d+:\d+\.\d+\]/)) {
+          rawText.split('\n').forEach((line, idx) => {
+            const match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+            if (match) {
+              const time = parseInt(match[1], 10) * 60 + parseFloat(match[2]);
+              const text = match[3].trim();
+              parsedLines.push({ id: idx, time, text, isEmpty: text === '' });
             } else {
-              // Plain text — strip any leftover brackets, split lines
-              const stripped = rawText.replace(/\[\d+:\d+\.\d+\]/g, '');
-              parsedLines = stripped.split('\n').map((line, idx) => {
-                const text = line.trim();
-                return { id: idx, time: null, text, isEmpty: text === '' };
-              });
+              const text = line.trim();
+              parsedLines.push({ id: idx, time: null, text, isEmpty: text === '' });
             }
-            setLyrics({ ...data, parsedLines });
-            setLyricsState('loaded');
-          } else if (data?.lyricsUrl) {
-            setLyrics({ ...data });
-            setLyricsState('url-only');
-          } else {
-            setLyricsState('not-found');
-          }
-        })
-        .catch(() => setLyricsState('error'));
+          });
+        } else {
+          const stripped = rawText.replace(/\[\d+:\d+\.\d+\]/g, '');
+          parsedLines = stripped.split('\n').map((line, idx) => {
+            const text = line.trim();
+            return { id: idx, time: null, text, isEmpty: text === '' };
+          });
+        }
+        setLyrics({ ...data, parsedLines });
+        setLyricsState('loaded');
+      } else if (data?.lyricsUrl) {
+        setLyrics({ ...data });
+        setLyricsState('url-only');
+      } else {
+        setLyricsState('not-found');
+      }
+    };
+
+    // 1. Try IndexedDB cache first (instant, works offline)
+    getCachedLyrics(currentSong.videoId).then(cached => {
+      if (cached) {
+        parseLyrics(cached);
+        return; // Done — no network needed
+      }
+
+      // 2. Not cached — fall back to network
+      user.getIdToken().then(token => {
+        const url = `${API}/api/lyrics/${currentSong.videoId}`;
+        fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .then(json => {
+            if (!json?.success) { setLyricsState('error'); return; }
+            parseLyrics(json.data);
+          })
+          .catch(() => setLyricsState('error'));
+      }).catch(() => setLyricsState('error'));
     }).catch(() => setLyricsState('error'));
   }, [currentSong?.videoId, user]);
 

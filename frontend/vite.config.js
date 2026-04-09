@@ -123,8 +123,8 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
 
-        // Offline fallback page
-        navigateFallback: '/offline.html',
+        // Offline fallback page (Always serve App Shell, React Router handles offline UI)
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
       },
     }),
