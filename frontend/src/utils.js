@@ -14,18 +14,17 @@ export const getHighResThumb = (url, size = 500) => {
     if (url.includes('lh3.googleusercontent.com') || url.includes('ggpht.com')) {
       // Replace the sizing params (w, h) at the end of the URL
       // but ONLY if they look like the standard =wNNN-hNNN pattern
-      // Strip -lNNN (dimension limiter that causes zoom glitches)
       let newUrl = url;
 
-      // Replace =wXXX-hXXX... pattern (the = prefix variant)
-      newUrl = newUrl.replace(/=w\d+-h\d+(-[a-z0-9-]+)?/, `=w${size}-h${size}-rj`);
+      // Replace =wXXX-hXXX... pattern but preserve other flags
+      newUrl = newUrl.replace(/([=-])w\d+-h\d+/, `$1w${size}-h${size}`);
 
       // Also handle -sXXX standalone size
       if (newUrl === url) {
-        newUrl = newUrl.replace(/([=-])s\d+(-[a-z0-9]+)*$/, `$1s${size}`);
+        newUrl = newUrl.replace(/([=-])s\d+(?=-|$)/, `$1s${size}`);
       }
 
-      // Strip harmful -lNNN limiters and clean up double dashes
+      // Strip harmful -lNNN limiters
       newUrl = newUrl.replace(/-l\d+/g, '').replace(/--+/g, '-');
 
       return newUrl;

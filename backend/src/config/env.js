@@ -30,5 +30,5 @@ module.exports = {
   SPOTIFY_CLIENT_SECRET:  process.env.SPOTIFY_CLIENT_SECRET || '',
   GENIUS_ACCESS_TOKEN:    process.env.GENIUS_ACCESS_TOKEN || '',
   PIPED_API_BASE:         process.env.PIPED_API_BASE || 'https://pipedapi.kavin.rocks',
-  YTDLP_PATH:             process.env.YTDLP_PATH || 'yt-dlp',
+  YTDLP_PATH:             process.env.YTDLP_PATH || './yt-dlp',
 };
