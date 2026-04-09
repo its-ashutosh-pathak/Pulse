@@ -200,8 +200,8 @@
 .playlist-actions-row {
   display: flex;
   align-items: center;
-  gap: 15px;
-  /* Tighter gap for the full row */
+  gap: 8px;
+  /* Tighter gap for slim phones */
   margin-bottom: 25px;
   width: 100%;
 }
@@ -229,7 +229,7 @@
 }
 
 .sort-dynamic span {
-  min-width: 55px;
+  min-width: 40px;
   text-align: left;
 }
 
