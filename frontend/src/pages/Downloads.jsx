@@ -220,7 +220,8 @@ export default function Downloads() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
-  const sortedPlaylists = sortPlaylists(playlists, rootSortKey, rootSortOrder);
+  const sortedPlaylists = sortPlaylists(playlists, rootSortKey, rootSortOrder)
+    .filter(pl => pl.id === '__downloads__' || (pl.tracks?.length || 0) > 0);
 
   const folderTracks = activeFolder?.tracks || [];
   const filteredTracks = trackFilter

@@ -504,21 +504,33 @@ async function getPlaylist(playlistId) {
 
   // ── Try as playlist ───────────────────────────────────────────────────────
   try {
-    const res    = await yt.music.getPlaylist(playlistId);
+    let res = await yt.music.getPlaylist(playlistId);
     const header = res.header;
-    const tracks = (res.contents || res.items || [])
-      .map((t) => normTrack(t))
-      .filter(Boolean);
 
-    if (tracks.length) {
-      logger.info('ytmusic_playlist', { playlistId, trackCount: tracks.length });
+    // Collect first page of tracks
+    let allTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
+
+    // Paginate: fetch continuation pages until there are no more
+    while (res.has_continuation) {
+      try {
+        res = await res.getContinuation();
+        const moreTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
+        allTracks = allTracks.concat(moreTracks);
+      } catch (contErr) {
+        logger.warn('ytmusic_playlist_continuation_failed', { playlistId, fetched: allTracks.length, error: contErr.message });
+        break;
+      }
+    }
+
+    if (allTracks.length) {
+      logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length });
       return {
         id:          playlistId,
         name:        String(header?.title       || 'Playlist'),
         description: String(header?.description || ''),
         thumbnail:   getThumb(header),
         type:        'YTM_PLAYLIST',
-        tracks,
+        tracks:      allTracks,
       };
     }
   } catch (e) {

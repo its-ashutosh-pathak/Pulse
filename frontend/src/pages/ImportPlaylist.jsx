@@ -57,14 +57,36 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [importedPlaylistId, setImportedPlaylistId] = useState(null);
+  const progressIntervalRef = React.useRef(null);
 
   const reset = () => {
+    clearInterval(progressIntervalRef.current);
     setUrl('');
     setPhase('idle');
     setPreview(null);
     setProgress(0);
     setErrorMsg('');
     setImportedPlaylistId(null);
+  };
+
+  // Simulates a smoothly decelerating progress bar — used for Spotify imports
+  // where the actual per-song progress isn't available on the frontend.
+  const startFakeProgress = () => {
+    setProgress(0);
+    clearInterval(progressIntervalRef.current);
+    progressIntervalRef.current = setInterval(() => {
+      setProgress(prev => {
+        // Slow down as it approaches 90% (hold there until real completion)
+        if (prev >= 90) { clearInterval(progressIntervalRef.current); return 90; }
+        const increment = (90 - prev) * 0.04; // Exponential deceleration
+        return Math.min(90, prev + Math.max(0.5, increment));
+      });
+    }, 150);
+  };
+
+  const finishFakeProgress = () => {
+    clearInterval(progressIntervalRef.current);
+    setProgress(100);
   };
 
   // ── Step 1: preview ───────────────────────────────────────────────────────
@@ -119,7 +141,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
     setProgress(0);
     try {
       if (tab === 'spotify') {
-        // Spotify: fire backend POST (hybrid sync/async)
+        // Spotify: read real-time SSE stream — backend sends a progress event per song
         const token = await user.getIdToken();
         const r = await fetch(`${API}/api/import/spotify`, {
           method: 'POST',
@@ -129,10 +151,38 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           },
           body: JSON.stringify({ url }),
         });
-        const json = await r.json();
-        if (!r.ok || !json.success) throw new Error(json.message || 'Import failed.');
-        setImportedPlaylistId(json.data.playlistId);
-        setPhase('done');
+
+        if (!r.ok || !r.body) throw new Error('Import request failed. Check your connection.');
+
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop(); // keep incomplete line for next chunk
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const event = JSON.parse(line.slice(6));
+              if (event.type === 'progress') {
+                setProgress(Math.round((event.current / event.total) * 100));
+              } else if (event.type === 'done') {
+                setProgress(100);
+                setImportedPlaylistId(event.playlistId);
+                setPhase('done');
+                return;
+              } else if (event.type === 'error') {
+                throw new Error(event.message || 'Import failed.');
+              }
+            } catch (parseErr) { /* skip malformed SSE lines */ }
+          }
+        }
         return;
       }
       const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
@@ -273,13 +323,11 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           {phase === 'importing' && (
             <div className="import-loading">
               <Loader2 size={36} className="import-spin" />
-              <p>
-                {tab === 'spotify' ? 'Saving to Library…' : `Saving… ${progress}%`}
-              </p>
+              <p>Saving… {progress}%</p>
               <div className="import-progress-wrap">
                 <div 
-                  className={`import-progress-fill ${tab === 'spotify' ? 'indeterminate' : ''}`} 
-                  style={{ width: tab === 'spotify' ? '100%' : `${progress}%` }} 
+                  className="import-progress-fill" 
+                  style={{ width: `${progress}%` }} 
                 />
               </div>
             </div>

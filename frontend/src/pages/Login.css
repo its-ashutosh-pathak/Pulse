@@ -126,6 +126,33 @@
   color: var(--text-secondary);
 }
 
+/* ── Password show/hide wrapper ─────────────────────────────────────────── */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  padding-right: 44px; /* Make room for the eye button */
+}
+
+.password-eye {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.18s;
+}
+.password-eye:hover { color: var(--accent-cyan); }
+
+
 .submit-btn {
   width: 100%;
   background: var(--accent-gradient);

@@ -155,12 +155,23 @@ async function importSpotifyPreview(req, res, next) {
 
 /**
  * POST /api/import/spotify
- * Body: { url: 'https://open.spotify.com/playlist/...' }
+ * Streams real-time per-song progress via Server-Sent Events (SSE).
+ * The frontend reads the stream and updates the progress bar after every matched song.
  */
 async function importSpotify(req, res, next) {
+  // ── SSE setup ──────────────────────────────────────────────────────────────
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // disable nginx/Railway response buffering
+  res.flushHeaders();
+
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  const sendError = (msg) => { send({ type: 'error', message: msg }); res.end(); };
+
   try {
     const { url } = req.body;
-    if (!url) return next(createError(400, 'MISSING_URL', 'Spotify playlist URL is required'));
+    if (!url) return sendError('Spotify playlist URL is required');
 
     // Extract Base62 ID
     let id = url.trim();
@@ -174,23 +185,65 @@ async function importSpotify(req, res, next) {
         if (m) id = m[1];
       } catch { }
     }
-    
+
     if (id.length < 10 || id.length > 30 || /[^A-Za-z0-9]/.test(id)) {
-      return next(createError(400, 'INVALID_URL', 'Not a valid Spotify playlist URL.'));
+      return sendError('Not a valid Spotify playlist URL.');
     }
 
-    // Call our robust Spotify wrapper Service
+    // 1. Fetch all tracks from Spotify (using API + embed fallback)
     const playlistData = await spotifyService.getFullPlaylist(id);
-
-    // Filter out missing names just in case
     playlistData.tracks = playlistData.tracks.filter(t => t.title && t.artist);
 
-    // Pass off to the execution core
-    await executeHybridImport(res, req.user.userId, req.user.displayName, playlistData, 'spotify');
+    const total = playlistData.tracks.length;
+    if (total === 0) return sendError('This playlist is empty or tracks are hidden.');
+
+    // 2. Create the Firestore playlist doc immediately
+    const docRef = db.collection('playlists').doc();
+    const playlistId = docRef.id;
+    await docRef.set({
+      name:         playlistData.name,
+      createdBy:    req.user.userId,
+      ownerName:    req.user.displayName || 'Pulse User',
+      members:      [req.user.userId],
+      songs:        [],
+      visibility:   'Public',
+      importedFrom: 'spotify',
+      createdAt:    FieldValue.serverTimestamp(),
+      lastUpdated:  FieldValue.serverTimestamp(),
+    });
+
+    // 3. Send initial metadata so frontend can set up UI
+    send({ type: 'start', playlistId, total });
+
+    // 4. Process every track — stream a progress event after each one
+    let succeeded = 0;
+    for (let i = 0; i < total; i++) {
+      const track = playlistData.tracks[i];
+      const ytMatch = await resolveYTSong(track);
+
+      if (ytMatch?.videoId) {
+        const mergedTrack = {
+          ...track,
+          videoId: ytMatch.videoId,
+          cover: track.cover || ytMatch.thumbnail || '',
+        };
+        await appendSongToPlaylist(playlistId, mergedTrack);
+        succeeded++;
+      }
+
+      // Emit real progress after every single song attempt
+      send({ type: 'progress', current: i + 1, total, succeeded });
+    }
+
+    logger.info('import_spotify_stream_done', { playlistId, total, succeeded });
+    send({ type: 'done', playlistId, succeeded, total });
+    res.end();
   } catch (e) {
-    next(e);
+    logger.error('import_spotify_stream_failed', { error: e.message });
+    sendError(e.message || 'Import failed.');
   }
 }
+
 
 /**
  * POST /api/import/ytmusic

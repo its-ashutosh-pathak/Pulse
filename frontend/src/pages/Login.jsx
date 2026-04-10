@@ -1,35 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import './Login.css';
 
 export default function Login() {
-  const { loginWithEmail, signupWithEmail } = useAuth();
+  const { user, loading, loginWithEmail, signupWithEmail } = useAuth();
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Redirect as soon as auth state confirms the user is logged in.
+  // This handles both: initial load (already logged in) and post-submit.
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setSubmitting(true);
     try {
       if (isSignup) {
         await signupWithEmail(email, password, name);
       } else {
         await loginWithEmail(email, password);
       }
-      navigate('/');
+      // Navigation handled by the useEffect above when user state updates
     } catch (e) {
       setError(e.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim());
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  // Don't render the form while auth is resolving to avoid flash
+  if (loading) return null;
 
   return (
     <div className="login-page">
@@ -60,17 +73,28 @@ export default function Login() {
             required
             className="input-field"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="input-field"
-          />
+          <div className="password-wrapper">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              className="input-field password-input"
+            />
+            <button
+              type="button"
+              className="password-eye"
+              onClick={() => setShowPassword(v => !v)}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {error && <p className="error-msg">{error}</p>}
-          <button type="submit" className="submit-btn hover-scale" disabled={loading}>
-            {loading ? 'Please wait...' : isSignup ? 'Create Account' : 'Sign In'}
+          <button type="submit" className="submit-btn hover-scale" disabled={submitting}>
+            {submitting ? 'Please wait...' : isSignup ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 

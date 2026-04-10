@@ -398,12 +398,15 @@
 
 .horizontal-scroll {
   display: flex;
-  gap: 15px;
+  flex-direction: row;
+  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 15px;
-  margin: 0 -20px;
+  padding-bottom: 12px;
   padding-left: 20px;
+  padding-right: 20px;
+  margin: 0 -20px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .horizontal-scroll::-webkit-scrollbar {
@@ -411,8 +414,10 @@
 }
 
 .top-song-card {
-  min-width: 140px;
-  padding: var(--space-sm);
+  flex: 0 0 120px;       /* fixed width, does NOT grow */
+  min-width: 120px;
+  max-width: 120px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -488,8 +493,10 @@
 }
 
 .artist-card {
-  min-width: 140px;
-  padding: var(--space-sm);
+  flex: 0 0 120px;       /* fixed width, does NOT grow */
+  min-width: 120px;
+  max-width: 120px;
+  padding: 10px;
   border-radius: var(--radius-lg);
   position: relative;
   text-align: center;

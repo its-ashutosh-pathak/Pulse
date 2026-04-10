@@ -47,7 +47,14 @@ export default function Library() {
 
   const currentLabel = SORT_OPTIONS.find(o => o.key === sortKey)?.label;
 
-  const sorted = [...allPlaylists].sort((a, b) => {
+  const sorted = [...allPlaylists]
+    .filter(pl => {
+      // Always show Liked Songs (system playlist). Hide all others with 0 songs.
+      if (pl.id === 'liked-songs') return true;
+      if (pl.type === 'YTM') return (pl.songCount || 0) > 0;
+      return (pl.songs?.length || 0) > 0;
+    })
+    .sort((a, b) => {
     if (sortKey === 'alpha') {
       const cmp = (a.name || '').localeCompare(b.name || '');
       // Down arrow (desc) = A-Z. Up arrow (asc) = Z-A
