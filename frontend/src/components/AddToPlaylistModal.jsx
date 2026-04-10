@@ -115,11 +115,6 @@ export default function AddToPlaylistModal({ song, onClose }) {
             >
               {creating ? '…' : 'Create'}
             </button>
-            <button type="button" onClick={() => { setShowCreate(false); setNewName(''); }}
-              style={{ padding: '10px', borderRadius: '12px', background: 'rgba(255,255,255,0.07)', border: 'none', cursor: 'pointer', color: 'white' }}
-            >
-              <X size={15} />
-            </button>
           </form>
         ) : (
           <button

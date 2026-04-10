@@ -17,4 +17,5 @@
   opacity: 0.55;
   transition: height 0.25s linear;
   backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }

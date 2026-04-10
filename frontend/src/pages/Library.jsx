@@ -402,7 +402,7 @@ export default function Library() {
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <form className="standard-modal glass" onClick={e => e.stopPropagation()} onSubmit={handleConfirmCreate}>
-            <h3>New Pulse</h3>
+            <h3>New Playlist</h3>
             <p>What should we call your new playlist?</p>
             <input
               autoFocus
