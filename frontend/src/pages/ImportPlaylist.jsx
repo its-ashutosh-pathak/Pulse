@@ -256,7 +256,6 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
                   <div>
                     <h3>{preview.name}</h3>
                     <p>{preview.total} track{preview.total !== 1 ? 's' : ''}</p>
-                    {tab === 'spotify' && <span className="import-match-note">Will be matched on YouTube Music</span>}
                   </div>
                 </div>
                 <button className="import-save-btn" onClick={handleImport}>
@@ -273,17 +272,16 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           {/* IMPORTING */}
           {phase === 'importing' && (
             <div className="import-loading">
-              <Loader2 size={36} className="import-spin" />
+              {tab === 'ytm' && <Loader2 size={36} className="import-spin" />}
               <p>
-                {tab === 'spotify'
-                  ? 'Matching songs on YouTube Music…'
-                  : `Saving… ${progress}%`}
+                {tab === 'spotify' ? 'Saving to Library…' : `Saving… ${progress}%`}
               </p>
-              {tab === 'ytm' && (
-                <div className="import-progress-wrap">
-                  <div className="import-progress-fill" style={{ width: `${progress}%` }} />
-                </div>
-              )}
+              <div className="import-progress-wrap">
+                <div 
+                  className={`import-progress-fill ${tab === 'spotify' ? 'indeterminate' : ''}`} 
+                  style={{ width: tab === 'spotify' ? '100%' : `${progress}%` }} 
+                />
+              </div>
             </div>
           )}
 

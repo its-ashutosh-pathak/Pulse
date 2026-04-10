@@ -213,6 +213,13 @@
   transition: width 0.35s ease;
   min-width: 2%;
 }
+.import-progress-fill.indeterminate {
+  animation: ip-pulse-bar 1.5s infinite alternate;
+}
+@keyframes ip-pulse-bar {
+  0% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
 
 /* ── Preview: sketch layout ─────────────────────────────────────────────── */
 
