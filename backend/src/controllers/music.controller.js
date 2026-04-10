@@ -130,6 +130,63 @@ async function albumSearch(req, res, next) {
     }));
   } catch (e) { next(e); }
 }
+/**
+ * streamProxy — pipes the YouTube audio stream through the backend to the browser.
+ * This is required because YouTube CDN URLs are IP-locked: yt-dlp fetches on the
+ * server IP, so the URL is only valid from that same IP. Returning it raw to the
+ * browser causes a 403 → NotSupportedError. Proxying solves this.
+ */
+async function streamProxy(req, res, next) {
+  try {
+    const { videoId } = req.params;
+    const forceRefresh = req.query.refresh === 'true';
+
+    const settings = req.user
+      ? await settingsRepo.get(req.user.userId)
+      : { streamingQuality: 'auto', dataSaverMode: false };
+
+    const quality = settings.dataSaverMode ? 'low' : (settings.streamingQuality || 'auto');
+    const streamData = await streamSvc.getStreamUrl(videoId, { quality, forceRefresh });
+    const streamUrl = streamData?.url;
+    if (!streamUrl) return next(createError(404, 'STREAM_NOT_FOUND', 'Cannot find stream'));
+
+    const axios = require('axios');
+
+    // Support range requests for seeking
+    const rangeHeader = req.headers['range'];
+    const axiosConfig = {
+      method: 'get',
+      url: streamUrl,
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)',
+        ...(rangeHeader ? { Range: rangeHeader } : {}),
+      },
+      timeout: 30000,
+    };
+
+    const upstream = await axios(axiosConfig);
+
+    // Forward key headers from YouTube so browser knows what it's getting
+    const forwardHeaders = ['content-type', 'content-length', 'content-range', 'accept-ranges'];
+    forwardHeaders.forEach(h => {
+      if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
+    });
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'no-store');
+
+    // Use 206 Partial Content if upstream returned it (for seeking support)
+    res.status(rangeHeader ? (upstream.status === 206 ? 206 : 200) : 200);
+
+    upstream.data.pipe(res);
+
+    // Clean up if client disconnects early
+    req.on('close', () => upstream.data.destroy());
+  } catch (e) {
+    next(e);
+  }
+}
+
 async function downloadOffline(req, res, next) {
   try {
     const { videoId } = req.params;
@@ -152,4 +209,4 @@ async function downloadOffline(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { home, search, suggestions, artist, ytPlaylist, play, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline };
+module.exports = { home, search, suggestions, artist, ytPlaylist, play, streamProxy, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline };

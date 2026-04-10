@@ -7,14 +7,18 @@ const logger          = require('../utils/logger');
  * Attaches req.user = { userId, email } on success.
  */
 module.exports = async function authMiddleware(req, res, next) {
+  // Support token via Authorization header OR ?token= query param
+  // The ?token= approach is required for <audio src> tags which cannot set headers
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
+  const queryToken = req.query.token;
+
+  const rawToken = header?.startsWith('Bearer ') ? header.split(' ')[1] : queryToken;
+
+  if (!rawToken) {
     return next(createError(401, 'AUTH_REQUIRED', 'Authorization header missing'));
   }
-
-  const token = header.split(' ')[1];
   try {
-    const decoded = await auth.verifyIdToken(token);
+    const decoded = await auth.verifyIdToken(rawToken);
     req.user = {
       userId: decoded.uid,
       email:  decoded.email || '',

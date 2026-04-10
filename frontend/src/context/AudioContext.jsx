@@ -280,43 +280,35 @@ export function AudioProvider({ children }) {
       const isCellular  = conn ? (conn.type === 'cellular' || ['2g', '3g'].includes(conn.effectiveType)) : false;
       
       const effectiveQuality = (dataSaver && isCellular) ? 'low' : userQuality;
+      // ── Stream via backend proxy (YouTube CDN URLs are IP-locked to the server) ──
+      // /api/stream/:videoId pipes the audio through our backend, so the browser
+      // never directly hits the YouTube CDN. We pass the auth token as ?token= so
+      // the <audio> element can use it directly (audio elements can't set headers).
       const token = user ? await user.getIdToken() : '';
+      if (isStale()) return;
 
-      const response = await fetch(`${API}/api/play/${normalizedSong.id}?q=${effectiveQuality}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error(`Play API returned ${response.status}`);
-      const json = await response.json();
-      const data = json.data || {};
+      const streamUrl = `${API}/api/stream/${normalizedSong.id}?token=${encodeURIComponent(token)}`;
+      playWithCrossfade(streamUrl);
 
-      if (data.url) {
-        if (isStale()) return; // New song was requested, discard this response
-
-        // Use shared crossfade helper (handles both fade-in and normal play)
-        playWithCrossfade(data.url);
-
-        // Proactive Queue Fetching...
-        if (!normalizedSong._contextId) {
-          fetch(`${API}/api/watch-next/${normalizedSong.id}`, { headers: { Authorization: `Bearer ${token}` } })
-            .then(r => r.json())
-            .then(res => {
-              const tracks = res.data || [];
-              if (res?.success && Array.isArray(tracks) && tracks.length > 0) {
-                setQueue(tracks);
-                setBaseQueue([normalizedSong, ...tracks]);
-              }
-            })
-            .catch(err => console.error('Failed to pre-fetch watch-next:', err));
-        }
-      } else {
-        console.error('No URL in Piped response:', data);
-        setIsLoading(false);
+      // Proactive Queue Fetching
+      if (!normalizedSong._contextId) {
+        fetch(`${API}/api/watch-next/${normalizedSong.id}`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json())
+          .then(res => {
+            const tracks = res.data || [];
+            if (res?.success && Array.isArray(tracks) && tracks.length > 0) {
+              setQueue(tracks);
+              setBaseQueue([normalizedSong, ...tracks]);
+            }
+          })
+          .catch(err => console.error('Failed to pre-fetch watch-next:', err));
       }
     } catch (err) {
-      console.error('Failed to load Piped stream:', err);
+      console.error('Failed to load stream:', err);
       setIsLoading(false);
     }
   }, []);
+
 
   // ── Queue controls ─────────────────────────────────────────────────────────
   const playNext = useCallback(() => {

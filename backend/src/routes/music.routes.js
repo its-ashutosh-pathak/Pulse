@@ -17,6 +17,7 @@ router.get('/album-search', rateLimiter(RATE_LIMIT_SEARCH), ctrl.albumSearch);
 
 // Protected endpoints
 router.get('/play/:videoId', auth, rateLimiter(RATE_LIMIT_PLAY), ctrl.play);
+router.get('/stream/:videoId', auth, rateLimiter(RATE_LIMIT_PLAY), ctrl.streamProxy);
 router.get('/lyrics/:videoId', auth, ctrl.lyrics);
 router.get('/recommendations/:videoId', auth, ctrl.recommendations);
 router.get('/watch-next/:videoId', auth, ctrl.watchNext);
