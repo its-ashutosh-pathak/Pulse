@@ -124,14 +124,22 @@ export default function Downloads() {
     localStorage.setItem('pulse_dl_view_mode', rootViewMode);
   }, [rootSortKey, rootSortOrder, rootViewMode]);
 
-  // Load playlists from IndexedDB
+  // Load playlists from IndexedDB and auto-delete any empty ones (except __downloads__)
   const load = async () => {
     setLoading(true);
     const all = await getAllOfflinePlaylists();
-    setPlaylists(all);
+
+    // Auto-delete empty playlists (not __downloads__ — that one is just hidden)
+    const toDelete = all.filter(pl => pl.id !== '__downloads__' && (pl.tracks?.length || 0) === 0);
+    await Promise.all(toDelete.map(pl => deleteOfflinePlaylist(pl.id)));
+
+    // Reload if any were deleted
+    const final = toDelete.length > 0 ? await getAllOfflinePlaylists() : all;
+    setPlaylists(final);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
 
   // Reset folder-level state when opening a new folder
   const openFolder = (pl) => {
@@ -221,7 +229,7 @@ export default function Downloads() {
   // ── Derived data ───────────────────────────────────────────────────────────
 
   const sortedPlaylists = sortPlaylists(playlists, rootSortKey, rootSortOrder)
-    .filter(pl => pl.id === '__downloads__' || (pl.tracks?.length || 0) > 0);
+    .filter(pl => pl.id === '__downloads__' || (pl.tracks?.length || 0) > 0); // __downloads__ hidden if empty, others already deleted
 
   const folderTracks = activeFolder?.tracks || [];
   const filteredTracks = trackFilter

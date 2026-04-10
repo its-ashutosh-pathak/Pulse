@@ -68,9 +68,9 @@ export function PlaylistProvider({ children }) {
 
   // Create a new playlist
   const createPlaylist = async (name = 'New Playlist') => {
-    if (!user) return;
+    if (!user) return null;
     try {
-      await addDoc(collection(db, 'playlists'), {
+      const docRef = await addDoc(collection(db, 'playlists'), {
         name,
         createdBy: user.uid,
         ownerName: user.displayName || 'Pulse User',
@@ -80,8 +80,10 @@ export function PlaylistProvider({ children }) {
         createdAt: serverTimestamp(),
         lastUpdated: serverTimestamp()
       });
+      return docRef.id;
     } catch (e) {
       console.error("Create Playlist Error:", e);
+      return null;
     }
   };
 

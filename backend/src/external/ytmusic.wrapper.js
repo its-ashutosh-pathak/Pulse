@@ -497,9 +497,11 @@ async function getArtist(browseId) {
 
 /**
  * Get a YTMusic playlist or album by ID.
+ * Pass full=true to paginate through all continuation pages (used by import).
+ * Default returns first page only (fast, used by preview).
  * Returns: { id, name, description, thumbnail, type, tracks[] }
  */
-async function getPlaylist(playlistId) {
+async function getPlaylist(playlistId, { full = false } = {}) {
   const yt = await getInstance();
 
   // ── Try as playlist ───────────────────────────────────────────────────────
@@ -510,20 +512,22 @@ async function getPlaylist(playlistId) {
     // Collect first page of tracks
     let allTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
 
-    // Paginate: fetch continuation pages until there are no more
-    while (res.has_continuation) {
-      try {
-        res = await res.getContinuation();
-        const moreTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
-        allTracks = allTracks.concat(moreTracks);
-      } catch (contErr) {
-        logger.warn('ytmusic_playlist_continuation_failed', { playlistId, fetched: allTracks.length, error: contErr.message });
-        break;
+    // Only paginate when explicitly requested (import path) to keep preview fast
+    if (full) {
+      while (res.has_continuation) {
+        try {
+          res = await res.getContinuation();
+          const moreTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
+          allTracks = allTracks.concat(moreTracks);
+        } catch (contErr) {
+          logger.warn('ytmusic_playlist_continuation_failed', { playlistId, fetched: allTracks.length, error: contErr.message });
+          break;
+        }
       }
     }
 
     if (allTracks.length) {
-      logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length });
+      logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length, full });
       return {
         id:          playlistId,
         name:        String(header?.title       || 'Playlist'),

@@ -49,24 +49,41 @@ export default function Library() {
 
   const sorted = [...allPlaylists]
     .filter(pl => {
-      // Always show Liked Songs (system playlist). Hide all others with 0 songs.
-      if (pl.id === 'liked-songs') return true;
+      // Liked Songs: hide when empty, never delete
+      if (pl.name === 'Liked Songs' && pl.createdBy === playlists.find(p => p.id === pl.id)?.createdBy) {
+        return (pl.songs?.length || 0) > 0;
+      }
       if (pl.type === 'YTM') return (pl.songCount || 0) > 0;
       return (pl.songs?.length || 0) > 0;
     })
     .sort((a, b) => {
     if (sortKey === 'alpha') {
       const cmp = (a.name || '').localeCompare(b.name || '');
-      // Down arrow (desc) = A-Z. Up arrow (asc) = Z-A
       return sortOrder === 'desc' ? cmp : -cmp;
     } else {
       const timeA = a.createdAt?.seconds || 0;
       const timeB = b.createdAt?.seconds || 0;
-      const cmp = timeB - timeA; // Most recent at top
-      // Up arrow (asc) = Most recent top. Down arrow (desc) = Most recent bottom
+      const cmp = timeB - timeA;
       return sortOrder === 'asc' ? cmp : -cmp;
     }
   });
+
+  // Auto-delete empty playlists from Firestore (except Liked Songs — that's just hidden)
+  React.useEffect(() => {
+    if (loading || allPlaylists.length === 0) return;
+    const timer = setTimeout(() => {
+      allPlaylists.forEach(pl => {
+        if (pl.type === 'YTM') return; // skip YTM playlists
+        const isEmpty = (pl.songs?.length || 0) === 0;
+        const isLiked = pl.name === 'Liked Songs';
+        if (isEmpty && !isLiked) {
+          deletePlaylist(pl.id);
+        }
+      });
+    }, 2000); // 2s grace period so import-created playlists aren't immediately deleted
+    return () => clearTimeout(timer);
+  }, [allPlaylists, loading]);
+
 
   const handleSortClick = (key) => {
     if (sortKey === key) {
@@ -273,7 +290,7 @@ export default function Library() {
               >
                 <div className="option-icon-box"><Plus size={20} /></div>
                 <div className="option-text">
-                  <h4>Create Pulse</h4>
+                  <h4>Create Playlist</h4>
                   <span>Start from scratch</span>
                 </div>
               </button>

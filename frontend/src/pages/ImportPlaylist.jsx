@@ -185,6 +185,22 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
         }
         return;
       }
+      // Re-fetch all tracks using full pagination (preview only had first page)
+      const id = extractYTPlaylistId(url);
+      const fullRes = await fetch(`${API}/api/playlist/${id}?full=true`);
+      const fullJson = await fullRes.json();
+      if (!fullJson.success || !fullJson.data) throw new Error('Failed to fetch full playlist.');
+
+      const fullTracks = (fullJson.data.songs || fullJson.data.tracks || [])
+        .map(s => ({
+          videoId: s.videoId || s.id,
+          title: s.title || s.name || '',
+          artist: s.artist || (s.artists || []).map(a => a.name).join(', ') || '',
+          thumbnail: s.thumbnail || s.cover || '',
+          duration: s.duration || 0,
+        }))
+        .filter(s => s.videoId && s.videoId.length === 11);
+
       const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
       const { db } = await import('../firebase');
 
@@ -201,15 +217,16 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
       });
       const playlistId = docRef.id;
 
-      const total = preview.tracks.length;
+      const total = fullTracks.length;
       for (let i = 0; i < total; i++) {
-        const track = preview.tracks[i];
+        const track = fullTracks[i];
         await addSongToPlaylist(playlistId, track);
         setProgress(Math.round(((i + 1) / total) * 100));
       }
 
       setImportedPlaylistId(playlistId);
       setPhase('done');
+
     } catch (e) {
       setErrorMsg(e.message || 'Import failed — please try again.');
       setPhase('error');

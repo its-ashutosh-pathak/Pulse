@@ -42,7 +42,8 @@ async function artist(req, res, next) {
 
 async function ytPlaylist(req, res, next) {
   try {
-    const data = await metaSvc.getPlaylist(req.params.id);
+    const full = req.query.full === 'true';
+    const data = await metaSvc.getPlaylist(req.params.id, { full });
     res.json(successBody(data));
   } catch (e) { next(e); }
 }

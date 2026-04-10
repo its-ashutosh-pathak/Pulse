@@ -99,8 +99,8 @@ async function getWatchNext(videoId) {
   return result;
 }
 
-async function getPlaylist(playlistId) {
-  return ytmusic.getPlaylist(playlistId);
+async function getPlaylist(playlistId, opts = {}) {
+  return ytmusic.getPlaylist(playlistId, opts);
 }
 
 async function resolveId(id) {
