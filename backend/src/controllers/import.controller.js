@@ -33,12 +33,13 @@ async function appendSongToPlaylist(playlistId, song) {
 
 /**
  * For Spotify tracks that have no videoId yet, search YouTube Music to resolve one.
+ * Returns the FULL matched YouTube track so we can inherit its cover art.
  */
-async function resolveVideoId(track) {
-  if (track.videoId) return track.videoId;
+async function resolveYTSong(track) {
+  if (track.videoId) return track;
   try {
     const results = await metadataService.searchSongs(`${track.title} ${track.artist}`);
-    return results[0]?.videoId || null;
+    return results[0] || null;
   } catch {
     return null;
   }
@@ -70,9 +71,17 @@ async function executeHybridImport(res, userId, userDisplayName, playlistData, s
 
   // Helper: resolve + save one track, returns true on success
   const processTrack = async (track) => {
-    const videoId = await resolveVideoId(track);
-    if (!videoId) return false;
-    await appendSongToPlaylist(playlistId, { ...track, videoId });
+    const ytMatch = await resolveYTSong(track);
+    if (!ytMatch || !ytMatch.videoId) return false;
+    
+    // Inherit the cover art from YouTube if Spotify didn't provide one
+    const mergedTrack = { 
+      ...track, 
+      videoId: ytMatch.videoId,
+      cover: track.cover || ytMatch.thumbnail || ''
+    };
+    
+    await appendSongToPlaylist(playlistId, mergedTrack);
     return true;
   };
 
