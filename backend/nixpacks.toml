@@ -1,0 +1,8 @@
+# nixpacks.toml — tells Railway's Nixpacks builder what system packages to install
+# alongside the Node.js runtime.
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "python312", "yt-dlp"]
+
+[start]
+cmd = "node index.js"

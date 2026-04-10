@@ -14,6 +14,16 @@ const server = app.listen(PORT, () => {
   });
   // Warm up Innertube in background so first request is fast
   warmUp();
+
+  // Check yt-dlp availability and log version (critical for streaming)
+  const { exec } = require('child_process');
+  exec(`${env.YTDLP_PATH || 'yt-dlp'} --version`, (err, stdout) => {
+    if (err) {
+      logger.error('ytdlp_not_found', { error: err.message, hint: 'yt-dlp is not installed — streaming will fail. Add yt-dlp to nixpacks.toml' });
+    } else {
+      logger.info('ytdlp_ready', { version: stdout.trim() });
+    }
+  });
 });
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
