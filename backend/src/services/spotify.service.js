@@ -253,7 +253,7 @@ async function getFullPlaylist(id) {
          try {
            const fallbackData = await scrapeSpotifyEmbed(id);
            return {
-             name: playlistName,
+             name: fallbackData.name || playlistName,
              total: fallbackData.tracks.length,
              tracks: fallbackData.tracks
            };
