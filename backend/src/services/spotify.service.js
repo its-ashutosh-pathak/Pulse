@@ -4,6 +4,8 @@
  * and paginated playlist fetching.
  */
 const axios = require('axios');
+const http = require('http');
+const https = require('https');
 const env = require('../config/env');
 const logger = require('../utils/logger');
 const { createError } = require('../utils/errorResponse');
@@ -89,6 +91,50 @@ async function fetchSpotifyAPI(url, params = {}) {
 }
 
 /**
+ * Scrapes the Spotify Embed Widget (__NEXT_DATA__) to extract playlist metadata anonymously.
+ * Bypasses all Developer API rate limits and quotas, but is strictly capped to the first 100 tracks.
+ */
+function scrapeSpotifyEmbed(playlistId) {
+  return new Promise((resolve, reject) => {
+    https.get(`https://open.spotify.com/embed/playlist/${playlistId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          if (!data.includes('__NEXT_DATA__')) {
+            throw new Error('Could not find internal data module');
+          }
+          const str = data.split('<script id="__NEXT_DATA__" type="application/json">')[1].split('</script>')[0];
+          const json = JSON.parse(str);
+          const entity = json.props.pageProps.state.data.entity;
+          
+          if (!entity || !entity.name) throw new Error('Invalid scraped data');
+          
+          const tracks = (entity.trackList || []).map(t => ({
+            spotifyId: t.id || t.uri,
+            title: t.title || 'Unknown',
+            artist: t.subtitle || 'Unknown',
+            duration: Math.round((t.duration || 0) / 1000)
+          }));
+
+          resolve({
+            name: entity.name,
+            total: tracks.length, // Max 100
+            tracks
+          });
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on('error', reject);
+  });
+}
+
+/**
  * Lightweight preview fetch — only name + total track count.
  * Used for the preview card step before the user confirms the import.
  */
@@ -114,8 +160,17 @@ async function getPlaylistMeta(id) {
     if (status === 429) throw createError(429, 'SPOTIFY_RATE_LIMITED', 'Spotify rate limit hit. Wait 30s and retry.');
     if (status === 403 && msg.toLowerCase().includes('premium'))
       throw createError(503, 'SPOTIFY_QUOTA_EXCEEDED', 'Spotify API quota exceeded.');
-    if (status === 403)
-      throw createError(403, 'SPOTIFY_FORBIDDEN', 'Cannot access this playlist. It may be private.');
+    
+    // If we get an auth/quota error, try the fallback
+    if (status === 401 || status === 403 || status === 429) {
+      logger.warn('spotify_api_blocked_using_fallback_preview', { id, status });
+      try {
+        const fallback = await scrapeSpotifyEmbed(id);
+        return { name: fallback.name, total: fallback.total };
+      } catch (fallbackErr) {
+        throw createError(403, 'SPOTIFY_FORBIDDEN', 'Cannot access this playlist. It may be private.');
+      }
+    }
     throw createError(502, 'SPOTIFY_META_ERROR', `Failed to fetch playlist info: ${e.message}`);
   }
 }
@@ -185,17 +240,29 @@ async function getFullPlaylist(id) {
 
       if (!pageData.next) break;
       offset += limit;
+      
+      // Artificial delay to prevent burst rate-limits from banning credentials
+      await new Promise(r => setTimeout(r, 250));
+      
     } catch (pageErr) {
       const status = pageErr.response?.status;
-      const sMsg = pageErr.response?.data?.error?.message || '';
-      if (status === 403 && sMsg.toLowerCase().includes('premium')) {
-         throw createError(503, 'SPOTIFY_QUOTA_EXCEEDED', 'Spotify API quota exceeded.');
-      }
-      if (offset === 0 && (status === 403 || status === 401)) {
-         throw createError(403, 'SPOTIFY_FORBIDDEN', 'Cannot access this playlist. It appears to be private or region locked.');
+      
+      // If we fail on the very first page due to strict API limits/bans, immediately use Fallback
+      if (offset === 0 && (status === 403 || status === 401 || status === 429)) {
+         logger.warn('spotify_api_quota_banned_using_fallback', { id, status });
+         try {
+           const fallbackData = await scrapeSpotifyEmbed(id);
+           return {
+             name: playlistName,
+             total: fallbackData.tracks.length,
+             tracks: fallbackData.tracks
+           };
+         } catch (fallbackErr) {
+           throw createError(403, 'SPOTIFY_FORBIDDEN', 'API Blocked and Fallback scraper failed. Playlist may be private.');
+         }
       }
       
-      // If we made it partly through but failed, warn but return what we got
+      // If we made it partly through but failed midway, warn but return what we got
       logger.warn('spotify_tracks_page_failed_mid_loop', { id, offset, status });
       break;
     }
