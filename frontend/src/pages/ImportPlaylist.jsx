@@ -272,7 +272,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           {/* IMPORTING */}
           {phase === 'importing' && (
             <div className="import-loading">
-              {tab === 'ytm' && <Loader2 size={36} className="import-spin" />}
+              <Loader2 size={36} className="import-spin" />
               <p>
                 {tab === 'spotify' ? 'Saving to Library…' : `Saving… ${progress}%`}
               </p>
