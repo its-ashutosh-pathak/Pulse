@@ -20,7 +20,12 @@ const app = express();
 
 // ── Global middleware ─────────────────────────────────────────────────────────
 app.set('trust proxy', 1); // trust X-Forwarded-For from Railway/Render reverse proxy
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(cors({ 
+  origin: env.FRONTEND_URL, 
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Range'],
+  exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type']
+}));
 app.use(express.json({ limit: '2mb' }));
 app.use(requestLogger);
 

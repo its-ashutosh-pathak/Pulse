@@ -51,7 +51,9 @@ async function extract(videoId, quality = 'auto') {
     '-g',
     '--no-playlist',
     '--no-warnings',
-    '--no-check-certificates'
+    '--no-check-certificates',
+    // Bypasses Web DRM blocks while returning standard WebM/MP4 (unlike iOS an its m3u8)
+    '--extractor-args "youtube:player_client=android"'
   ];
 
   // If cookies are provided by the user via .env, rotate through them

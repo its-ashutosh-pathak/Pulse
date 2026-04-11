@@ -19,9 +19,19 @@ async function getInstance() {
 
   _initPromise = (async () => {
     const { Innertube } = await import('youtubei.js');
+    const cookieManager = require('../utils/cookieManager');
+    const cookieFile = cookieManager.getRandomCookieFile();
+    let cookieContent = '';
+    
+    if (cookieFile) {
+      const fs = require('fs');
+      cookieContent = fs.readFileSync(cookieFile, 'utf-8');
+    }
+
     _instance = await Innertube.create({
       cache: null,
       generate_session_locally: true,
+      ...(cookieContent ? { cookie: cookieContent } : {}),
     });
     return _instance;
   })();

@@ -159,7 +159,9 @@ async function streamProxy(req, res, next) {
       url: streamUrl,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        // Must match the Android player client used during extraction (ytdlp/innertube)
+        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US) gzip',
+        'Referer': 'https://www.youtube.com/',
         ...(rangeHeader ? { Range: rangeHeader } : {}),
       },
       timeout: 30000,
@@ -211,7 +213,8 @@ async function downloadOffline(req, res, next) {
       url: streamUrl,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US) gzip',
+        'Referer': 'https://www.youtube.com/',
       }
     });
 

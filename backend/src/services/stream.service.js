@@ -6,13 +6,13 @@
  * - Extraction lock prevents duplicate concurrent fetches for the same videoId
  * - Stream URLs stored ONLY in memory — never in Firestore
  */
-const axios    = require('axios');
-const cache    = require('../cache/memoryCache');
-const piped    = require('../external/piped');
-const ytdlp    = require('../external/ytdlp');
-const innertube= require('../external/innertube');
+const axios = require('axios');
+const cache = require('../cache/memoryCache');
+const piped = require('../external/piped');
+const ytdlp = require('../external/ytdlp');
+const innertube = require('../external/innertube');
 const settingsRepo = require('../repositories/settings.repository');
-const logger   = require('../utils/logger');
+const logger = require('../utils/logger');
 const { createError } = require('../utils/errorResponse');
 const { STREAM_TTL_MS } = require('../config/constants');
 
@@ -87,8 +87,11 @@ async function _doExtract(videoId, quality) {
     logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
   }
 
-  logger.error('stream_all_sources_failed', { videoId, errors });
-  throw createError(502, 'STREAM_FAILED', `Unable to fetch stream. Errors: ${errors.join(' | ')}`);
+  logger.error('stream_all_sources_failed', { 
+    videoId, 
+    diagnostics: errors.join(' | ') 
+  });
+  throw createError(502, 'STREAM_FAILED', `Extraction failed. Diagnostics: ${errors.join(' | ')}`);
 }
 
 /**

@@ -18,8 +18,10 @@ function init() {
   }
 
   cookieVars.forEach((key) => {
-    // Replace literal '\n' strings with actual newlines in case they were escaped in .env
-    const rawContent = process.env[key].replace(/\\n/g, '\n');
+    // Replace literal '\n' strings and strip potential surrounding quotes
+    const rawContent = process.env[key]
+      .replace(/\\n/g, '\n')
+      .replace(/"/g, ''); // strip any accidental surrounding quotes
 
     // Only accept basic heuristic that it looks like Netscape cookie file
     if (!rawContent.includes('.youtube.com')) {
