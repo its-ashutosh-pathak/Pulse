@@ -18,22 +18,18 @@ async function getInstance() {
   if (_initPromise) return _initPromise;
 
   _initPromise = (async () => {
-    const { Innertube } = await import('youtubei.js');
-    const cookieManager = require('../utils/cookieManager');
-    const cookieFile = cookieManager.getRandomCookieFile();
-    let cookieContent = '';
-    
-    if (cookieFile) {
-      const fs = require('fs');
-      cookieContent = fs.readFileSync(cookieFile, 'utf-8');
+    try {
+      const { Innertube } = await import('youtubei.js');
+      // Use clean standard Web client for Housekeeping/Search (most stable)
+      _instance = await Innertube.create({
+        cache: null,
+        generate_session_locally: true,
+      });
+      return _instance;
+    } catch (e) {
+      _initPromise = null; // Self-healing: clear on fail so we can retry fresh
+      throw e;
     }
-
-    _instance = await Innertube.create({
-      cache: null,
-      generate_session_locally: true,
-      ...(cookieContent ? { cookie: cookieContent } : {}),
-    });
-    return _instance;
   })();
 
   return _initPromise;

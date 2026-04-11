@@ -31,7 +31,16 @@ function pickBestAudio(formats, quality) {
 async function extract(videoId, quality = 'auto') {
   const yt = await getInstance();
 
-  for (const clientType of ['IOS', 'ANDROID', 'WEB']) {
+  const cookieManager = require('../utils/cookieManager');
+  const cookieFile = cookieManager.getRandomCookieFile();
+  let cookieContent = '';
+  if (cookieFile) {
+    const fs = require('fs');
+    cookieContent = fs.readFileSync(cookieFile, 'utf-8');
+  }
+
+  // Streaming prefers ANDROID client to bypass 403 blocks seen on Web client
+  for (const clientType of ['ANDROID']) {
     try {
       const info    = await yt.getBasicInfo(videoId, clientType);
       const formats = info.streaming_data?.adaptive_formats || [];

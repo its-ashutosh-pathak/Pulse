@@ -124,7 +124,7 @@ async function albumSearch(req, res, next) {
     const data = await metaSvc.searchAll(q);
     // Only return MPRE-prefixed IDs — those are true YTMusic album IDs
     const album = (data.albums || []).find(a => (a.browseId || a.id)?.startsWith('MPRE'));
-    res.json(successBody({ 
+    res.json(successBody({
       browseId: album?.browseId || album?.id || null,
       title: album?.title || null
     }));
