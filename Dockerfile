@@ -24,8 +24,8 @@ RUN npm install --production
 # Copy the rest of the backend source code
 COPY backend/ .
 
-# Expose the port your backend uses (5000)
-EXPOSE 5000
+# Expose the port your backend uses (7860 for Hugging Face)
+EXPOSE 7860
 
 # Start the server
 CMD ["node", "index.js"]

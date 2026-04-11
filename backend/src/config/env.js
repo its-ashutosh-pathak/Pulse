@@ -13,7 +13,7 @@ required.forEach((key) => {
 });
 
 module.exports = {
-  PORT:               process.env.PORT || 5000,
+  PORT:               process.env.PORT || 7860,
   NODE_ENV:           process.env.NODE_ENV || 'development',
   FRONTEND_URL:       (process.env.FRONTEND_URL || '*').replace(/\/$/, ''),
 

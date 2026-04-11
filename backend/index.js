@@ -2,9 +2,13 @@ require('dotenv').config();
 const app = require('./src/app');
 const env = require('./src/config/env');
 const logger = require('./src/utils/logger');
+const cookieManager = require('./src/utils/cookieManager');
 const { warmUp } = require('./src/external/innertube.singleton');
 
 const PORT = env.PORT || 5000;
+
+// Initialize cookies BEFORE server starts handling requests
+cookieManager.init();
 
 const server = app.listen(PORT, () => {
   logger.info('server_started', {

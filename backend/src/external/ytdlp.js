@@ -44,17 +44,29 @@ async function extract(videoId, quality = 'auto') {
 
   const format = qualityToFormat(quality);
   const url    = `https://www.youtube.com/watch?v=${videoId}`;
-  const cmd = [
-    YTDLP,
+  
+  // Base yt-dlp arguments
+  const args = [
     `-f "${format}"`,
     '-g',
     '--no-playlist',
     '--no-warnings',
     '--no-check-certificates',
-    `"${url}"`
-  ].join(' ');
+    // Strong cookieless bypass: Spoof iOS client to reduce bot rate-limits
+    '--extractor-args "youtube:player_client=ios"'
+  ];
 
-  logger.info('ytdlp_extract', { videoId, quality });
+  // If cookies are provided by the user via .env, rotate through them
+  const cookieManager = require('../utils/cookieManager');
+  const cookieFile = cookieManager.getRandomCookieFile();
+  if (cookieFile) {
+    args.push(`--cookies "${cookieFile}"`);
+  }
+
+  args.push(`"${url}"`);
+  const cmd = `${YTDLP} ${args.join(' ')}`;
+
+  logger.info('ytdlp_extract', { videoId, quality, hasCookies: !!cookieFile });
 
   try {
     const { stdout, stderr } = await execAsync(cmd, { timeout: 45_000 });
