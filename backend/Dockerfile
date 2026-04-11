@@ -16,13 +16,13 @@ RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o 
 WORKDIR /app
 
 # Copy backend package files first for better caching
-COPY backend/package*.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install --production
 
 # Copy the rest of the backend source code
-COPY backend/ .
+COPY . .
 
 # Expose the port your backend uses (7860 for Hugging Face)
 EXPOSE 7860
