@@ -1,12 +1,15 @@
 /**
  * stream.service.js — Core streaming engine.
  *
- * Priority: Piped → yt-dlp (1 retry) → Innertube
- * - All URLs validated before caching
+ * Priority (dynamic):
+ *   - WITH cookies: yt-dlp → Piped → Innertube
+ *     (cookies let yt-dlp bypass YouTube's cloud IP restrictions)
+ *   - WITHOUT cookies: Piped → Innertube → yt-dlp
+ *     (Piped CDN avoids YouTube IP-locking entirely)
+ *
  * - Extraction lock prevents duplicate concurrent fetches for the same videoId
  * - Stream URLs stored ONLY in memory — never in Firestore
  */
-const axios = require('axios');
 const cache = require('../cache/memoryCache');
 const piped = require('../external/piped');
 const ytdlp = require('../external/ytdlp');
@@ -20,66 +23,37 @@ const { STREAM_TTL_MS } = require('../config/constants');
 // triggering two separate extractions
 const inFlight = new Map();
 
-/**
- * Validate a stream URL is reachable by making a HEAD request.
- * Returns true if valid audio content, false otherwise.
- */
-async function validateUrl(url) {
-  // YouTube CDNs often reject HEAD/GET requests if the User-Agent doesn't match the extraction client flawlessly.
-  // We trust the extractors (yt-dlp, piped). Validating it often leads to false negatives which trigger the 502 error loop.
-  return true;
-}
-
 async function _doExtract(videoId, quality) {
   const errors = [];
+  const cookieManager = require('../utils/cookieManager');
+  const hasCookies = !!cookieManager.getRandomCookieFile();
 
-  // Tier 1: Piped (external CDN — fast, no YouTube IP restrictions, works on cloud hosting)
-  // Prioritized first because yt-dlp / Innertube ANDROID both get 403'd on Hugging Face IPs.
-  try {
-    const data = await piped.extract(videoId, quality);
-    if (data?.url) {
-      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-      logger.info('stream_extracted', { videoId, source: 'piped' });
-      return data;
+  // With cookies: yt-dlp goes first — cookies let it bypass YouTube's cloud IP restrictions.
+  // Without cookies: Piped goes first — avoids YouTube CDN IP-locking entirely.
+  const tiers = hasCookies
+    ? ['ytdlp', 'piped', 'innertube']
+    : ['piped', 'innertube', 'ytdlp'];
+
+  for (const source of tiers) {
+    try {
+      let data;
+      if (source === 'ytdlp')      data = await ytdlp.extract(videoId, quality);
+      else if (source === 'piped')  data = await piped.extract(videoId, quality);
+      else                          data = await innertube.extract(videoId, quality);
+
+      if (data?.url) {
+        cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
+        logger.info('stream_extracted', { videoId, source, hasCookies });
+        return data;
+      }
+      errors.push(`${source}: returned empty URL`);
+    } catch (e) {
+      errors.push(`${source}: ${e.message}`);
+      logger.warn('stream_fallback', { videoId, failedSource: source, reason: e.message });
     }
-    errors.push('piped: returned empty URL');
-  } catch (e) {
-    errors.push(`piped: ${e.message}`);
-    logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
   }
 
-  // Tier 2: Innertube (pure Node.js — no binary required)
-  try {
-    const data = await innertube.extract(videoId, quality);
-    if (data?.url) {
-      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-      logger.info('stream_extracted', { videoId, source: 'innertube' });
-      return data;
-    }
-    errors.push('innertube: returned empty URL');
-  } catch (e) {
-    errors.push(`innertube: ${e.message}`);
-    logger.warn('stream_fallback', { videoId, failedSource: 'innertube', reason: e.message });
-  }
-
-  // Tier 3: yt-dlp (single attempt — last resort; slow on cloud IPs but kept as safety net)
-  try {
-    const data = await ytdlp.extract(videoId, quality);
-    if (data?.url) {
-      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-      logger.info('stream_extracted', { videoId, source: 'ytdlp' });
-      return data;
-    }
-    errors.push('ytdlp: returned empty URL');
-  } catch (e) {
-    errors.push(`ytdlp: ${e.message}`);
-    logger.warn('stream_fallback', { videoId, failedSource: 'ytdlp', reason: e.message });
-  }
-
-  logger.error('stream_all_sources_failed', {
-    videoId,
-    diagnostics: errors.join(' | ')
-  });
+  logger.error('stream_all_sources_failed', { videoId, diagnostics: errors.join(' | ') });
   throw createError(502, 'STREAM_FAILED', 'Music extraction failed. Please try again later or refresh the page.');
 }
 
