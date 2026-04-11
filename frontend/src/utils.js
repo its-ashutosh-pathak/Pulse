@@ -11,22 +11,12 @@ export const getHighResThumb = (url, size = 500) => {
   try {
     // Handle lh3.googleusercontent.com / ggpht.com (YouTube Music art)
     // These use a param-based sizing system like =w226-h226-l90-rj
-    if (url.includes('lh3.googleusercontent.com') || url.includes('ggpht.com')) {
-      // Replace the sizing params (w, h) at the end of the URL
-      // but ONLY if they look like the standard =wNNN-hNNN pattern
-      let newUrl = url;
-
-      // Replace =wXXX-hXXX... pattern but preserve other flags
-      newUrl = newUrl.replace(/([=-])w\d+-h\d+/, `$1w${size}-h${size}`);
-
-      // Also handle -sXXX standalone size
+    if (url.includes('googleusercontent.com') || url.includes('ggpht.com')) {
+      if (url.includes('=w') && url.includes('-c')) return url;
+      let newUrl = url.replace(/([=])w\d+-h\d+/, `$1w${size}-h${size}`);
       if (newUrl === url) {
-        newUrl = newUrl.replace(/([=-])s\d+(?=-|$)/, `$1s${size}`);
+        newUrl = url.replace(/([=])s\d+/, `$1s${size}`);
       }
-
-      // Strip harmful -lNNN limiters
-      newUrl = newUrl.replace(/-l\d+/g, '').replace(/--+/g, '-');
-
       return newUrl;
     }
 

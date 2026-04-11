@@ -47,13 +47,16 @@ async function extract(videoId, quality = 'auto') {
   
   // Base yt-dlp arguments
   const args = [
-    `-f "${format}"`,
+    // Use a high-compatibility Edge signature to match our proxy (better cookie compatibility than Android spoofing on Cloud IPs)
+    '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"',
+    // Try best audio, but fall back to ANY format that has audio if things get desperate
+    `-f "${format}/bestaudio/best"`,
     '-g',
     '--no-playlist',
     '--no-warnings',
     '--no-check-certificates',
-    // Bypasses Web DRM blocks while returning standard WebM/MP4 (unlike iOS an its m3u8)
-    '--extractor-args "youtube:player_client=android"'
+    // Allow yt-dlp to negotiate client types naturally (Web/Android/etc) while staying within the UA signature
+    '--extractor-args "youtube:player_client=web,android"'
   ];
 
   // If cookies are provided by the user via .env, rotate through them
