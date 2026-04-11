@@ -87,9 +87,9 @@ async function _doExtract(videoId, quality) {
     logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
   }
 
-  logger.error('stream_all_sources_failed', { 
-    videoId, 
-    diagnostics: errors.join(' | ') 
+  logger.error('stream_all_sources_failed', {
+    videoId,
+    diagnostics: errors.join(' | ')
   });
   throw createError(502, 'STREAM_FAILED', `Extraction failed. Diagnostics: ${errors.join(' | ')}`);
 }

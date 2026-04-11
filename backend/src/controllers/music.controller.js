@@ -160,7 +160,7 @@ async function streamProxy(req, res, next) {
       responseType: 'stream',
       headers: {
         // Must match the Android player client used during extraction (ytdlp/innertube)
-        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US) gzip',
+        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US)',
         'Referer': 'https://www.youtube.com/',
         ...(rangeHeader ? { Range: rangeHeader } : {}),
       },
@@ -213,7 +213,7 @@ async function downloadOffline(req, res, next) {
       url: streamUrl,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US) gzip',
+        'User-Agent': 'com.google.android.youtube/19.29.37 (Linux; U; Android 14; en_US)',
         'Referer': 'https://www.youtube.com/',
       }
     });
