@@ -26,13 +26,25 @@ const inFlight = new Map();
  */
 async function validateUrl(url) {
   try {
-    const res = await axios.head(url, {
+    const res = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Range': 'bytes=0-10' // Only fetch tiny chunk to validate
+      },
       timeout: 5000,
       validateStatus: (s) => s < 400,
+      responseType: 'stream'
     });
     const ct = res.headers['content-type'] || '';
+    
+    // Clean up stream immediately since we only wanted headers
+    if (res.data && typeof res.data.destroy === 'function') {
+      res.data.destroy();
+    }
+    
     return ct.includes('audio') || ct.includes('video') || ct.includes('octet-stream');
-  } catch {
+  } catch (e) {
+    logger.warn('validateUrl_failed', { message: e.message, status: e.response?.status });
     return false;
   }
 }
