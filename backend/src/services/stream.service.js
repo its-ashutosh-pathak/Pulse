@@ -33,58 +33,47 @@ async function validateUrl(url) {
 async function _doExtract(videoId, quality) {
   const errors = [];
 
-  // Tier 1: yt-dlp (direct YouTube extraction — most reliable)
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const data = await ytdlp.extract(videoId, quality);
-      if (data?.url) {
-        const valid = await validateUrl(data.url);
-        if (valid) {
-          cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-          logger.info('stream_extracted', { videoId, source: 'ytdlp', attempt });
-          return data;
-        }
-        errors.push(`ytdlp attempt ${attempt}: URL failed validation`);
-      }
-    } catch (e) {
-      errors.push(`ytdlp attempt ${attempt}: ${e.message}`);
-      logger.warn('stream_fallback', { videoId, failedSource: `ytdlp_attempt_${attempt}`, reason: e.message });
-      if (attempt < 2) await new Promise((r) => setTimeout(r, 1000)); // 1s before retry
+  // Tier 1: Piped (external CDN — fast, no YouTube IP restrictions, works on cloud hosting)
+  // Prioritized first because yt-dlp / Innertube ANDROID both get 403'd on Hugging Face IPs.
+  try {
+    const data = await piped.extract(videoId, quality);
+    if (data?.url) {
+      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
+      logger.info('stream_extracted', { videoId, source: 'piped' });
+      return data;
     }
+    errors.push('piped: returned empty URL');
+  } catch (e) {
+    errors.push(`piped: ${e.message}`);
+    logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
   }
 
   // Tier 2: Innertube (pure Node.js — no binary required)
   try {
     const data = await innertube.extract(videoId, quality);
     if (data?.url) {
-      const valid = await validateUrl(data.url);
-      if (valid) {
-        cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-        logger.info('stream_extracted', { videoId, source: 'innertube' });
-        return data;
-      }
-      errors.push('innertube: URL failed validation');
+      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
+      logger.info('stream_extracted', { videoId, source: 'innertube' });
+      return data;
     }
+    errors.push('innertube: returned empty URL');
   } catch (e) {
     errors.push(`innertube: ${e.message}`);
     logger.warn('stream_fallback', { videoId, failedSource: 'innertube', reason: e.message });
   }
 
-  // Tier 3: Piped (external API — last resort)
+  // Tier 3: yt-dlp (single attempt — last resort; slow on cloud IPs but kept as safety net)
   try {
-    const data = await piped.extract(videoId, quality);
+    const data = await ytdlp.extract(videoId, quality);
     if (data?.url) {
-      const valid = await validateUrl(data.url);
-      if (valid) {
-        cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-        logger.info('stream_extracted', { videoId, source: 'piped' });
-        return data;
-      }
-      errors.push('piped: URL failed validation');
+      cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
+      logger.info('stream_extracted', { videoId, source: 'ytdlp' });
+      return data;
     }
+    errors.push('ytdlp: returned empty URL');
   } catch (e) {
-    errors.push(`piped: ${e.message}`);
-    logger.warn('stream_fallback', { videoId, failedSource: 'piped', reason: e.message });
+    errors.push(`ytdlp: ${e.message}`);
+    logger.warn('stream_fallback', { videoId, failedSource: 'ytdlp', reason: e.message });
   }
 
   logger.error('stream_all_sources_failed', {

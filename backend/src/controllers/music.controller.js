@@ -154,33 +154,40 @@ async function streamProxy(req, res, next) {
 
     // Support range requests for seeking
     const rangeHeader = req.headers['range'];
-    const axiosConfig = {
+
+    // Build upstream headers — Piped URLs don't need YouTube Referer
+    const isPiped = streamData?.source === 'piped';
+    const upstreamHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+      ...(isPiped ? {} : { 'Referer': 'https://www.youtube.com/' }),
+      ...(rangeHeader ? { Range: rangeHeader } : {}),
+    };
+
+    const upstream = await axios({
       method: 'get',
       url: streamUrl,
       responseType: 'stream',
-      headers: {
-        // Must match the signature used during extraction (ytdlp/innertube)
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
-        'Referer': 'https://www.youtube.com/',
-        ...(rangeHeader ? { Range: rangeHeader } : {}),
-      },
-      timeout: 30000,
-    };
+      headers: upstreamHeaders,
+      // Long timeout: Piped/YouTube CDN can be slow to start sending data
+      timeout: 45000,
+    });
 
-    const upstream = await axios(axiosConfig);
-
-    // Forward key headers from YouTube so browser knows what it's getting
-    const forwardHeaders = ['content-type', 'content-length', 'content-range', 'accept-ranges'];
+    // Forward key headers from upstream so browser knows what it's getting
+    const forwardHeaders = ['content-type', 'content-range', 'accept-ranges'];
     forwardHeaders.forEach(h => {
       if (upstream.headers[h]) res.setHeader(h, upstream.headers[h]);
     });
+    // Forward content-length only if not chunked (avoids broken pipe on chunked streams)
+    if (upstream.headers['content-length'] && !upstream.headers['transfer-encoding']) {
+      res.setHeader('content-length', upstream.headers['content-length']);
+    }
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-store');
 
     // Use 206 Partial Content if upstream returned it (for seeking support)
     res.status(rangeHeader ? (upstream.status === 206 ? 206 : 200) : 200);
 
-    // Catch asynchronous stream errors so Node.js doesn't crash (returning 502)
+    // Catch asynchronous stream errors so Node.js doesn't crash
     upstream.data.on('error', (err) => {
       console.error('[StreamProxy] Upstream error:', err.message);
       if (!res.headersSent) res.status(500).end();
@@ -208,14 +215,16 @@ async function downloadOffline(req, res, next) {
     if (!streamUrl) return next(createError(404, 'STREAM_NOT_FOUND', 'Cannot find stream'));
 
     const axios = require('axios');
+    const isPiped = streamData?.source === 'piped';
     const response = await axios({
       method: 'get',
       url: streamUrl,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
-        'Referer': 'https://www.youtube.com/',
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        ...(isPiped ? {} : { 'Referer': 'https://www.youtube.com/' }),
+      },
+      timeout: 45000,
     });
 
     res.setHeader('Content-Type', response.headers['content-type'] || 'audio/webm');
