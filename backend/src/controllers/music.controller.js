@@ -159,7 +159,8 @@ async function streamProxy(req, res, next) {
       url: streamUrl,
       responseType: 'stream',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)',
+        // Use an iOS User-Agent because yt-dlp extracted the URL using iOS client spoofing.
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
         ...(rangeHeader ? { Range: rangeHeader } : {}),
       },
       timeout: 30000,
@@ -177,6 +178,17 @@ async function streamProxy(req, res, next) {
 
     // Use 206 Partial Content if upstream returned it (for seeking support)
     res.status(rangeHeader ? (upstream.status === 206 ? 206 : 200) : 200);
+
+    // Catch asynchronous stream errors so Node.js doesn't crash (returning 502)
+    upstream.data.on('error', (err) => {
+      console.error('[StreamProxy] Upstream error:', err.message);
+      if (!res.headersSent) res.status(500).end();
+    });
+
+    res.on('error', (err) => {
+      console.error('[StreamProxy] Response stream error:', err.message);
+      upstream.data.destroy();
+    });
 
     upstream.data.pipe(res);
 
@@ -198,14 +210,29 @@ async function downloadOffline(req, res, next) {
     const response = await axios({
       method: 'get',
       url: streamUrl,
-      responseType: 'stream'
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+      }
     });
 
     res.setHeader('Content-Type', response.headers['content-type'] || 'audio/webm');
     res.setHeader('Content-Disposition', `attachment; filename="${videoId}.webm"`);
     res.setHeader('Access-Control-Allow-Origin', '*'); // explicitly allow cross origin
 
+    response.data.on('error', (err) => {
+      console.error('[DownloadOffline] Upstream error:', err.message);
+      if (!res.headersSent) res.status(500).end();
+    });
+
+    res.on('error', (err) => {
+      console.error('[DownloadOffline] Response stream error:', err.message);
+      response.data.destroy();
+    });
+
     response.data.pipe(res);
+
+    req.on('close', () => response.data.destroy());
   } catch (e) { next(e); }
 }
 
