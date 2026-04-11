@@ -51,9 +51,7 @@ async function extract(videoId, quality = 'auto') {
     '-g',
     '--no-playlist',
     '--no-warnings',
-    '--no-check-certificates',
-    // Strong cookieless bypass: Spoof iOS client to reduce bot rate-limits
-    '--extractor-args "youtube:player_client=ios"'
+    '--no-check-certificates'
   ];
 
   // If cookies are provided by the user via .env, rotate through them
