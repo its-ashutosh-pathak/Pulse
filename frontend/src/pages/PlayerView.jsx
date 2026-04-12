@@ -35,6 +35,11 @@ export default function PlayerView() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState(null);
 
+  // FIX #11: Draggable progress bar state
+  const [isDragging, setIsDragging] = useState(false);
+  const dragProgressRef = useRef(0);
+  const [dragProgress, setDragProgress] = useState(0);
+
   // Swipe tracking for lyrics toggle
   const touchStartRef = useRef(null);
 
@@ -65,7 +70,9 @@ export default function PlayerView() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+  // FIX #11: Show drag position during drag, otherwise show actual progress
+  const displayProgress = isDragging ? dragProgress : progress;
+  const progressPercent = duration > 0 ? (displayProgress / duration) * 100 : 0;
 
   // Find active lyric index
   const activeLineIndex = React.useMemo(() => {
@@ -154,31 +161,55 @@ export default function PlayerView() {
     }).catch(() => setLyricsState('error'));
   }, [currentSong?.videoId, user]);
 
+  // FIX #11: Unified click handler for tap-to-seek
   const handleScrubberClick = (e) => {
+    // Don't seek on click if we just finished a drag (it fires both events)
+    if (isDragging) return;
     const bar = e.currentTarget;
     const rect = bar.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+    const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+    const clickX = clientX - rect.left;
     const ratio = Math.max(0, Math.min(1, clickX / rect.width));
     seek(ratio * duration);
   };
 
+  // FIX #11: Smooth drag handler with real-time preview (touch + mouse)
   const handleScrubberDrag = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const bar = e.currentTarget;
     const rect = bar.getBoundingClientRect();
+    setIsDragging(true);
+
+    const getX = (evt) => {
+      if (evt.touches?.length) return evt.touches[0].clientX;
+      return evt.clientX;
+    };
+
+    // Set initial drag position
+    const initX = getX(e);
+    const initTime = (Math.max(0, Math.min(initX - rect.left, rect.width)) / rect.width) * duration;
+    dragProgressRef.current = initTime;
+    setDragProgress(initTime);
+
     const move = (me) => {
-      const x = Math.max(0, Math.min(me.clientX - rect.left, rect.width));
-      seek((x / rect.width) * duration);
+      me.preventDefault();
+      const x = Math.max(0, Math.min(getX(me) - rect.left, rect.width));
+      const time = (x / rect.width) * duration;
+      dragProgressRef.current = time;
+      setDragProgress(time); // Visual preview only — don't seek yet
     };
     const up = () => {
+      setIsDragging(false);
+      seek(dragProgressRef.current); // Commit seek on release
       window.removeEventListener('mousemove', move);
       window.removeEventListener('mouseup', up);
-      window.removeEventListener('touchmove', move);
+      window.removeEventListener('touchmove', move, { passive: false });
       window.removeEventListener('touchend', up);
     };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
-    window.addEventListener('touchmove', move);
+    window.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', up);
   };
 
@@ -345,9 +376,10 @@ export default function PlayerView() {
 
       <div className="scrubber-container">
         <div
-          className="progress-bar"
+          className={`progress-bar ${isDragging ? 'dragging' : ''}`}
           onClick={handleScrubberClick}
           onMouseDown={handleScrubberDrag}
+          onTouchStart={handleScrubberDrag}
           style={{ cursor: 'pointer' }}
         >
           <div className="progress-fill" style={{ width: `${progressPercent}%` }}>
@@ -355,7 +387,7 @@ export default function PlayerView() {
           </div>
         </div>
         <div className="time-labels">
-          <span>{formatTime(progress)}</span>
+          <span>{formatTime(displayProgress)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>

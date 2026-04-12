@@ -272,7 +272,7 @@ async function importYTMusic(req, res, next) {
     }
 
     // Call innerTube wrapper (metadataService directly fetches massive metadata + tracks)
-    const ytmData = await metadataService.getPlaylist(id);
+    const ytmData = await metadataService.getPlaylist(id, { full: true });
 
     // Standardize array structure for Hybrid Exec
     const playlistData = {

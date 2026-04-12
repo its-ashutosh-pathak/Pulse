@@ -18,7 +18,7 @@ export default function PlaylistView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playlists, addSongToPlaylist, removeSongFromPlaylist, copyPlaylist } = usePlaylists();
+  const { playlists, addSongToPlaylist, removeSongFromPlaylist, copyPlaylist, updateLastPlayed } = usePlaylists();
   const { playSong, addToQueue, setQueue, currentSong, isShuffled, toggleShuffle, replaceQueue } = useAudio();
 
   // Firestore playlist state
@@ -78,7 +78,8 @@ export default function PlaylistView() {
     setYtmLoading(true);
     setYtmError(false);
 
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/playlist/${id}`)
+    // FIX #8: Pass full=true to fetch ALL tracks (continuation tokens)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/playlist/${id}?full=true`)
       .then(r => r.json())
       .then(json => {
         if (!json || !json.success) { setYtmError(true); return; }
@@ -177,9 +178,18 @@ export default function PlaylistView() {
       else navigate(`/search?q=${encodeURIComponent(song.artist)}`);
     }
     else if (action === 'ALBUM') {
-      const albumId = song.albumBrowseId || song.albumId;
-      if (albumId && albumId.length > 11) navigate(`/playlist/${albumId}`);
-      else navigate(`/search?q=${encodeURIComponent(song.album || song.title)}`);
+      // FIX #7: Only navigate to IDs with MPRE prefix (actual YTMusic album IDs).
+      // The old check (albumId.length > 11) was matching Firestore doc IDs,
+      // which caused "Go to Album" to re-open the current playlist.
+      const albumId = [song.albumBrowseId, song.albumId, song.album?.browseId, song.album?.id]
+        .find(id => id && String(id).startsWith('MPRE'));
+      if (albumId) {
+        navigate(`/playlist/${albumId}`);
+      } else {
+        // Fallback: search by album name
+        const albumName = song.album || song.title || '';
+        navigate(`/search?q=${encodeURIComponent(albumName)}`);
+      }
     }
   };
 
@@ -398,6 +408,8 @@ export default function PlaylistView() {
             if (!songsToRender.length) return;
             playSong(songsToRender[0]);
             replaceQueue(songsToRender.slice(1));
+            // FIX #12: Update lastPlayedAt for Firestore playlists
+            if (!isYTM && id) updateLastPlayed(id);
           }}
         >
           <Play size={20} fill="currentColor" />
@@ -440,6 +452,8 @@ export default function PlaylistView() {
                   // Grab the rest of the generated playlist strictly sequentially
                   const remainingSongs = songsToRender.slice(i + 1);
                   replaceQueue(remainingSongs);
+                  // FIX #12: Update lastPlayedAt for Firestore playlists (debounced)
+                  if (!isYTM && id) updateLastPlayed(id);
                 }}
               >
                 {/* Track number strictly displays the serial number */}

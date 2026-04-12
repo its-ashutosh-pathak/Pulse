@@ -18,6 +18,7 @@
 
 const { getInstance } = require('./innertube.singleton');
 const logger = require('../utils/logger');
+const { validateTrack, validateBatch } = require('../utils/schemaValidator');
 
 // ── Thumbnail helpers ─────────────────────────────────────────────────────────
 
@@ -185,7 +186,16 @@ function normItem(item) {
 function normTrack(track, albumTitle = '', albumThumb = '') {
   if (!track) return null;
   const videoId = getVideoId(track);
-  if (!videoId || videoId.length !== 11) return null;
+  if (!videoId || videoId.length !== 11) {
+    // FIX #3: Log skipped tracks with diagnostic info instead of silent null
+    logger.warn('norm_track_skip', {
+      reason: 'invalid videoId',
+      videoId: videoId || 'empty',
+      hasTitle: Boolean(track.title || track.name),
+      raw: JSON.stringify(track).slice(0, 200),
+    });
+    return null;
+  }
 
   return {
     id: videoId,
@@ -362,6 +372,11 @@ async function getHome() {
 
   logger.info('ytmusic_home_final', { totalSections: out.length });
 
+  // FIX #3: Validate output quality for monitoring
+  for (const section of out) {
+    validateBatch(section.items, `home:${section.title}`);
+  }
+
   return out;
 }
 
@@ -397,7 +412,10 @@ async function search(q, type = 'songs') {
   };
   const ytType = ytTypeMap[type] || 'song';
   const results = await yt.music.search(q, { type: ytType });
-  return extractSearchItems(results).slice(0, 20);
+  const items = extractSearchItems(results).slice(0, 20);
+  // FIX #3: Validate search results for monitoring
+  validateBatch(items, `search:${type}:${q.slice(0, 30)}`);
+  return items;
 }
 
 function extractSearchItems(results) {
@@ -550,9 +568,16 @@ async function getPlaylist(playlistId, { full = false } = {}) {
     if (allTracks.length) {
       // Extract total track count from header metadata (available without pagination).
       // This lets the preview show the real total even when only the first page is fetched.
-      const headerTotal = parseInt(header?.subtitle?.text?.match(/(\d+)/)?.[1], 10)
+      // Extract total from multiple possible locations in the header.
+      // subtitle can be a Text object or a plain string; String() normalizes both.
+      // Match the number immediately before "song" or "track" to avoid grabbing year/duration numbers.
+      const subtitleStr = String(header?.subtitle?.text || header?.subtitle || '');
+      const songCountMatch = subtitleStr.match(/(\d[\d,]*)\s*(?:song|track|video)/i);
+      const headerTotal = parseInt((songCountMatch?.[1] || '').replace(/,/g, ''), 10)
+        || parseInt(header?.song_count, 10)
         || parseInt(header?.item_count, 10)
         || parseInt(header?.total_items, 10)
+        || parseInt(subtitleStr.match(/(\d[\d,]*)/)?.[1]?.replace(/,/g, ''), 10)
         || 0;
       logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length, headerTotal, full });
       return {

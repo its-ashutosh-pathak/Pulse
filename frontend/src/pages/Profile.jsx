@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAudio } from '../context/AudioContext';
-import { LogOut, User as UserIcon, Camera, Loader2, Clock, PlayCircle, Mic2, TrendingUp, Headphones } from 'lucide-react';
+import { LogOut, User as UserIcon, Loader2, Clock, PlayCircle, Mic2, TrendingUp, Headphones } from 'lucide-react';
 import { getHighResThumb } from '../utils';
 import './Profile.css';
 
@@ -11,12 +11,12 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export default function Profile() {
   const navigate = useNavigate();
   const { playSong } = useAudio();
-  const { user, updateUserProfile, uploadProfilePhoto, logout } = useAuth();
+  const { user, updateUserProfile, logout } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+
   const [activeTimeframe, setActiveTimeframe] = useState('week');
 
   // Stats States
@@ -27,7 +27,7 @@ export default function Profile() {
   const [topArtists, setTopArtists] = useState([]);
   const [dailyHistory, setDailyHistory] = useState([]);
 
-  const fileInputRef = useRef(null);
+
 
   // Sync temp name when user data arrives
   useEffect(() => {
@@ -215,18 +215,7 @@ export default function Profile() {
     }
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      await uploadProfilePhoto(file);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUploading(false);
-    }
-  };
+
 
   const formatTime = (ms) => {
     if (!ms || isNaN(ms)) return "0m";
@@ -365,19 +354,12 @@ export default function Profile() {
       </div>
 
       {isEditing && (
-        <div className="modal-overlay" onClick={() => !isSaving && !isUploading && setIsEditing(false)}>
+        <div className="modal-overlay" onClick={() => !isSaving && setIsEditing(false)}>
           <div className="edit-profile-card glass" onClick={e => e.stopPropagation()}>
             <header className="edit-modal-header">
               <h2>Edit Profile</h2>
             </header>
 
-            <div className="edit-avatar-section">
-              <div className="profile-avatar-large edit-mode glass" onClick={() => fileInputRef.current?.click()}>
-                {isUploading ? <Loader2 className="animate-spin" /> : user?.photoURL ? <img src={user.photoURL} alt="" /> : <span>{initials}</span>}
-                <div className="camera-overlay"><Camera size={24} /></div>
-              </div>
-              <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} style={{ display: 'none' }} />
-            </div>
 
             <div className="edit-form-field">
               <label>DISPLAY NAME</label>
@@ -395,7 +377,7 @@ export default function Profile() {
               <button className="save-btn glass" onClick={handleSaveName} disabled={isSaving}>
                 {isSaving ? <Loader2 className="animate-spin" size={16} /> : 'Save Changes'}
               </button>
-              <button className="cancel-pill glass" onClick={() => setIsEditing(false)} disabled={isSaving || isUploading}>
+              <button className="cancel-pill glass" onClick={() => setIsEditing(false)} disabled={isSaving}>
                 Cancel
               </button>
             </div>

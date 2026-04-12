@@ -30,53 +30,8 @@
   transition: all 0.3s ease;
 }
 
-.profile-avatar-large.editable {
-  cursor: pointer;
-}
 
-.profile-avatar-large.editable:hover {
-  transform: scale(1.05);
-  border-color: var(--accent-cyan);
-}
 
-.camera-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.profile-avatar-large.editable:hover .camera-overlay {
-  opacity: 1;
-}
-
-.upload-loader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-cyan);
-  z-index: 10;
-}
-
-.profile-avatar-large img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 
 .profile-email {
@@ -186,39 +141,8 @@
   color: var(--text-secondary);
 }
 
-.edit-avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  /* Removed gap since the button below is gone */
-}
 
-.profile-avatar-large.edit-mode {
-  width: 140px;
-  height: 140px;
-  cursor: pointer;
-}
 
-.profile-avatar-large.edit-mode .camera-overlay {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-.change-photo-btn {
-  padding: 8px 16px;
-  border-radius: 50px;
-  font-size: 12px;
-  font-weight: 700;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.change-photo-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-}
 
 .edit-form-field {
   display: flex;

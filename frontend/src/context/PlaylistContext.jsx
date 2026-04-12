@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import {
   collection,
   query,
@@ -18,11 +18,19 @@ import { isDownloaded, addTrackToPlaylist, activeDownloads } from '../utils/down
 
 const PlaylistContext = createContext(null);
 
+// FIX #2: Safety guard — Firestore doc limit is 1MB (~4000 songs).
+// Block additions before hitting the limit to prevent silent data loss.
+const MAX_SONGS_PER_DOC = 3500;
+
 export function PlaylistProvider({ children }) {
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState([]);
   const [ytPlaylists, setYtPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // FIX #12: Debounced lastPlayedAt updates (10-second window)
+  const lastPlayedTimerRef = useRef(null);
+  const lastPlayedQueueRef = useRef(null); // stores the playlistId pending write
 
   // Sync playlists from Firestore where current user is owner OR collaborator
   useEffect(() => {
@@ -41,10 +49,10 @@ export function PlaylistProvider({ children }) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const p = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data(), type: 'PULSE' }))
-        // Sort client-side: newest first (avoids needing a Firestore composite index)
+        // FIX #12: Sort by lastPlayedAt first (most recent activity), fallback to createdAt
         .sort((a, b) => {
-          const tA = a.createdAt?.toMillis?.() || 0;
-          const tB = b.createdAt?.toMillis?.() || 0;
+          const tA = a.lastPlayedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+          const tB = b.lastPlayedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
           return tB - tA;
         });
       setPlaylists(p);
@@ -91,7 +99,15 @@ export function PlaylistProvider({ children }) {
   const addSongToPlaylist = async (playlistId, song) => {
     if (!user) return;
     try {
+      // FIX #2: Check song count before writing to prevent 1MB Firestore doc limit
       const ref = doc(db, 'playlists', playlistId);
+      const snap = await getDoc(ref);
+      const currentSongs = snap.data()?.songs || [];
+      if (currentSongs.length >= MAX_SONGS_PER_DOC) {
+        console.error(`Playlist limit reached (${MAX_SONGS_PER_DOC} songs). Split into multiple playlists.`);
+        throw new Error(`Playlist limit reached (${MAX_SONGS_PER_DOC} songs). Please create a new playlist.`);
+      }
+
       await updateDoc(ref, {
         songs: arrayUnion({
           ...song,
@@ -112,8 +128,8 @@ export function PlaylistProvider({ children }) {
           let plName = playlists.find(p => p.id === playlistId)?.name;
           if (!plName) {
             try {
-              const snap = await getDoc(doc(db, 'playlists', playlistId));
-              plName = snap.exists() ? snap.data().name : null;
+              const snap2 = await getDoc(doc(db, 'playlists', playlistId));
+              plName = snap2.exists() ? snap2.data().name : null;
             } catch {}
           }
           await addTrackToPlaylist(`__pl__${playlistId}`, plName || 'Playlist', videoId);
@@ -193,6 +209,38 @@ export function PlaylistProvider({ children }) {
     }
   };
 
+  // FIX #12: Update lastPlayedAt with 10-second debounce to avoid excessive Firestore writes.
+  // Multiple rapid skips within the same playlist collapse into a single write.
+  const updateLastPlayed = useCallback((playlistId) => {
+    if (!user || !playlistId) return;
+
+    // Always clear the previous timer to prevent orphaned timers when switching playlists
+    if (lastPlayedTimerRef.current) {
+      clearTimeout(lastPlayedTimerRef.current);
+    }
+
+    lastPlayedQueueRef.current = playlistId;
+    lastPlayedTimerRef.current = setTimeout(async () => {
+      lastPlayedTimerRef.current = null;
+      lastPlayedQueueRef.current = null;
+      try {
+        const ref = doc(db, 'playlists', playlistId);
+        await updateDoc(ref, { lastPlayedAt: serverTimestamp() });
+      } catch (e) {
+        console.error('Failed to update lastPlayedAt:', e);
+      }
+    }, 10000); // 10-second debounce window
+  }, [user]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (lastPlayedTimerRef.current) {
+        clearTimeout(lastPlayedTimerRef.current);
+      }
+    };
+  }, []);
+
   // Liked Songs logic
   const getLikedPlaylist = () => {
     return playlists.find(p => p.name === 'Liked Songs' && p.createdBy === user?.uid);
@@ -250,6 +298,7 @@ export function PlaylistProvider({ children }) {
       removeSongFromPlaylist,
       deletePlaylist,
       updatePlaylist,
+      updateLastPlayed,
       toggleLike,
       isLiked
     }}>

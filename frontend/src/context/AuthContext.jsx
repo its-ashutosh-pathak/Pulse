@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, increment, collection, setDoc as setDocAlt, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage, googleProvider } from '../firebase';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db, googleProvider } from '../firebase';
 
 const AuthContext = createContext(null);
 
@@ -91,55 +90,7 @@ export function AuthProvider({ children }) {
     setUser(nextUser);
   };
 
-  const uploadProfilePhoto = async (file) => {
-    if (!auth.currentUser || !file) return;
 
-    try {
-      // 1. Compress and convert to base64
-      const base64Photo = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 256; // Keep it small for Firestore
-            const MAX_HEIGHT = 256;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            // 2. Compress to 70% quality JPEG string (~10-20KB max)
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-          img.onerror = reject;
-        };
-        reader.onerror = reject;
-      });
-
-      // 3. Update Auth Profile & Firestore with the base64 string
-      await updateUserProfile({ photoURL: base64Photo });
-      return base64Photo;
-    } catch (error) {
-      console.error("AuthContext: Upload Error:", error);
-      throw error;
-    }
-  };
 
   const updatePlaybackStats = async (song, milliseconds) => {
     if (!auth.currentUser || !song) return;
@@ -171,7 +122,7 @@ export function AuthProvider({ children }) {
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginWithEmail, signupWithEmail, updateUserProfile, uploadProfilePhoto, updatePlaybackStats, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginWithEmail, signupWithEmail, updateUserProfile, updatePlaybackStats, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

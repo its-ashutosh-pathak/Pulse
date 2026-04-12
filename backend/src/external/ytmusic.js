@@ -12,6 +12,6 @@ module.exports = {
   getArtist:      (browseId)   => wrapper.getArtist(browseId),
   getLyrics:      (videoId)    => wrapper.getLyrics(videoId),
   getWatchNext:   (videoId)    => wrapper.getWatchNext(videoId),
-  getPlaylist:    (playlistId) => wrapper.getPlaylist(playlistId),
+  getPlaylist:    (playlistId, opts) => wrapper.getPlaylist(playlistId, opts),
   resolve:        (id)         => wrapper.resolve(id),
 };

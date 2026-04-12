@@ -91,7 +91,10 @@ export default function AddToPlaylistModal({ song, onClose }) {
 
         {/* Create New Playlist inline form */}
         {showCreate ? (
-          <form onSubmit={handleCreate} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+          <form onSubmit={handleCreate} style={{
+            display: 'flex', gap: '8px', marginBottom: '12px',
+            width: '100%', minWidth: 0, boxSizing: 'border-box'
+          }}>
             <input
               autoFocus
               type="text"
@@ -99,9 +102,9 @@ export default function AddToPlaylistModal({ song, onClose }) {
               value={newName}
               onChange={e => setNewName(e.target.value)}
               style={{
-                flex: 1, padding: '10px 14px', borderRadius: '12px',
+                flex: 1, minWidth: 0, padding: '10px 14px', borderRadius: '12px',
                 background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)',
-                color: 'white', fontSize: '14px', outline: 'none',
+                color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
               }}
               disabled={creating}
             />
