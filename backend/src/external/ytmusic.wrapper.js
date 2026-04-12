@@ -101,10 +101,10 @@ function getPlaylistId(item) {
 
 function inferType(item) {
   const raw = String(item?.item_type || item?.type || item?.resultType || '').toLowerCase();
-  if (raw.includes('album'))    return 'ALBUM';
+  if (raw.includes('album')) return 'ALBUM';
   if (raw.includes('playlist')) return 'PLAYLIST';
-  if (raw.includes('artist'))   return 'ARTIST';
-  if (raw.includes('single'))   return 'SINGLE';
+  if (raw.includes('artist')) return 'ARTIST';
+  if (raw.includes('single')) return 'SINGLE';
   return 'SONG';
 }
 
@@ -120,7 +120,7 @@ function normItem(item) {
   const skip = String(item?.type || '').toLowerCase();
   if (skip.includes('divider') || skip.includes('ad')) return null;
 
-  const videoId  = getVideoId(item);
+  const videoId = getVideoId(item);
   const browseId = getBrowseId(item);
 
   // Primary id: prefer videoId (11 chars) then browseId
@@ -158,17 +158,17 @@ function normItem(item) {
     id,
     videoId,
     browseId,
-    playlistId:      getPlaylistId(item),
-    albumBrowseId:   String(item.album?.id || item.album?.browseId || ''),
-    artistBrowseId:  String(item.artists?.[0]?.id || item.artists?.[0]?.browseId || ''),
-    title:           String(item.title   || item.name   || 'Unknown'),
+    playlistId: getPlaylistId(item),
+    albumBrowseId: String(item.album?.id || item.album?.browseId || ''),
+    artistBrowseId: String(item.artists?.[0]?.id || item.artists?.[0]?.browseId || ''),
+    title: String(item.title || item.name || 'Unknown'),
     artist,
-    album:           String(item.album?.name || item.album || ''),
-    thumbnail:       getThumb(item),
+    album: String(item.album?.name || item.album || ''),
+    thumbnail: getThumb(item),
     type,
-    duration:        item.duration?.seconds ?? (typeof item.duration === 'number' ? item.duration : 0),
-    year:            String(item.year || item.description || ''),
-    itemCount:       String(item.item_count || item.itemCount || ''),
+    duration: item.duration?.seconds ?? (typeof item.duration === 'number' ? item.duration : 0),
+    year: String(item.year || item.description || ''),
+    itemCount: String(item.item_count || item.itemCount || ''),
   };
 }
 
@@ -182,14 +182,14 @@ function normTrack(track, albumTitle = '', albumThumb = '') {
   if (!videoId || videoId.length !== 11) return null;
 
   return {
-    id:        videoId,
+    id: videoId,
     videoId,
-    title:     String(track.title || track.name || 'Unknown'),
-    artist:    parseArtists(track.artists) || 'Unknown',
-    album:     String(track.album?.name || albumTitle || ''),
+    title: String(track.title || track.name || 'Unknown'),
+    artist: parseArtists(track.artists) || 'Unknown',
+    album: String(track.album?.name || albumTitle || ''),
     thumbnail: getThumb(track) || albumThumb,
-    duration:  track.duration?.seconds ?? (typeof track.duration === 'number' ? track.duration : 0),
-    type:      'SONG',
+    duration: track.duration?.seconds ?? (typeof track.duration === 'number' ? track.duration : 0),
+    type: 'SONG',
   };
 }
 
@@ -247,7 +247,7 @@ function normSearchItem(item) {
   const videoId = String(item.id || item.video_id || item.videoId || '');
   const browseId = String(item.browseId || item.browse_id || '');
   const playlistId = String(item.playlistId || item.playlist_id || '');
-  
+
   // At least one id must exist
   const id = videoId || browseId || playlistId;
   if (!id) return null;
@@ -312,16 +312,16 @@ async function getHome() {
 
   // ── Always supplement to reach 10 rows ──────────────────────────────────────
   const supplementQueries = [
-    { title: 'Global Top Playlists', q: 'top songs global',         type: 'playlist' },
-    { title: 'Bollywood Hits',       q: 'bollywood hits 2024',      type: 'playlist' },
-    { title: 'Trending Now',         q: 'trending music 2024',      type: 'song'     },
-    { title: 'Popular Artists',      q: 'popular artists india',    type: 'artist'   },
-    { title: 'Pop Hits',             q: 'pop music hits 2024',      type: 'playlist' },
-    { title: 'Chill Vibes',          q: 'chill lofi vibes',         type: 'playlist' },
-    { title: 'Workout & Gym',        q: 'workout gym hits',         type: 'playlist' },
-    { title: 'Romantic Tunes',       q: 'romantic songs hindi',     type: 'playlist' },
-    { title: 'Party Bangers',        q: 'party songs dance hits',   type: 'playlist' },
-    { title: 'Top Hip-Hop',          q: 'hip hop rap 2024',         type: 'playlist' },
+    { title: 'Global Top Playlists', q: 'top songs global', type: 'playlist' },
+    { title: 'Bollywood Hits', q: 'bollywood hits 2024', type: 'playlist' },
+    { title: 'Trending Now', q: 'trending music 2024', type: 'song' },
+    { title: 'Popular Artists', q: 'popular artists india', type: 'artist' },
+    { title: 'Pop Hits', q: 'pop music hits 2024', type: 'playlist' },
+    { title: 'Chill Vibes', q: 'chill lofi vibes', type: 'playlist' },
+    { title: 'Workout & Gym', q: 'workout gym hits', type: 'playlist' },
+    { title: 'Romantic Tunes', q: 'romantic songs hindi', type: 'playlist' },
+    { title: 'Party Bangers', q: 'party songs dance hits', type: 'playlist' },
+    { title: 'Top Hip-Hop', q: 'hip hop rap 2024', type: 'playlist' },
   ];
 
   const needed = Math.max(0, 10 - out.length);
@@ -369,25 +369,25 @@ async function search(q, type = 'songs') {
 
   if (type === 'all') {
     const [sRes, alRes, plRes, arRes] = await Promise.all([
-      yt.music.search(q, { type: 'song'     }).catch(() => null),
-      yt.music.search(q, { type: 'album'    }).catch(() => null),
+      yt.music.search(q, { type: 'song' }).catch(() => null),
+      yt.music.search(q, { type: 'album' }).catch(() => null),
       yt.music.search(q, { type: 'playlist' }).catch(() => null),
-      yt.music.search(q, { type: 'artist'   }).catch(() => null),
+      yt.music.search(q, { type: 'artist' }).catch(() => null),
     ]);
 
     return {
-      songs:     extractSearchItems(sRes).slice(0,  15),
-      albums:    extractSearchItems(alRes).slice(0,  8),
-      playlists: extractSearchItems(plRes).slice(0,  8),
-      artists:   extractSearchItems(arRes).slice(0,  8),
+      songs: extractSearchItems(sRes).slice(0, 15),
+      albums: extractSearchItems(alRes).slice(0, 8),
+      playlists: extractSearchItems(plRes).slice(0, 8),
+      artists: extractSearchItems(arRes).slice(0, 8),
     };
   }
 
   const ytTypeMap = {
-    songs:     'song',
-    albums:    'album',
+    songs: 'song',
+    albums: 'album',
     playlists: 'playlist',
-    artists:   'artist',
+    artists: 'artist',
   };
   const ytType = ytTypeMap[type] || 'song';
   const results = await yt.music.search(q, { type: ytType });
@@ -397,7 +397,7 @@ async function search(q, type = 'songs') {
 function extractSearchItems(results) {
   if (!results) return [];
   const items = [];
-  
+
   // Try sections-based extraction first (standard search result structure)
   if (results.sections?.length) {
     for (const section of results.sections) {
@@ -407,7 +407,7 @@ function extractSearchItems(results) {
       }
     }
   }
-  
+
   // Fallback: try flattenSearchResult (handles MusicShelf wrapper)
   if (!items.length) {
     const raw = flattenSearchResult(results);
@@ -446,18 +446,18 @@ async function getSuggestions(q) {
  * Returns: { browseId, name, description, thumbnail, subscribers, topSongs, albums, singles }
  */
 async function getArtist(browseId) {
-  const yt     = await getInstance();
-  const data   = await yt.music.getArtist(browseId);
+  const yt = await getInstance();
+  const data = await yt.music.getArtist(browseId);
   const header = data.header;
 
-  const name        = String(header?.title        || header?.name   || 'Artist');
-  const description = String(header?.description  || '');
-  const subscribers = String(header?.subscribers  || '');
-  const thumb       = getThumb(header) || getThumb({ thumbnail: header?.thumbnail?.contents });
+  const name = String(header?.title || header?.name || 'Artist');
+  const description = String(header?.description || '');
+  const subscribers = String(header?.subscribers || '');
+  const thumb = getThumb(header) || getThumb({ thumbnail: header?.thumbnail?.contents });
 
   let topSongs = [];
-  let albums   = [];
-  let singles  = [];
+  let albums = [];
+  let singles = [];
 
   for (const section of (data.sections || [])) {
     const sTitle = String(
@@ -473,20 +473,20 @@ async function getArtist(browseId) {
 
     } else if (sTitle.includes('album')) {
       albums = contents.map((a) => ({
-        browseId:  getBrowseId(a),
-        title:     String(a.title || a.name || ''),
-        year:      String(a.year  || a.description || ''),
+        browseId: getBrowseId(a),
+        title: String(a.title || a.name || ''),
+        year: String(a.year || a.description || ''),
         thumbnail: getThumb(a),
-        type:      'ALBUM',
+        type: 'ALBUM',
       })).filter((a) => a.browseId).slice(0, 10);
 
     } else if (sTitle.includes('single') || sTitle.includes('ep')) {
       singles = contents.map((s) => ({
-        browseId:  getBrowseId(s),
-        title:     String(s.title || s.name || ''),
-        year:      String(s.year  || s.description || ''),
+        browseId: getBrowseId(s),
+        title: String(s.title || s.name || ''),
+        year: String(s.year || s.description || ''),
         thumbnail: getThumb(s),
-        type:      'SINGLE',
+        type: 'SINGLE',
       })).filter((s) => s.browseId).slice(0, 6);
     }
   }
@@ -527,14 +527,21 @@ async function getPlaylist(playlistId, { full = false } = {}) {
     }
 
     if (allTracks.length) {
-      logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length, full });
+      // Extract total track count from header metadata (available without pagination).
+      // This lets the preview show the real total even when only the first page is fetched.
+      const headerTotal = parseInt(header?.subtitle?.text?.match(/(\d+)/)?.[1], 10)
+        || parseInt(header?.item_count, 10)
+        || parseInt(header?.total_items, 10)
+        || 0;
+      logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length, headerTotal, full });
       return {
-        id:          playlistId,
-        name:        String(header?.title       || 'Playlist'),
+        id: playlistId,
+        name: String(header?.title || 'Playlist'),
         description: String(header?.description || ''),
-        thumbnail:   getThumb(header),
-        type:        'YTM_PLAYLIST',
-        tracks:      allTracks,
+        thumbnail: getThumb(header),
+        type: 'YTM_PLAYLIST',
+        totalTracks: headerTotal || allTracks.length,
+        tracks: allTracks,
       };
     }
   } catch (e) {
@@ -543,22 +550,22 @@ async function getPlaylist(playlistId, { full = false } = {}) {
 
   // ── Try as album ──────────────────────────────────────────────────────────
   try {
-    const res        = await yt.music.getAlbum(playlistId);
-    const header     = res.header;
+    const res = await yt.music.getAlbum(playlistId);
+    const header = res.header;
     const albumTitle = String(header?.title || 'Album');
     const albumThumb = getThumb(header);
-    const tracks     = (res.contents || res.items || [])
+    const tracks = (res.contents || res.items || [])
       .map((t) => normTrack(t, albumTitle, albumThumb))
       .filter(Boolean);
 
     if (tracks.length) {
       logger.info('ytmusic_album', { playlistId, trackCount: tracks.length });
       return {
-        id:          playlistId,
-        name:        albumTitle,
+        id: playlistId,
+        name: albumTitle,
         description: String(header?.description || ''),
-        thumbnail:   albumThumb,
-        type:        'YTM_ALBUM',
+        thumbnail: albumThumb,
+        type: 'YTM_ALBUM',
         tracks,
       };
     }
@@ -595,12 +602,12 @@ async function getLyrics(videoId) {
   const yt = await getInstance();
   try {
     const upNext = await yt.music.getUpNext(videoId);
-    const token  = upNext?.lyrics_browse_id;
+    const token = upNext?.lyrics_browse_id;
     if (!token) return { lyrics: null, source: null };
     const res = await yt.getLyrics(token);
     return {
       lyrics: String(res?.text || '').trim() || null,
-      source:  'youtube_music',
+      source: 'youtube_music',
     };
   } catch (e) {
     logger.warn('ytmusic_lyrics_failed', { videoId, error: e.message });
@@ -615,9 +622,9 @@ async function getLyrics(videoId) {
 async function resolve(id) {
   try {
     const playlist = await getPlaylist(id);
-    const first    = playlist.tracks?.[0]?.videoId;
+    const first = playlist.tracks?.[0]?.videoId;
     if (first) return { videoId: first };
-  } catch {}
+  } catch { }
   // Unable to resolve — return as-is and let the stream engine handle it
   return { videoId: id };
 }

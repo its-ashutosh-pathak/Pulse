@@ -242,6 +242,10 @@
   min-width: 0;
 }
 .import-preview-icon { color: var(--accent-cyan); flex-shrink: 0; }
+.import-preview-info > div {
+  min-width: 0;
+  overflow: hidden;
+}
 .import-preview-info h3 {
   font-size: 14px;
   font-weight: 700;

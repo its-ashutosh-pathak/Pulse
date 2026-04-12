@@ -6,11 +6,15 @@ import './Settings.css';
 
 
 
+// Map between UI labels and backend storage values
+const toBackendQuality = (q) => ({ automatic: 'auto', normal: 'medium' }[q] ?? q);
+const toFrontendQuality = (q) => ({ auto: 'automatic', medium: 'normal' }[q] ?? q);
+
 export default function Settings() {
   const { user } = useAuth();
-  const [streamingQuality, setStreamingQuality] = useState(() => localStorage.getItem('pulse_streaming_quality') || 'automatic');
+  const [streamingQuality, setStreamingQuality] = useState(() => toFrontendQuality(localStorage.getItem('pulse_streaming_quality') || 'automatic'));
 
-  const [downloadQuality, setDownloadQuality] = useState(() => localStorage.getItem('pulse_download_quality') || 'high');
+  const [downloadQuality, setDownloadQuality] = useState(() => toFrontendQuality(localStorage.getItem('pulse_download_quality') || 'high'));
   const [crossfade, setCrossfade] = useState(() => parseInt(localStorage.getItem('pulse_crossfade') || '0'));
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('pulse_accent_color') || '#865AA4');
   const [dataSaver, setDataSaver] = useState(() => localStorage.getItem('pulse_data_saver') === 'true');
@@ -162,8 +166,8 @@ export default function Settings() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
           body: JSON.stringify({
-            streamingQuality,
-            downloadQuality,
+            streamingQuality: toBackendQuality(streamingQuality),
+            downloadQuality: toBackendQuality(downloadQuality),
             crossfadeDuration: crossfade,
             dataSaverMode: dataSaver
           })
@@ -185,8 +189,8 @@ export default function Settings() {
       .then(json => {
         if (isMounted && json.success && json.data) {
           const s = json.data;
-          if (s.streamingQuality) setStreamingQuality(s.streamingQuality);
-          if (s.downloadQuality) setDownloadQuality(s.downloadQuality);
+          if (s.streamingQuality) setStreamingQuality(toFrontendQuality(s.streamingQuality));
+          if (s.downloadQuality) setDownloadQuality(toFrontendQuality(s.downloadQuality));
           if (s.crossfadeDuration !== undefined) setCrossfade(s.crossfadeDuration);
           if (s.dataSaverMode !== undefined) setDataSaver(s.dataSaverMode);
           if (s.accentColor && s.accentColor !== accentColor) setAccentColor(s.accentColor);

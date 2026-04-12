@@ -17,7 +17,7 @@ export default function Profile() {
   const [tempName, setTempName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [activeTimeframe, setActiveTimeframe] = useState('month');
+  const [activeTimeframe, setActiveTimeframe] = useState('week');
 
   // Stats States
   const [summary, setSummary] = useState({ totalMs: 0, totalPlays: 0 });

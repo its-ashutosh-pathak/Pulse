@@ -64,6 +64,14 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  isolation: isolate;
+}
+
+/* Solid fallback when backdrop-filter isn't supported or is broken by parent transforms */
+@supports not (backdrop-filter: blur(16px)) {
+  .glass {
+    background: rgba(15, 15, 15, 0.92);
+  }
 }
 
 /* ── Base Button Reset ── */

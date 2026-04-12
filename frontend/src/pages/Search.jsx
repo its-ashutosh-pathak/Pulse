@@ -35,12 +35,22 @@ export default function Search() {
   const [addedStatus, setAddedStatus]   = useState(null);
   const inputRef = useRef(null);
 
-  // Sync URL query param
+  // Sync URL query param → state on mount (and restore cached results)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const q = params.get('q');
-    if (q) setQuery(q);
-  }, [location.search]);
+    if (q) {
+      setQuery(q);
+      // Restore cached results instantly so user sees them before re-fetch
+      try {
+        const cached = sessionStorage.getItem(`pulse_search_${q}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          setResults(parsed);
+        }
+      } catch {}
+    }
+  }, []); // Run once on mount only
 
   useEffect(() => {
     localStorage.setItem('pulse_search_history', JSON.stringify(history));
@@ -65,6 +75,12 @@ export default function Search() {
     setIsSearching(true);
     setShowSugg(true);
 
+    // Push query to URL so back-navigation restores it
+    const params = new URLSearchParams(location.search);
+    if (params.get('q') !== query) {
+      navigate(`/search?q=${encodeURIComponent(query)}`, { replace: true });
+    }
+
     const suggTimer = setTimeout(() => {
       fetch(`${API}/api/suggestions?q=${encodeURIComponent(query)}`)
         .then(r => r.json())
@@ -78,12 +94,15 @@ export default function Search() {
         const res  = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}&type=all`);
         const json = await res.json();
         const data = json.data || {};
-        setResults({
+        const newResults = {
           songs:     Array.isArray(data.songs)     ? data.songs     : [],
           albums:    Array.isArray(data.albums)    ? data.albums    : [],
           playlists: Array.isArray(data.playlists) ? data.playlists : [],
           artists:   Array.isArray(data.artists)   ? data.artists   : [],
-        });
+        };
+        setResults(newResults);
+        // Cache results in sessionStorage for back-navigation
+        try { sessionStorage.setItem(`pulse_search_${query}`, JSON.stringify(newResults)); } catch {}
       } catch {
         setResults({ songs: [], albums: [], playlists: [], artists: [] });
       } finally {

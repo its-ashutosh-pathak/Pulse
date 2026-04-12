@@ -114,7 +114,8 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           }))
           .filter(s => s.videoId && s.videoId.length === 11);
 
-        setPreview({ name: data.name || data.title || 'Imported Playlist', total: tracks.length, tracks });
+        const realTotal = data.totalTracks || tracks.length;
+        setPreview({ name: data.name || data.title || 'Imported Playlist', total: realTotal, tracks });
         setPhase('preview');
 
       } else {
