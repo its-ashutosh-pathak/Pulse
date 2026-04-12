@@ -425,6 +425,18 @@ export function AudioProvider({ children }) {
     // Re-attach event listeners to the new primary element (FIX #6 — the core fix)
     attachAudioListeners(cfAudio);
 
+    // ── CRITICAL: Force-sync play state after swap ───────────────────────────
+    // cfAudio.play() was called BEFORE listeners were attached, so its 'play'
+    // event was never caught → setIsPlaying(true) was never called.
+    // Then oldPrimary.pause() fired 'pause' → setIsPlaying(false).
+    // Net result: button shows "paused" while music is actually playing.
+    // Fix: explicitly read the real playing state from the new primary element.
+    const cfIsPlaying = !cfAudio.paused;
+    setIsPlaying(cfIsPlaying);
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = cfIsPlaying ? 'playing' : 'paused';
+    }
+
     // Update state from the new primary
     setDuration(cfAudio.duration || 0);
     setProgress(cfAudio.currentTime || 0);
