@@ -64,14 +64,6 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  /* FIX #10: Force GPU compositing layer — ensures backdrop-filter works in
-     production builds where CSS minification may reorder rules or where
-     parent stacking contexts interfere. */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* NOTE: Do NOT use `isolation: isolate` here — it creates a new stacking
-     context that prevents backdrop-filter from sampling content behind the
-     element in WebKit/Blink. */
 }
 
 /* Solid fallback when backdrop-filter isn't supported */

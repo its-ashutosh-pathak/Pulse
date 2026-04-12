@@ -171,19 +171,24 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
 
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
-            try {
-              const event = JSON.parse(line.slice(6));
-              if (event.type === 'progress') {
-                setProgress(Math.round((event.current / event.total) * 100));
-              } else if (event.type === 'done') {
-                setProgress(100);
-                setImportedPlaylistId(event.playlistId);
-                setPhase('done');
-                return;
-              } else if (event.type === 'error') {
-                throw new Error(event.message || 'Import failed.');
-              }
-            } catch (parseErr) { /* skip malformed SSE lines */ }
+            let event;
+            try { event = JSON.parse(line.slice(6)); } catch { continue; }
+
+            if (event.type === 'fetching') {
+              // Backend is working on fetching Spotify tracks — keep spinner visible
+              setProgress(0);
+            } else if (event.type === 'start') {
+              setProgress(0);
+            } else if (event.type === 'progress') {
+              setProgress(Math.round((event.current / event.total) * 100));
+            } else if (event.type === 'done') {
+              setProgress(100);
+              setImportedPlaylistId(event.playlistId);
+              setPhase('done');
+              return;
+            } else if (event.type === 'error') {
+              throw new Error(event.message || 'Import failed.');
+            }
           }
         }
         return;
@@ -340,7 +345,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           {phase === 'importing' && (
             <div className="import-loading">
               <Loader2 size={36} className="import-spin" />
-              <p>Saving… {progress}%</p>
+              <p>{progress === 0 && tab === 'spotify' ? 'Fetching tracks from Spotify…' : `Saving… ${progress}%`}</p>
               <div className="import-progress-wrap">
                 <div 
                   className="import-progress-fill" 

@@ -577,7 +577,6 @@ async function getPlaylist(playlistId, { full = false } = {}) {
         || parseInt(header?.song_count, 10)
         || parseInt(header?.item_count, 10)
         || parseInt(header?.total_items, 10)
-        || parseInt(subtitleStr.match(/(\d[\d,]*)/)?.[1]?.replace(/,/g, ''), 10)
         || 0;
       logger.info('ytmusic_playlist', { playlistId, trackCount: allTracks.length, headerTotal, full });
       return {

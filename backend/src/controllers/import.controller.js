@@ -190,7 +190,10 @@ async function importSpotify(req, res, next) {
       return sendError('Not a valid Spotify playlist URL.');
     }
 
-    // 1. Fetch all tracks from Spotify (using API + embed fallback)
+    // 1. Send an immediate signal so the frontend knows we're working
+    send({ type: 'fetching', message: 'Fetching tracks from Spotify…' });
+
+    // 2. Fetch all tracks from Spotify (using API + embed fallback)
     const playlistData = await spotifyService.getFullPlaylist(id);
     playlistData.tracks = playlistData.tracks.filter(t => t.title && t.artist);
 
