@@ -15,6 +15,10 @@ router.get('/playlist/:id', rateLimiter(RATE_LIMIT_SEARCH), ctrl.ytPlaylist);
 router.get('/resolve/:id', ctrl.resolveId);
 router.get('/album-search', rateLimiter(RATE_LIMIT_SEARCH), ctrl.albumSearch);
 
+// Thumbnail proxy — relays YouTube/Google images with CORS headers so Android
+// notification panel can display album art (direct ytimg.com URLs fail CORS on Android)
+router.get('/proxy-image', ctrl.proxyImage);
+
 // Protected endpoints
 router.get('/play/:videoId', auth, rateLimiter(RATE_LIMIT_PLAY), ctrl.play);
 router.get('/stream/:videoId', auth, rateLimiter(RATE_LIMIT_PLAY), ctrl.streamProxy);
@@ -24,3 +28,4 @@ router.get('/watch-next/:videoId', auth, ctrl.watchNext);
 router.get('/download/:videoId', auth, rateLimiter(RATE_LIMIT_PLAY), ctrl.downloadOffline);
 
 module.exports = router;
+

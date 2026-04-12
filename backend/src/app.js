@@ -18,13 +18,30 @@ const importRoutes   = require('./routes/import.routes');
 
 const app = express();
 
-// ── Global middleware ─────────────────────────────────────────────────────────
-app.set('trust proxy', 1); // trust X-Forwarded-For from Railway/Render reverse proxy
-app.use(cors({ 
-  origin: env.FRONTEND_URL, 
+app.set('trust proxy', 1); // trust X-Forwarded-For from HF/Vercel reverse proxy
+
+// ── CORS ─────────────────────────────────────────────────────────────────────
+// Stream/download routes need `Access-Control-Allow-Origin: *` so that:
+//   1. Web Audio API's crossorigin="anonymous" CORS check passes (crossfade works)
+//   2. Android's notification system can fetch proxied thumbnails
+// All other routes use the specific frontend URL with credentials support.
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, mobile apps, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow the configured frontend URL (or any origin if FRONTEND_URL = '*')
+    const allowed = env.FRONTEND_URL;
+    if (allowed === '*' || origin === allowed) return callback(null, true);
+    // Also allow *.vercel.app previews so PR deploys work
+    if (/\.vercel\.app$/.test(origin)) return callback(null, true);
+    return callback(null, false);
+  },
   credentials: true,
-  exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type']
-}));
+  exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'Content-Type'],
+};
+app.use(cors(corsOptions));
+// Pre-flight for all routes
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '2mb' }));
 app.use(requestLogger);
 

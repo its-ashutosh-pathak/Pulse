@@ -196,6 +196,8 @@ async function streamProxy(req, res, next) {
       res.setHeader('content-length', upstream.headers['content-length']);
     }
     res.setHeader('Access-Control-Allow-Origin', '*');
+    // MUST remove credentials header when using wildcard origin — browsers reject the combination
+    res.removeHeader('Access-Control-Allow-Credentials');
     res.setHeader('Cache-Control', 'no-store');
 
     // Use 206 Partial Content if upstream returned it (for seeking support)
@@ -243,7 +245,8 @@ async function downloadOffline(req, res, next) {
 
     res.setHeader('Content-Type', response.headers['content-type'] || 'audio/webm');
     res.setHeader('Content-Disposition', `attachment; filename="${videoId}.webm"`);
-    res.setHeader('Access-Control-Allow-Origin', '*'); // explicitly allow cross origin
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.removeHeader('Access-Control-Allow-Credentials'); // wildcard + credentials = browser rejection
 
     response.data.on('error', (err) => {
       console.error('[DownloadOffline] Upstream error:', err.message);
@@ -261,4 +264,55 @@ async function downloadOffline(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { home, search, suggestions, artist, ytPlaylist, play, streamProxy, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline };
+/**
+ * proxyImage — fetches a remote image (thumbnail) server-side and relays it with CORS headers.
+ * Android's media notification panel fetches artwork via its own HTTP request.
+ * Direct YouTube/Google CDN URLs (ytimg.com, lh3.googleusercontent.com) have no CORS headers,
+ * so the notification fetch fails and album art is blank. This proxy adds the missing headers.
+ */
+async function proxyImage(req, res, next) {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: 'Missing url param' });
+
+    // Only allow known thumbnail hosts to prevent SSRF abuse
+    const ALLOWED_HOSTS = [
+      'i.ytimg.com',
+      'yt3.ggpht.com',
+      'lh3.googleusercontent.com',
+      'lh4.googleusercontent.com',
+      'music.youtube.com',
+    ];
+    let parsedUrl;
+    try { parsedUrl = new URL(url); } catch { return res.status(400).json({ error: 'Invalid url' }); }
+    if (!ALLOWED_HOSTS.some(h => parsedUrl.hostname === h || parsedUrl.hostname.endsWith('.' + h))) {
+      return res.status(403).json({ error: 'Host not allowed' });
+    }
+
+    const axios = require('axios');
+    const upstream = await axios({
+      method: 'get',
+      url,
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        'Referer': 'https://music.youtube.com/',
+      },
+      timeout: 10000,
+    });
+
+    const ct = upstream.headers['content-type'] || 'image/jpeg';
+    res.setHeader('Content-Type', ct);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache for 1 day
+    if (upstream.headers['content-length']) {
+      res.setHeader('Content-Length', upstream.headers['content-length']);
+    }
+    res.status(200);
+    upstream.data.on('error', () => { if (!res.headersSent) res.status(500).end(); });
+    upstream.data.pipe(res);
+    req.on('close', () => upstream.data.destroy());
+  } catch (e) { next(e); }
+}
+
+module.exports = { home, search, suggestions, artist, ytPlaylist, play, streamProxy, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline, proxyImage };

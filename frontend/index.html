@@ -9,6 +9,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      These hidden audio elements MUST live in the DOM.
+      Android Chrome only grants OS-level media session focus (lock screen / notification controls)
+      to <audio> elements that are attached to the document — floating `new Audio()` objects are ignored.
+    -->
+    <audio id="pulse-primary-audio" preload="none" crossorigin="anonymous" style="display:none"></audio>
+    <audio id="pulse-crossfade-audio" preload="none" crossorigin="anonymous" style="display:none"></audio>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

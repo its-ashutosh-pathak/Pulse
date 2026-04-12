@@ -19,8 +19,23 @@ export function AudioProvider({ children }) {
   const [history, setHistory] = useState([]); // Track history for Prev button
   const [isLoading, setIsLoading] = useState(false);
 
-  const audioRef = useRef(new Audio());
-  const crossfadeAudioRef = useRef(new Audio()); // secondary element for crossfade fade-in
+  // ── CRITICAL: Use DOM-attached <audio> elements, NOT floating new Audio() objects.
+  // Android Chrome only grants OS-level media session focus (lock screen / notification controls)
+  // to <audio> elements that exist in the document. Floating objects are silently ignored.
+  //
+  // We use a lazy ref initializer (function passed to useRef) so the DOM elements are
+  // resolved SYNCHRONOUSLY before any useEffect fires — avoiding race conditions with
+  // the listener-attachment effect that also runs at mount.
+  const audioRef = useRef(
+    typeof document !== 'undefined'
+      ? document.getElementById('pulse-primary-audio') || new Audio()
+      : null
+  );
+  const crossfadeAudioRef = useRef(
+    typeof document !== 'undefined'
+      ? document.getElementById('pulse-crossfade-audio') || new Audio()
+      : null
+  );
   const statsThresholdReached = useRef(false);
   const currentSongRef = useRef(null);
   const crossfadeActiveRef = useRef(false); // true once crossfade fade-out starts for current song
@@ -326,18 +341,27 @@ export function AudioProvider({ children }) {
   useEffect(() => {
     if (!('mediaSession' in navigator) || !currentSong) return;
 
+    // ── Artwork: proxy YouTube thumbnails through backend to avoid CORS rejections.
+    // Android's notification system fetches artwork independently — direct ytimg.com
+    // URLs fail CORS checks and result in blank/missing notification art on many devices.
+    const buildArtwork = (thumb) => {
+      if (!thumb) return [{ src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' }];
+      // Use backend proxy if it's a remote URL
+      const isRemote = thumb.startsWith('http');
+      const proxied = isRemote ? `${API}/api/proxy-image?url=${encodeURIComponent(thumb)}` : thumb;
+      return [
+        { src: proxied, sizes: '96x96',   type: 'image/jpeg' },
+        { src: proxied, sizes: '128x128', type: 'image/jpeg' },
+        { src: proxied, sizes: '256x256', type: 'image/jpeg' },
+        { src: proxied, sizes: '512x512', type: 'image/jpeg' },
+      ];
+    };
+
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentSong.title || 'Unknown Title',
       artist: currentSong.artist || 'Unknown Artist',
       album: currentSong.album || 'Pulse',
-      artwork: currentSong.thumbnail
-        ? [
-          { src: currentSong.thumbnail, sizes: '96x96', type: 'image/jpeg' },
-          { src: currentSong.thumbnail, sizes: '128x128', type: 'image/jpeg' },
-          { src: currentSong.thumbnail, sizes: '256x256', type: 'image/jpeg' },
-          { src: currentSong.thumbnail, sizes: '512x512', type: 'image/jpeg' },
-        ]
-        : [{ src: '/logo192.png', sizes: '192x192', type: 'image/png' }],
+      artwork: buildArtwork(currentSong.thumbnail),
     });
   }, [currentSong]);
 
