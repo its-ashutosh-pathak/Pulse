@@ -64,11 +64,13 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  isolation: isolate;
+  /* NOTE: Do NOT use `isolation: isolate` here — it creates a new stacking
+     context that prevents backdrop-filter from sampling content behind the
+     element in WebKit/Blink. */
 }
 
-/* Solid fallback when backdrop-filter isn't supported or is broken by parent transforms */
-@supports not (backdrop-filter: blur(16px)) {
+/* Solid fallback when backdrop-filter isn't supported */
+@supports not ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
   .glass {
     background: rgba(15, 15, 15, 0.92);
   }

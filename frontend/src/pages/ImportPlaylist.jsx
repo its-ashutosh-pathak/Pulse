@@ -9,6 +9,8 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Link2, Music2, CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 import { usePlaylists } from '../context/PlaylistContext';
 import { useAuth } from '../context/AuthContext';
 import './ImportPlaylist.css';
@@ -201,9 +203,6 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
           duration: s.duration || 0,
         }))
         .filter(s => s.videoId && s.videoId.length === 11);
-
-      const { addDoc, collection, serverTimestamp } = await import('firebase/firestore');
-      const { db } = await import('../firebase');
 
       const docRef = await addDoc(collection(db, 'playlists'), {
         name: preview.name,

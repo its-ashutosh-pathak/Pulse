@@ -24,15 +24,20 @@ export function AudioProvider({ children }) {
   const statsThresholdReached = useRef(false);
   const currentSongRef        = useRef(null); 
   const crossfadeActiveRef    = useRef(false); // true once crossfade fade-out starts for current song
-  const fadeInNextRef         = useRef(false); // true = next song should fade in from 0 vol
+  const crossfadeTimerRef     = useRef(null);  // setInterval id for crossfade volume ramp
   const loadGenRef            = useRef(0); // Increments on each new song load to cancel stale play() calls
 
   // Keep refs in sync with state (avoids stale closures in audio event handlers)
   const repeatModeRef = useRef(repeatMode);
   const playNextRef   = useRef(null); // Stable ref to playNext — avoids stale closure in timeupdate
   const playPrevRef   = useRef(null); // Stable ref to playPrev — used by Media Session API
+  const queueRef      = useRef(queue); // Stable ref to queue — used for prefetch IDs
   useEffect(() => { currentSongRef.current = currentSong; }, [currentSong]);
   useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
+  useEffect(() => { queueRef.current = queue; }, [queue]);
+
+  // ── Throttle helper for Media Session position updates ──────────────────────
+  const lastPositionUpdate = useRef(0);
 
   // ── Audio event listeners ──────────────────────────────────────────────────
   useEffect(() => {
@@ -47,9 +52,8 @@ export function AudioProvider({ children }) {
         const timeLeft = audio.duration - audio.currentTime;
         if (!crossfadeActiveRef.current && timeLeft <= fadeSeconds && timeLeft > 0) {
           crossfadeActiveRef.current = true;
-          // Trigger next song immediately so it starts loading/playing
-          // playNext() is hoisted via ref to avoid stale closure issues
-          playNextRef.current?.();
+          // Start the crossfade: load next into secondary element and ramp volumes
+          _startCrossfade(fadeSeconds);
         }
         // Smoothly fade out current track as time runs out
         if (crossfadeActiveRef.current) {
@@ -65,6 +69,19 @@ export function AudioProvider({ children }) {
       ) {
         updatePlaybackStats(currentSongRef.current, Math.round(audio.currentTime * 1000));
         statsThresholdReached.current = true;
+      }
+
+      // ── Media Session: Update position state (throttled to once per second) ──
+      const now = Date.now();
+      if (now - lastPositionUpdate.current > 1000 && 'mediaSession' in navigator && audio.duration > 0) {
+        lastPositionUpdate.current = now;
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audio.duration,
+            playbackRate: audio.playbackRate || 1,
+            position: Math.min(audio.currentTime, audio.duration),
+          });
+        } catch (_) { /* some browsers don't support setPositionState */ }
       }
     };
 
@@ -90,8 +107,14 @@ export function AudioProvider({ children }) {
       setIsLoading(false);
     };
     const onCanPlay        = () => setIsLoading(false);
-    const onPlay           = () => setIsPlaying(true);
-    const onPause          = () => setIsPlaying(false);
+    const onPlay           = () => {
+      setIsPlaying(true);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+    };
+    const onPause          = () => {
+      setIsPlaying(false);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    };
     const onPlaying        = () => { setIsPlaying(true); setIsLoading(false); };
 
     audio.addEventListener('timeupdate',     onTimeUpdate);
@@ -126,6 +149,7 @@ export function AudioProvider({ children }) {
         crossfadeAudioRef.current.pause();
         crossfadeAudioRef.current.src = '';
       }
+      if (crossfadeTimerRef.current) clearInterval(crossfadeTimerRef.current);
     };
   }, []);
 
@@ -147,10 +171,18 @@ export function AudioProvider({ children }) {
             ]
           : [],
       });
+
+      // Set initial playback state so OS knows we're actively playing
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
     }
 
     navigator.mediaSession.setActionHandler('play',  () => { audioRef.current?.play(); setIsPlaying(true); });
     navigator.mediaSession.setActionHandler('pause', () => { audioRef.current?.pause(); setIsPlaying(false); });
+    navigator.mediaSession.setActionHandler('stop',  () => {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    });
     navigator.mediaSession.setActionHandler('previoustrack', () => playPrevRef.current?.());
     navigator.mediaSession.setActionHandler('nexttrack',     () => playNextRef.current?.());
     navigator.mediaSession.setActionHandler('seekto', (d) => {
@@ -159,7 +191,105 @@ export function AudioProvider({ children }) {
         setProgress(d.seekTime);
       }
     });
-  }, [currentSong]); // Re-run when song changes to update OS metadata
+    navigator.mediaSession.setActionHandler('seekbackward', (d) => {
+      if (audioRef.current) {
+        const offset = d?.seekOffset || 10;
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - offset);
+        setProgress(audioRef.current.currentTime);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekforward', (d) => {
+      if (audioRef.current) {
+        const offset = d?.seekOffset || 10;
+        audioRef.current.currentTime = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + offset);
+        setProgress(audioRef.current.currentTime);
+      }
+    });
+  }, [currentSong, isPlaying]); // Re-run when song or playback state changes
+
+  // ── Crossfade: load next song into secondary element and ramp volumes ───────
+  const _startCrossfade = useCallback(async (fadeSeconds) => {
+    // Get the next song from the queue without consuming it
+    // (playNext will consume it when crossfade finishes or when the primary song ends)
+    const nextInQueue = queueRef.current?.[0];
+    if (!nextInQueue) {
+      // No next song — just let current fade out and trigger playNext on ended
+      return;
+    }
+
+    try {
+      const nextId = nextInQueue.videoId || nextInQueue.id || '';
+      if (!nextId || nextId.length !== 11) return;
+
+      // Build stream URL for the crossfade target
+      const token = user ? await user.getIdToken() : '';
+      let streamUrl;
+
+      // Check offline first
+      try {
+        const downloaded = await isDownloaded(nextId);
+        if (downloaded) {
+          streamUrl = await getAudioObjectURL(nextId);
+        }
+      } catch (_) { /* not downloaded, fall through */ }
+
+      if (!streamUrl) {
+        streamUrl = `${API}/api/stream/${nextId}?token=${encodeURIComponent(token)}`;
+      }
+
+      // Load into crossfade element and start playing at volume 0
+      const cfAudio = crossfadeAudioRef.current;
+      cfAudio.volume = 0;
+      cfAudio.src = streamUrl;
+      cfAudio.load();
+      cfAudio.play().catch(() => {});
+
+      // Ramp crossfade audio from 0→1 starting when it actually produces sound
+      const onCfPlaying = () => {
+        cfAudio.removeEventListener('playing', onCfPlaying);
+        const startTime = Date.now();
+        crossfadeTimerRef.current = setInterval(() => {
+          const elapsed = (Date.now() - startTime) / 1000;
+          const vol = Math.min(1, elapsed / fadeSeconds);
+          cfAudio.volume = vol;
+          if (vol >= 1) {
+            clearInterval(crossfadeTimerRef.current);
+            crossfadeTimerRef.current = null;
+
+            // Crossfade complete — swap refs: crossfade becomes primary
+            const oldPrimary = audioRef.current;
+            oldPrimary.pause();
+            oldPrimary.src = '';
+
+            audioRef.current = cfAudio;
+            crossfadeAudioRef.current = oldPrimary;
+            crossfadeActiveRef.current = false;
+
+            // Wire event listeners to the new primary audio element
+            // (the useEffect above only attached to the original audioRef.current)
+            // For simplicity, update state from the new primary
+            setDuration(cfAudio.duration || 0);
+            setProgress(cfAudio.currentTime || 0);
+
+            // Consume the queue entry
+            setCurrentSong({
+              ...nextInQueue,
+              id: nextInQueue.videoId || nextInQueue.id || '',
+              videoId: nextInQueue.videoId || nextInQueue.id || '',
+              thumbnail: nextInQueue.thumbnail || nextInQueue.cover || nextInQueue.artworkUrl || '',
+            });
+            statsThresholdReached.current = false;
+            setQueue(prev => prev.slice(1));
+          }
+        }, 50);
+      };
+      cfAudio.addEventListener('playing', onCfPlaying);
+
+    } catch (err) {
+      console.warn('[Crossfade] Failed to start crossfade, falling back to normal transition:', err);
+      // Fall back — normal playNext will handle it
+    }
+  }, [user]);
 
   // ── Core play function ─────────────────────────────────────────────────────
   const playSong = useCallback(async (song, offlineUrl = null) => {
@@ -192,10 +322,16 @@ export function AudioProvider({ children }) {
     }
 
     try {
+      // Cancel any active crossfade
+      if (crossfadeTimerRef.current) {
+        clearInterval(crossfadeTimerRef.current);
+        crossfadeTimerRef.current = null;
+      }
+      crossfadeActiveRef.current = false;
+      crossfadeAudioRef.current.pause();
+      crossfadeAudioRef.current.src = '';
+
       statsThresholdReached.current = false;
-      // If crossfade was active, carry that intent into fade-in for the new song
-      fadeInNextRef.current = crossfadeActiveRef.current;
-      crossfadeActiveRef.current = false; // reset fade-out trigger for new song
       setIsLoading(true);
       setCurrentSong(normalizedSong);
       setIsPlaying(true);
@@ -205,51 +341,24 @@ export function AudioProvider({ children }) {
       // Stop any current playback, reset volume
       audioRef.current.pause();
       audioRef.current.src = '';
+      audioRef.current.volume = 1;
 
       // Increment load generation — any stale async play() calls will be aborted
       const myGen = ++loadGenRef.current;
       const isStale = () => loadGenRef.current !== myGen;
 
-      // ── Helper: apply crossfade fade-in if needed, otherwise play immediately
-      // IMPORTANT: the ramp starts from the 'playing' event, NOT from when src is set.
-      // This is critical for streaming — buffering takes 1-3s, and if the ramp starts
-      // earlier, the interval burns through part of it before any audio is heard.
-      const playWithCrossfade = (url) => {
-        const fadeSeconds = parseInt(localStorage.getItem('pulse_crossfade') || '0');
-        if (fadeSeconds > 0 && fadeInNextRef.current) {
-          fadeInNextRef.current = false;
-          audioRef.current.volume = 0;
-          audioRef.current.src = url;
-          audioRef.current.load();
-          audioRef.current.play().catch(err => { if (!isStale()) console.error('Play error:', err); });
-
-          // Start the ramp only when audio actually produces sound
-          let iv = null;
-          const onActuallyPlaying = () => {
-            audioRef.current.removeEventListener('playing', onActuallyPlaying);
-            if (isStale()) return;
-            const startTime = Date.now();
-            iv = setInterval(() => {
-              if (isStale()) { clearInterval(iv); return; }
-              const vol = Math.min(1, (Date.now() - startTime) / 1000 / fadeSeconds);
-              audioRef.current.volume = vol;
-              if (vol >= 1) clearInterval(iv);
-            }, 50);
-          };
-          audioRef.current.addEventListener('playing', onActuallyPlaying);
-        } else {
-          fadeInNextRef.current = false;
-          audioRef.current.volume = 1;
-          audioRef.current.src = url;
-          audioRef.current.load();
-          audioRef.current.play().catch(err => { if (!isStale()) console.error('Play error:', err); });
-        }
+      // ── Helper: play with optional fade-in ──
+      const playUrl = (url) => {
+        audioRef.current.volume = 1;
+        audioRef.current.src = url;
+        audioRef.current.load();
+        audioRef.current.play().catch(err => { if (!isStale()) console.error('Play error:', err); });
       };
 
       // ── OFFLINE PATH: explicit blobUrl provided (e.g. from Downloads page) ──
       const blobUrl = offlineUrl || (song.offline ? song.streamUrl : null);
       if (blobUrl) {
-        playWithCrossfade(blobUrl);
+        playUrl(blobUrl);
         return;
       }
 
@@ -262,7 +371,7 @@ export function AudioProvider({ children }) {
           if (downloaded) {
             const localUrl = await getAudioObjectURL(normalizedSong.id);
             if (isStale()) return;
-            playWithCrossfade(localUrl);
+            playUrl(localUrl);
             return;
           }
         } catch (_) {
@@ -281,14 +390,13 @@ export function AudioProvider({ children }) {
       
       const effectiveQuality = (dataSaver && isCellular) ? 'low' : userQuality;
       // ── Stream via backend proxy (YouTube CDN URLs are IP-locked to the server) ──
-      // /api/stream/:videoId pipes the audio through our backend, so the browser
-      // never directly hits the YouTube CDN. We pass the auth token as ?token= so
-      // the <audio> element can use it directly (audio elements can't set headers).
       const token = user ? await user.getIdToken() : '';
       if (isStale()) return;
 
-      const streamUrl = `${API}/api/stream/${normalizedSong.id}?token=${encodeURIComponent(token)}`;
-      playWithCrossfade(streamUrl);
+      // Build stream URL — include next 3 queue IDs for backend prefetching
+      const nextIds = queueRef.current.slice(0, 3).map(s => s.videoId || s.id).filter(Boolean).join(',');
+      const streamUrl = `${API}/api/stream/${normalizedSong.id}?token=${encodeURIComponent(token)}${nextIds ? `&next=${nextIds}` : ''}`;
+      playUrl(streamUrl);
 
       // Proactive Queue Fetching
       if (!normalizedSong._contextId) {

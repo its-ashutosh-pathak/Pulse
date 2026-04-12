@@ -80,25 +80,39 @@ export default function SongActionMenu({ song, onAction, showRemove = false, onC
     // ── ALBUM ─────────────────────────────────────────────────────────────────
     if (action === 'ALBUM') {
       setLoadingAction('ALBUM');
-      const cachedId = song.albumBrowseId?.startsWith('MPRE') ? song.albumBrowseId
-        : song.albumId?.startsWith('MPRE') ? song.albumId : null;
+      // 1. Check all possible cached album browse IDs on the song object
+      const cachedId = [song.albumBrowseId, song.albumId, song.album?.browseId, song.album?.id]
+        .find(id => id && String(id).startsWith('MPRE'));
       if (cachedId) {
         navigate(`/playlist/${cachedId}`);
         if (onClose) onClose();
         return;
       }
-      const q = `${song.album || song.title} ${song.artist || ''}`.trim();
+      // 2. Fallback: search by ALBUM TITLE ONLY (not combined with artist —
+      //    combining them causes wrong matches for common album names like
+      //    "Greatest Hits" or self-titled albums)
+      const albumName = song.album || song.title || '';
+      if (!albumName) {
+        navigate(`/search?q=${encodeURIComponent(song.title || '')}`);
+        if (onClose) onClose();
+        return;
+      }
       try {
-        const r = await fetch(`${API}/api/album-search?q=${encodeURIComponent(q)}`);
-        const json = await r.json();
-        const bid = json?.data?.browseId;
+        // Search with just album name first; if that fails, try album + artist
+        let bid = null;
+        for (const q of [albumName, `${albumName} ${song.artist || ''}`]) {
+          const r = await fetch(`${API}/api/album-search?q=${encodeURIComponent(q.trim())}`);
+          const json = await r.json();
+          bid = json?.data?.browseId;
+          if (bid?.startsWith('MPRE')) break;
+        }
         if (bid?.startsWith('MPRE')) {
           navigate(`/playlist/${bid}`);
         } else {
-          navigate(`/search?q=${encodeURIComponent(song.album || song.title)}`);
+          navigate(`/search?q=${encodeURIComponent(albumName)}`);
         }
       } catch {
-        navigate(`/search?q=${encodeURIComponent(song.album || song.title)}`);
+        navigate(`/search?q=${encodeURIComponent(albumName)}`);
       }
       if (onClose) onClose();
       return;

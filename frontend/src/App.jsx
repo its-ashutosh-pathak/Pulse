@@ -1,22 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlaylistProvider } from './context/PlaylistContext';
 import { AudioProvider } from './context/AudioContext';
 
-// Components & Pages
+// Critical-path components — static imports (always needed immediately)
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Library from './pages/Library';
+import Search from './pages/Search';
 import PlayerView from './pages/PlayerView';
 import Login from './pages/Login';
-import PlaylistView from './pages/PlaylistView';
-import Search from './pages/Search';
-import Settings from './pages/Settings';
-import Profile from './pages/Profile';
-import ArtistView from './pages/ArtistView';
-import Downloads from './pages/Downloads';
-import OfflineScreen from './pages/OfflineScreen';
+
+// Heavy / infrequently-accessed pages — lazy-loaded for proper chunk splitting
+const Settings     = lazy(() => import('./pages/Settings'));
+const Profile      = lazy(() => import('./pages/Profile'));
+const Downloads    = lazy(() => import('./pages/Downloads'));
+const PlaylistView = lazy(() => import('./pages/PlaylistView'));
+const ArtistView   = lazy(() => import('./pages/ArtistView'));
+const OfflineScreen = lazy(() => import('./pages/OfflineScreen'));
+
+// Minimal loading fallback for lazy chunks
+const PageLoader = () => (
+  <div className="universal-loader-container">
+    <div className="universal-ring" />
+  </div>
+);
 
 // Hook: tracks real-time online/offline status
 function useOnlineStatus() {
@@ -108,29 +117,31 @@ function AppRoutes() {
   // NOTE: This must come AFTER all hooks — conditional returns before hooks violate Rules of Hooks.
   const isDownloadsRoute = pathname.startsWith('/downloads');
   if (!isOnline && !isDownloadsRoute) {
-    return <OfflineScreen />;
+    return <Suspense fallback={<PageLoader />}><OfflineScreen /></Suspense>;
   }
 
   return (
-    <Routes>
-      {/* Public */}
-      <Route path="/login" element={<Login />} />
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<Login />} />
 
-      {/* Protected — with bottom nav */}
-      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<Home />} />
-        <Route path="library" element={<Library />} />
-        <Route path="search" element={<Search />} />
-        <Route path="settings"     element={<Settings />} />
-        <Route path="profile"      element={<Profile />} />
-        <Route path="downloads"    element={<Downloads />} />
-        <Route path="playlist/:id" element={<PlaylistView />} />
-        <Route path="artist/:id"   element={<ArtistView />} />
-      </Route>
+        {/* Protected — with bottom nav */}
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route index element={<Home />} />
+          <Route path="library" element={<Library />} />
+          <Route path="search" element={<Search />} />
+          <Route path="settings"     element={<Settings />} />
+          <Route path="profile"      element={<Profile />} />
+          <Route path="downloads"    element={<Downloads />} />
+          <Route path="playlist/:id" element={<PlaylistView />} />
+          <Route path="artist/:id"   element={<ArtistView />} />
+        </Route>
 
-      {/* Protected — fullscreen (no bottom nav) */}
-      <Route path="/player" element={<ProtectedRoute><PlayerView /></ProtectedRoute>} />
-    </Routes>
+        {/* Protected — fullscreen (no bottom nav) */}
+        <Route path="/player" element={<ProtectedRoute><PlayerView /></ProtectedRoute>} />
+      </Routes>
+    </Suspense>
   );
 }
 

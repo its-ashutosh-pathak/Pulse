@@ -41,31 +41,58 @@ async function recordPlay(userId, body) {
 /**
  * Compute listening time stats for a given period.
  * Returns totalSeconds, totalMinutes, totalHours, dailyAverageMinutes, and per-day breakdown.
+ *
+ * dailyAverageMinutes is ALWAYS computed from lifetime data / total active days,
+ * so it stays consistent regardless of which period is being viewed.
  */
 async function getListeningTime(userId, period) {
   validate.statsPeriod(period);
 
   let rows;
-  let numDays;
 
   if (period === 'lifetime') {
-    rows    = await statsRepo.getAll(userId);
-    numDays = rows.length || 1;
+    rows = await statsRepo.getAll(userId);
   } else {
-    const days = { day: 1, week: 7, month: 30, year: 365, lifetime: 365 }[period] || 30;
-    numDays    = days;
+    const days = { day: 1, week: 7, month: 30, year: 365 }[period] || 30;
     const dates = buildDateRange(days);
-    rows        = await statsRepo.getByDates(userId, dates);
+    rows = await statsRepo.getByDates(userId, dates);
   }
 
   const totalSeconds = rows.reduce((sum, r) => sum + (r.totalSeconds || 0), 0);
+
+  // ── Compute daily average from LIFETIME data (stable across all period views) ──
+  let dailyAverageMinutes = 0;
+  try {
+    const allRows = period === 'lifetime' ? rows : await statsRepo.getAll(userId);
+    const lifetimeSeconds = allRows.reduce((sum, r) => sum + (r.totalSeconds || 0), 0);
+
+    // Count actual days with recorded activity, or fall back to date span
+    let accountDays = 1;
+    if (allRows.length > 0) {
+      // Get earliest and latest dates in the user's stats
+      const sortedDates = allRows.map(r => r.date).filter(Boolean).sort();
+      if (sortedDates.length >= 2) {
+        const earliest = new Date(sortedDates[0]);
+        const latest   = new Date(sortedDates[sortedDates.length - 1]);
+        accountDays = Math.max(1, Math.round((latest - earliest) / (1000 * 60 * 60 * 24)) + 1);
+      } else {
+        accountDays = 1; // Only one day of data
+      }
+    }
+
+    dailyAverageMinutes = Math.round(lifetimeSeconds / 60 / accountDays);
+  } catch (e) {
+    // If lifetime query fails, fall back to period-based calculation
+    const fallbackDays = rows.length || 1;
+    dailyAverageMinutes = Math.round(totalSeconds / 60 / fallbackDays);
+  }
 
   return {
     period,
     totalSeconds,
     totalMinutes:         Math.floor(totalSeconds / 60),
     totalHours:           Math.floor(totalSeconds / 3600),
-    dailyAverageMinutes:  Math.round(totalSeconds / 60 / numDays),
+    dailyAverageMinutes,
     days: rows.map((r) => ({ date: r.date, totalSeconds: r.totalSeconds || 0 })),
   };
 }

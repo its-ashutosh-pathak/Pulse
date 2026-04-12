@@ -95,6 +95,15 @@ async function watchNext(req, res, next) {
   try {
     const data = await metaSvc.getWatchNext(req.params.videoId);
     res.json(successBody(data));
+
+    // Background prefetch first 3 watch-next tracks to warm stream cache
+    const nextIds = (data || []).slice(0, 3).map(t => t.videoId).filter(Boolean);
+    if (nextIds.length) {
+      const settings = req.user
+        ? await settingsRepo.get(req.user.userId).catch(() => ({}))
+        : {};
+      prefetchSvc.prefetchNext(nextIds, settings.streamingQuality || 'auto', Boolean(settings.dataSaverMode));
+    }
   } catch (e) { next(e); }
 }
 
@@ -140,15 +149,20 @@ async function streamProxy(req, res, next) {
   try {
     const { videoId } = req.params;
     const forceRefresh = req.query.refresh === 'true';
+    const nextIds = req.query.next ? req.query.next.split(',').filter(Boolean) : [];
 
     const settings = req.user
       ? await settingsRepo.get(req.user.userId)
       : { streamingQuality: 'auto', dataSaverMode: false };
 
     const quality = settings.dataSaverMode ? 'low' : (settings.streamingQuality || 'auto');
+    const dataSaver = Boolean(settings.dataSaverMode);
     const streamData = await streamSvc.getStreamUrl(videoId, { quality, forceRefresh });
     const streamUrl = streamData?.url;
     if (!streamUrl) return next(createError(404, 'STREAM_NOT_FOUND', 'Cannot find stream'));
+
+    // Background prefetch next tracks — never blocks the current stream response
+    prefetchSvc.prefetchNext(nextIds, quality, dataSaver);
 
     const axios = require('axios');
 

@@ -159,7 +159,13 @@ function normItem(item) {
     videoId,
     browseId,
     playlistId: getPlaylistId(item),
-    albumBrowseId: String(item.album?.id || item.album?.browseId || ''),
+    albumBrowseId: String(
+      item.album?.id || item.album?.browseId || item.album?.browse_id ||
+      item.albumBrowseId || item.album_browse_id ||
+      // Some items carry album endpoint in flex_columns
+      item.flex_columns?.[2]?.title?.runs?.[0]?.endpoint?.browseEndpoint?.browseId ||
+      ''
+    ),
     artistBrowseId: String(item.artists?.[0]?.id || item.artists?.[0]?.browseId || ''),
     title: String(item.title || item.name || 'Unknown'),
     artist,
@@ -514,15 +520,30 @@ async function getPlaylist(playlistId, { full = false } = {}) {
 
     // Only paginate when explicitly requested (import path) to keep preview fast
     if (full) {
-      while (res.has_continuation) {
+      const MAX_PAGES = 200; // Safety: 200 pages × ~100 tracks = 20,000 tracks max
+      let page = 0;
+      // Check both `has_continuation` and the raw `continuation` token —
+      // different youtubei.js versions expose the flag differently.
+      while (page < MAX_PAGES && (res.has_continuation || res.continuation)) {
         try {
+          // Small delay between pages to avoid YouTube rate limiting
+          if (page > 0) await new Promise(r => setTimeout(r, 200));
           res = await res.getContinuation();
           const moreTracks = (res.contents || res.items || []).map(normTrack).filter(Boolean);
+          if (moreTracks.length === 0) {
+            logger.info('ytmusic_playlist_continuation_empty', { playlistId, page, totalSoFar: allTracks.length });
+            break; // No more tracks — stop
+          }
           allTracks = allTracks.concat(moreTracks);
+          page++;
+          logger.info('ytmusic_playlist_page', { playlistId, page, fetched: moreTracks.length, totalSoFar: allTracks.length });
         } catch (contErr) {
-          logger.warn('ytmusic_playlist_continuation_failed', { playlistId, fetched: allTracks.length, error: contErr.message });
+          logger.warn('ytmusic_playlist_continuation_failed', { playlistId, page, fetched: allTracks.length, error: contErr.message });
           break;
         }
+      }
+      if (page >= MAX_PAGES) {
+        logger.warn('ytmusic_playlist_max_pages', { playlistId, pages: page, tracks: allTracks.length });
       }
     }
 

@@ -28,6 +28,11 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 app.use(requestLogger);
 
+// ── Root health endpoint — prevents 404 on GET / ─────────────────────────────
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'pulse-backend', uptime: Math.floor(process.uptime()), timestamp: new Date().toISOString() });
+});
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/health',    healthRoutes);
 app.use('/auth',      rateLimiter(RATE_LIMIT_GENERAL), authRoutes);
