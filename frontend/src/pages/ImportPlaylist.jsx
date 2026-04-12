@@ -101,7 +101,7 @@ export default function ImportPlaylist({ onClose, initialTab = 'ytm' }) {
         const id = extractYTPlaylistId(url);
         if (!id) throw new Error('Could not find a YouTube / YouTube Music playlist ID in that URL.');
 
-        const r = await fetch(`${API}/api/playlist/${id}`);
+        const r = await fetch(`${API}/api/playlist/${id}?full=true`);
         const json = await r.json();
         if (!json.success || !json.data) throw new Error('Playlist not found or is private.');
 

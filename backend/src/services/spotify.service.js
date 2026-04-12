@@ -280,9 +280,30 @@ async function getPlaylistMeta(id) {
     if (status === 403 && msg.toLowerCase().includes('premium'))
       throw createError(503, 'SPOTIFY_QUOTA_EXCEEDED', 'Spotify API quota exceeded.');
     
-    // If we get an auth/quota error, try the fallback
-    if (status === 401 || status === 403 || status === 429) {
-      logger.warn('spotify_api_blocked_using_fallback_preview', { id, status });
+    // If API is blocked OR credentials are missing, try anon token for real total
+    const shouldFallback = status === 401 || status === 403 || status === 429
+      || e.code === 'SPOTIFY_NOT_CONFIGURED' || e.statusCode === 503;
+
+    if (shouldFallback) {
+      logger.warn('spotify_meta_api_blocked_using_anon_fallback', { id, status, code: e.code });
+      try {
+        // Try anonymous token first — gets real total without the 100-track embed cap
+        const token = await getAnonymousToken(id);
+        if (token) {
+          const anonMeta = await axios.get(`${SPOTIFY_API}/playlists/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { fields: 'name,tracks.total' },
+            timeout: 8000,
+          });
+          return {
+            name: anonMeta.data?.name || 'Spotify Playlist',
+            total: anonMeta.data?.tracks?.total || 0,
+          };
+        }
+      } catch (anonErr) {
+        logger.warn('spotify_anon_meta_failed', { id, error: anonErr.message });
+      }
+      // Last resort: embed scraper (capped at 100, but better than nothing)
       try {
         const fallback = await scrapeSpotifyEmbed(id);
         return { name: fallback.name, total: fallback.total };

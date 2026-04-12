@@ -80,40 +80,48 @@ export default function SongActionMenu({ song, onAction, showRemove = false, onC
     // ── ALBUM ─────────────────────────────────────────────────────────────────
     if (action === 'ALBUM') {
       setLoadingAction('ALBUM');
-      // 1. Check all possible cached album browse IDs on the song object
+      // 1. Check cached album browse ID — must start with MPRE (YouTube Music album)
       const cachedId = [song.albumBrowseId, song.albumId, song.album?.browseId, song.album?.id]
         .find(id => id && String(id).startsWith('MPRE'));
       if (cachedId) {
         navigate(`/playlist/${cachedId}`);
+        setLoadingAction(null);
         if (onClose) onClose();
         return;
       }
-      // 2. Fallback: search by ALBUM TITLE ONLY (not combined with artist —
-      //    combining them causes wrong matches for common album names like
-      //    "Greatest Hits" or self-titled albums)
+      // 2. Search using "album <title> <artist>" — much more specific than just the title.
+      //    Prefix "album" biases YouTube Music search toward album results, not playlists.
       const albumName = song.album || song.title || '';
+      const artist = song.artist || '';
       if (!albumName) {
         navigate(`/search?q=${encodeURIComponent(song.title || '')}`);
+        setLoadingAction(null);
         if (onClose) onClose();
         return;
       }
       try {
-        // Search with just album name first; if that fails, try album + artist
+        // Try with full "album title artist" first, then fallback to title only
         let bid = null;
-        for (const q of [albumName, `${albumName} ${song.artist || ''}`]) {
-          const r = await fetch(`${API}/api/album-search?q=${encodeURIComponent(q.trim())}`);
+        const queries = [
+          `album ${albumName} ${artist}`.trim(),
+          albumName,
+        ];
+        for (const q of queries) {
+          const r = await fetch(`${API}/api/album-search?q=${encodeURIComponent(q)}`);
           const json = await r.json();
-          bid = json?.data?.browseId;
-          if (bid?.startsWith('MPRE')) break;
+          const candidate = json?.data?.browseId;
+          if (candidate?.startsWith('MPRE')) { bid = candidate; break; }
         }
-        if (bid?.startsWith('MPRE')) {
+        if (bid) {
           navigate(`/playlist/${bid}`);
         } else {
-          navigate(`/search?q=${encodeURIComponent(albumName)}`);
+          // No album found — search so user can pick manually
+          navigate(`/search?q=${encodeURIComponent(`${albumName} ${artist}`.trim())}`);
         }
       } catch {
         navigate(`/search?q=${encodeURIComponent(albumName)}`);
       }
+      setLoadingAction(null);
       if (onClose) onClose();
       return;
     }
