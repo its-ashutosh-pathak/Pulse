@@ -350,7 +350,7 @@ export function AudioProvider({ children }) {
       const isRemote = thumb.startsWith('http');
       const proxied = isRemote ? `${API}/api/proxy-image?url=${encodeURIComponent(thumb)}` : thumb;
       return [
-        { src: proxied, sizes: '96x96',   type: 'image/jpeg' },
+        { src: proxied, sizes: '96x96', type: 'image/jpeg' },
         { src: proxied, sizes: '128x128', type: 'image/jpeg' },
         { src: proxied, sizes: '256x256', type: 'image/jpeg' },
         { src: proxied, sizes: '512x512', type: 'image/jpeg' },
@@ -454,8 +454,94 @@ export function AudioProvider({ children }) {
 
   // ── Crossfade: load next song into secondary element and ramp via Web Audio GainNode ──
   const _startCrossfade = useCallback(async (fadeSeconds) => {
+    // ── Handle repeat-one with crossfade: loop same song via crossfade ──
+    if (repeatModeRef.current === 'one') {
+      const cs = currentSongRef.current;
+      if (!cs) return;
+      // Build a synthetic "next" that is the same song, and crossfade into it
+      const selfSong = { ...cs };
+      const nextId = selfSong.videoId || selfSong.id || '';
+      if (!nextId || nextId.length !== 11) {
+        // Fallback: just seek to 0
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+        crossfadeActiveRef.current = false;
+        return;
+      }
+      // Use the same crossfade logic with selfSong as "nextInQueue"
+      try {
+        const token = user ? await user.getIdToken() : '';
+        let streamUrl;
+        try {
+          const downloaded = await isDownloaded(nextId);
+          if (downloaded) streamUrl = await getAudioObjectURL(nextId);
+        } catch (_) {}
+        if (!streamUrl) {
+          streamUrl = `${API}/api/stream/${nextId}?token=${encodeURIComponent(token)}`;
+        }
+        const cfAudio = crossfadeAudioRef.current;
+        cfAudio.src = streamUrl;
+        cfAudio.load();
+        const ctx = ensureWebAudioCtx();
+        const primaryGain = connectElementToGain(audioRef.current);
+        primaryGainRef.current = primaryGain;
+        const cfGain = connectElementToGain(cfAudio);
+        crossfadeGainRef.current = cfGain;
+        if (cfGain && ctx) {
+          cfGain.gain.setValueAtTime(0, ctx.currentTime);
+          cfAudio.volume = 1;
+        } else {
+          cfAudio.volume = 0;
+        }
+        cfAudio.play().catch(() => {});
+        const onCfPlaying = () => {
+          cfAudio.removeEventListener('playing', onCfPlaying);
+          if (cfGain && ctx) {
+            cfGain.gain.setValueAtTime(0, ctx.currentTime);
+            cfGain.gain.linearRampToValueAtTime(1, ctx.currentTime + fadeSeconds);
+            const swapDelay = fadeSeconds * 1000 + 100;
+            crossfadeTimerRef.current = setTimeout(() => {
+              crossfadeTimerRef.current = null;
+              _completeCrossfadeSwap(cfAudio, selfSong);
+            }, swapDelay);
+          } else {
+            const startTime = Date.now();
+            crossfadeTimerRef.current = setInterval(() => {
+              const elapsed = (Date.now() - startTime) / 1000;
+              const vol = Math.min(1, elapsed / fadeSeconds);
+              cfAudio.volume = vol;
+              if (vol >= 1) {
+                clearInterval(crossfadeTimerRef.current);
+                crossfadeTimerRef.current = null;
+                _completeCrossfadeSwap(cfAudio, selfSong);
+              }
+            }, 50);
+          }
+        };
+        cfAudio.addEventListener('playing', onCfPlaying);
+      } catch (err) {
+        console.warn('[Crossfade] Repeat-one crossfade failed, falling back:', err);
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(() => {});
+        crossfadeActiveRef.current = false;
+      }
+      return;
+    }
+
     // Get the next song from the queue without consuming it
-    const nextInQueue = queueRef.current?.[0];
+    let nextInQueue = queueRef.current?.[0];
+
+    // ── Handle repeat-all with crossfade: rebuild queue if empty ──
+    if (!nextInQueue && repeatModeRef.current === 'all' && baseQueue.length > 0) {
+      // Rebuild the queue from baseQueue (which includes the original song)
+      const rebuilt = isShuffled
+        ? [...baseQueue].sort(() => Math.random() - 0.5)
+        : [...baseQueue];
+      setQueue(rebuilt);
+      queueRef.current = rebuilt;
+      nextInQueue = rebuilt[0];
+    }
+
     if (!nextInQueue) {
       // No next song — just let current fade out and trigger playNext on ended
       return;
@@ -544,7 +630,7 @@ export function AudioProvider({ children }) {
       console.warn('[Crossfade] Failed to start crossfade, falling back to normal transition:', err);
       // Fall back — normal playNext will handle it
     }
-  }, [user, ensureWebAudioCtx, connectElementToGain, _completeCrossfadeSwap]);
+  }, [user, ensureWebAudioCtx, connectElementToGain, _completeCrossfadeSwap, baseQueue, isShuffled]);
 
   // ── Core play function ─────────────────────────────────────────────────────
   const playSong = useCallback(async (song, offlineUrl = null) => {
@@ -662,8 +748,10 @@ export function AudioProvider({ children }) {
       const streamUrl = `${API}/api/stream/${normalizedSong.id}?token=${encodeURIComponent(token)}${nextIds ? `&next=${nextIds}` : ''}`;
       playUrl(streamUrl);
 
-      // Proactive Queue Fetching
-      if (!normalizedSong._contextId) {
+      // Proactive Queue Fetching — only when the queue is empty.
+      // This prevents suggestions from replacing the current queue every time
+      // a new song plays from the existing queue.
+      if (!normalizedSong._contextId && queueRef.current.length === 0) {
         fetch(`${API}/api/watch-next/${normalizedSong.id}`, { headers: { Authorization: `Bearer ${token}` } })
           .then(r => r.json())
           .then(res => {
@@ -693,10 +781,21 @@ export function AudioProvider({ children }) {
       }
 
       // If repeat ALL and queue empty, restart from baseQueue
+      // Include the currently playing song at the beginning so the full cycle replays
       if (repeatModeRef.current === 'all' && baseQueue.length > 0) {
-        const [first, ...rest] = isShuffled
-          ? [...baseQueue].sort(() => Math.random() - 0.5)
-          : baseQueue;
+        // Build the full repeat list: currentSong + original baseQueue (deduplicated)
+        const cs = currentSongRef.current;
+        let fullList = [...baseQueue];
+        if (cs) {
+          const csId = cs.videoId || cs.id;
+          // Ensure currentSong is at the front of the repeat cycle
+          fullList = fullList.filter(s => (s.videoId || s.id) !== csId);
+          fullList.unshift(cs);
+        }
+        if (isShuffled) {
+          fullList = fullList.sort(() => Math.random() - 0.5);
+        }
+        const [first, ...rest] = fullList;
         playSong(first);
         return rest;
       }

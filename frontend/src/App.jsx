@@ -112,11 +112,11 @@ function AppRoutes() {
     document.documentElement.style.setProperty('--accent-pink', secondary);
   }, []);
 
-  // If fully offline AND not on the downloads page (which works via IndexedDB),
+  // If fully offline AND not on a route that works offline (downloads, player),
   // show the offline screen so user can navigate to downloads or retry.
   // NOTE: This must come AFTER all hooks — conditional returns before hooks violate Rules of Hooks.
-  const isDownloadsRoute = pathname.startsWith('/downloads');
-  if (!isOnline && !isDownloadsRoute) {
+  const isOfflineAllowed = pathname.startsWith('/downloads') || pathname.startsWith('/player');
+  if (!isOnline && !isOfflineAllowed) {
     return <Suspense fallback={<PageLoader />}><OfflineScreen /></Suspense>;
   }
 
