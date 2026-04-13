@@ -8,7 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-a78de8.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-brightgreen.svg)](https://nodejs.org)
-[![React](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev)
+[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev)
 [![PWA](https://img.shields.io/badge/PWA-Ready-865AA4.svg)](https://web.dev/progressive-web-apps/)
 
 [Features](#-features) · [Screenshots](#-screenshots) · [Getting Started](#-getting-started) · [Configuration](#-configuration) · [Deployment](#-deployment)
@@ -21,7 +21,8 @@
 
 ### 🎵 Playback
 - Stream 100M+ songs from YouTube Music — no ads, no limits
-- **Crossfade** between tracks with configurable fade duration
+- **True Gapless Crossfade** between tracks with configurable fade duration using Web Audio API GainNodes
+- Smooth dual-audio element system for precision volume-ramping transitions
 - Gapless queue management with shuffle and repeat modes
 - **Lock screen controls** (Media Session API) — play, pause, skip from your OS notification shade
 - Full seek bar with live progress and duration
@@ -206,6 +207,14 @@ The app is split into two independently deployable services.
 4. Set **output directory**: `dist`
 5. Add environment variable: `VITE_API_URL=https://your-backend-url.railway.app`
 
+### Hugging Face Deployment (Advanced)
+
+Pulse backend can be run entirely free on Hugging Face Spaces using a Docker template. The repository is designed for a subtree split workflow:
+```bash
+git subtree split --prefix backend main
+git push hf <COMMIT_SHA>:refs/heads/main --force
+```
+
 > After deploying, update `FRONTEND_URL` in the backend env and add your frontend URL to the Spotify app's Redirect URIs.
 
 ---
@@ -215,14 +224,15 @@ The app is split into two independently deployable services.
 ### Backend
 - **Express.js** — REST API
 - **Firebase Admin SDK** — Authentication + Firestore
-- **youtube-music-ts-api** — YouTube Music data
-- **Piped API** — Audio stream extraction (no yt-dlp required)
-- **Workbox** — Service worker caching (via vite-plugin-pwa)
+- **youtubei.js** (Innertube) — YouTube Music metadata and search
+- **Multi-tier Stream Extraction Engine** — dynamically attempts `yt-dlp` (bypasses cloud locks via cookie rotation), `Piped API` (bypasses via external CDN), and `Innertube` stream endpoints to guarantee reliable high-quality playback.
+- **LRCLib / Genius** — Synced lyrics fetching and caching
 
 ### Frontend
-- **React 18** + **Vite**
-- **React Router v6** — Client-side routing
-- **IndexedDB** — Offline song storage
+- **React 19** + **Vite**
+- **React Router v7** — Client-side routing
+- **Web Audio API** — High-performance audio engine bypassing traditional HTML5 audio limitations for gapless crossfades
+- **IndexedDB** — Offline song and lyrics metadata storage
 - **Media Session API** — OS lock screen controls
 - **vite-plugin-pwa** — PWA manifest + Workbox service worker
 - Vanilla CSS with CSS custom properties (no Tailwind)
