@@ -56,7 +56,7 @@ async function _doExtract(videoId, quality) {
   }
 
   logger.error('stream_all_sources_failed', { videoId, diagnostics: errors.join(' | ') });
-  throw createError(502, 'STREAM_FAILED', 'Music extraction failed. Please try again later or refresh the page.');
+  throw createError(502, 'STREAM_FAILED', `Music extraction failed. Diagnostic: ${errors.join(' | ')}`);
 }
 
 /**
