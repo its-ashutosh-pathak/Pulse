@@ -12,8 +12,9 @@
  */
 const cache = require('../cache/memoryCache');
 const piped = require('../external/piped');
-const ytdlp = require('../external/ytdlp');
+const playdl = require('../external/playdl');
 const innertube = require('../external/innertube');
+const ytdlp = require('../external/ytdlp');
 const settingsRepo = require('../repositories/settings.repository');
 const logger = require('../utils/logger');
 const { createError } = require('../utils/errorResponse');
@@ -28,30 +29,25 @@ async function _doExtract(videoId, quality) {
   const cookieManager = require('../utils/cookieManager');
   const hasCookies = !!cookieManager.getRandomCookieFile();
 
-  // With cookies: yt-dlp goes first — cookies let it bypass YouTube's cloud IP restrictions.
-  // Without cookies: Piped goes first — avoids YouTube CDN IP-locking entirely.
-  const tiers = hasCookies
-    ? ['ytdlp', 'piped', 'innertube']
-    : ['piped', 'innertube', 'ytdlp'];
+  const tiers = [
+    { source: 'ytdlp', func: ytdlp.extract },
+    { source: 'piped', func: piped.extract },
+    { source: 'innertube', func: innertube.extract },
+    { source: 'playdl', func: playdl.extract }
+  ];
 
-  for (const source of tiers) {
+  for (const tier of tiers) {
     try {
-      let data;
-      if (source === 'ytdlp') {
-         data = await ytdlp.extract(videoId, quality);
-      } else {
-         continue; // skip broken pipelines
-      }
-
-      if (data?.url) {
+      const data = await tier.func(videoId, quality);
+      if (data && data.url) {
         cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
-        logger.info('stream_extracted', { videoId, source, hasCookies });
+        logger.info('stream_extracted', { videoId, source: tier.source, hasCookies });
         return data;
       }
-      errors.push(`${source}: returned empty URL`);
+      errors.push(`${tier.source}: returned empty URL`);
     } catch (e) {
-      errors.push(`${source}: ${e.message}`);
-      logger.warn('stream_fallback', { videoId, failedSource: source, reason: e.message });
+      errors.push(`${tier.source}: ${e.message}`);
+      logger.warn('stream_fallback', { videoId, failedSource: tier.source, reason: e.message });
     }
   }
 
