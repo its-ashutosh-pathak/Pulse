@@ -37,9 +37,11 @@ async function _doExtract(videoId, quality) {
   for (const source of tiers) {
     try {
       let data;
-      if (source === 'ytdlp')      data = await ytdlp.extract(videoId, quality);
-      else if (source === 'piped')  data = await piped.extract(videoId, quality);
-      else                          data = await innertube.extract(videoId, quality);
+      if (source === 'ytdlp') {
+         data = await ytdlp.extract(videoId, quality);
+      } else {
+         continue; // skip broken pipelines
+      }
 
       if (data?.url) {
         cache.set(`stream:${videoId}`, { ...data, expiry: Date.now() + STREAM_TTL_MS }, STREAM_TTL_MS);
