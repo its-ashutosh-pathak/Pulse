@@ -29,14 +29,10 @@ async function getInstance() {
         });
       }
 
-      const cookieManager = require('../utils/cookieManager');
-      const cookieStr = typeof cookieManager.getCookieString === 'function' ? cookieManager.getCookieString() : undefined;
-
       // Use clean standard Web client for Housekeeping/Search (most stable)
       _instance = await Innertube.create({
         cache: null,
         generate_session_locally: true,
-        cookie: cookieStr
       });
       return _instance;
     } catch (e) {
