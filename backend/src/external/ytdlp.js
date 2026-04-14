@@ -47,8 +47,8 @@ async function extract(videoId, quality = 'auto') {
 
   // Base yt-dlp arguments
   const args = [
-    // Use a high-compatibility Edge signature
-    '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0"',
+    // Use Android client bypass for YouTube botanical checks
+    '--extractor-args "youtube:player_client=android"',
     // Enable Node.js runtime for JS challenges
     '--js-runtimes node',
     // Try best audio, fall back to any audio format
