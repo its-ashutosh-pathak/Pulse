@@ -22,20 +22,21 @@ async function getInstance() {
       const { Innertube, UniversalCache, Parser } = await import('youtubei.js');
 
       // Suppress noisy InnertubeError warnings for unknown parser nodes
-      // (e.g., "LiveBadge not found"). YouTube frequently adds new UI components
-      // that youtubei.js hasn't mapped yet — these are harmless.
       if (Parser && typeof Parser.setParserErrorHandler === 'function') {
         Parser.setParserErrorHandler((err) => {
-          // Silently ignore "not found" parser mismatches
           if (err?.message?.includes('not found')) return;
           console.warn('[youtubei.js parser]', err?.message || err);
         });
       }
 
+      const cookieManager = require('../utils/cookieManager');
+      const cookieStr = typeof cookieManager.getCookieString === 'function' ? cookieManager.getCookieString() : undefined;
+
       // Use clean standard Web client for Housekeeping/Search (most stable)
       _instance = await Innertube.create({
         cache: null,
         generate_session_locally: true,
+        cookie: cookieStr
       });
       return _instance;
     } catch (e) {

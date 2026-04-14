@@ -4,6 +4,7 @@ const logger = require('./logger');
 const os = require('os');
 
 let cookieFiles = [];
+let rawCookieString = null;
 
 /**
  * Scans environment variables for any starting with YOUTUBE_COOKIE_
@@ -18,12 +19,24 @@ function init() {
   }
 
   cookieVars.forEach((key) => {
-    // Replace literal '\n' strings and strip potential surrounding quotes
-    const rawContent = process.env[key]
+    // Replace literal '\n' strings and strip ONLY surrounding quotes
+    let rawContent = process.env[key]
       .replace(/\\n/g, '\n')
-      .replace(/"/g, ''); // strip any accidental surrounding quotes
+      .replace(/^"|"$/g, ''); 
 
-    // Only accept basic heuristic that it looks like Netscape cookie file
+    // Repair HF secret tab-to-space conversion for yt-dlp
+    // Netscape format: domain, flag, path, secure, expiration, name, value
+    // separated by tabs.
+    rawContent = rawContent.split('\n').map(line => {
+      if (line.startsWith('#') || !line.trim()) return line;
+      // match 6 whitespace separated tokens, then capture the rest of the line
+      const parts = line.match(/^\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/);
+      if (parts) {
+        return parts.slice(1, 8).join('\t');
+      }
+      return line;
+    }).join('\n');
+
     if (!rawContent.includes('.youtube.com')) {
       logger.warn('cookie_manager', { msg: `Ignoring ${key} — does not appear to contain youtube.com cookies.` });
       return;
@@ -31,7 +44,6 @@ function init() {
 
     try {
       const filePath = path.join(os.tmpdir(), `${key.toLowerCase()}.txt`);
-      // yt-dlp expects standard Netscape format. If it doesn't have the header, prepend it.
       let finalContent = rawContent;
       if (!finalContent.startsWith('# Netscape HTTP Cookie File')) {
         finalContent = `# Netscape HTTP Cookie File\n${finalContent}`;
@@ -40,6 +52,22 @@ function init() {
       fs.writeFileSync(filePath, finalContent, { encoding: 'utf-8' });
       cookieFiles.push(filePath);
       logger.info('cookie_manager', { msg: `Loaded cookie from ${key}` });
+
+      // Generate HTTP cookie header string for APIs like youtubei.js
+      if (!rawCookieString) {
+        const cookies = [];
+        finalContent.split('\n').forEach(line => {
+          if (line.startsWith('#') || !line.trim()) return;
+          const parts = line.split('\t');
+          if (parts.length >= 7) {
+            cookies.push(`${parts[5]}=${parts[6].trim()}`);
+          }
+        });
+        if (cookies.length > 0) {
+          rawCookieString = cookies.join('; ');
+        }
+      }
+      
     } catch (e) {
       logger.error('cookie_manager_error', { key, error: e.message });
     }
@@ -54,4 +82,8 @@ function getRandomCookieFile() {
   return cookieFiles[idx];
 }
 
-module.exports = { init, getRandomCookieFile };
+function getCookieString() {
+  return rawCookieString;
+}
+
+module.exports = { init, getRandomCookieFile, getCookieString };
