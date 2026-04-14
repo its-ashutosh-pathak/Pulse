@@ -374,7 +374,7 @@
 
 .progress-bar:hover,
 .progress-bar.dragging {
-  height: 6px;
+  height: 4px;
 }
 
 .progress-bar:active .scrubber-thumb,

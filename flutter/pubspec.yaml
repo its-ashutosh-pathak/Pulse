@@ -1,0 +1,61 @@
+name: pulse
+description: A premium music streaming app powered by YouTube Music.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Routing
+  go_router: ^14.8.1
+
+  # Firebase
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1
+  cloud_firestore: ^5.6.5
+  google_sign_in: ^6.2.2
+
+  # Audio
+  just_audio: ^0.9.43
+  audio_service: ^0.18.17
+
+  # Networking
+  dio: ^5.7.0
+
+  # Local Storage
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  shared_preferences: ^2.3.5
+
+  # UI
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+
+  # Utilities
+  wakelock_plus: ^1.2.11
+  connectivity_plus: ^6.1.4
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.4
+  image_picker: ^1.1.2
+  permission_handler: ^11.3.1
+
+  # Icons (matching lucide-react from web app)
+  lucide_icons: ^0.257.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  riverpod_generator: ^2.6.3
+  build_runner: ^2.4.14
+  custom_lint: ^0.7.5
+  riverpod_lint: ^2.6.3

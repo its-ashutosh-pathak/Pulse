@@ -58,9 +58,7 @@ async function extract(videoId, quality = 'auto') {
     '--no-warnings',
     '--no-check-certificates',
     // Fail fast on slow connections (cloud IPs often get throttled by YouTube)
-    '--socket-timeout 10',
-    // Allow yt-dlp to negotiate client types naturally
-    '--extractor-args "youtube:player_client=web,android"'
+    '--socket-timeout 10'
   ];
 
   // If cookies are provided by the user via .env, rotate through them
