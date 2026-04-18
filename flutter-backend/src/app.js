@@ -14,6 +14,9 @@ app.use(morgan('dev'));
 // Core Proxy Route
 app.use('/', innertubeProxy);
 
+// Root success message
+app.get('/', (req, res) => res.send('🚀 Pulse Flutter Proxy is Live and Running!'));
+
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', proxy: 'active' }));
 
