@@ -292,36 +292,11 @@ class AudioNotifier extends Notifier<AudioState> {
       }
       if (isStale()) return;
 
-      // ── Stream from backend (mirrors lines 736-749) ──
-      final settings = ref.read(settingsProvider);
-      final quality = settings.dataSaverMode ? 'low' : settings.streamingQuality;
-
-      // Build stream URL with next-song prefetch hints
-      final nextIds = state.queue
-          .take(3)
-          .map((s) => s.videoId)
-          .where((id) => id.isNotEmpty)
-          .toList();
-      final baseUrl = ApiClient.instance.dio.options.baseUrl;
-      final streamPath = ApiConstants.stream(normalizedSong.videoId);
-      final nextParam =
-          nextIds.isNotEmpty ? '&next=${nextIds.join(',')}' : '';
-      final qualityParam = quality != 'automatic' ? '&quality=$quality' : '';
-      final streamUrl = '$baseUrl$streamPath?$nextParam$qualityParam';
-
-      // Get auth token for the request headers
-      final auth = ref.read(authProvider);
-      final token = auth.user != null
-          ? await auth.user!.getIdToken()
-          : null;
+      // ── Stream from local extractor ──
+      final streamUrl = await _musicApi.extractStreamUrl(normalizedSong.videoId);
       if (isStale()) return;
 
-      final headers = <String, String>{};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-
-      await player.setUrl(streamUrl, headers: headers);
+      await player.setUrl(streamUrl);
       if (isStale()) return;
       await player.play();
 
@@ -533,15 +508,7 @@ class AudioNotifier extends Notifier<AudioState> {
     String? streamUrl;
     Map<String, String>? headers;
     if (localPath == null) {
-      final auth = ref.read(authProvider);
-      final token =
-          auth.user != null ? await auth.user!.getIdToken() : null;
-      final baseUrl = ApiClient.instance.dio.options.baseUrl;
-      streamUrl =
-          '$baseUrl${ApiConstants.stream(nextSong.videoId)}';
-      if (token != null) {
-        headers = {'Authorization': 'Bearer $token'};
-      }
+      streamUrl = await _musicApi.extractStreamUrl(nextSong.videoId);
     }
 
     final success = await _crossfadeEngine.startCrossfade(
