@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, Share2, Trash2, ArrowLeft, Search, Music, Globe, Shuffle, Download, ArrowUpDown, ArrowUp, ArrowDown, Check, Loader, MoreVertical, PlusSquare, ArrowRight, ListMusic, User, Disc } from 'lucide-react';
 import { getHighResThumb } from '../utils';
-import { downloadSong, isDownloaded, getDownloadedVideoIds } from '../utils/downloadManager';
+import { downloadSong, isDownloaded, getDownloadedVideoIds, addTrackToPlaylist } from '../utils/downloadManager';
 
 import { usePlaylists } from '../context/PlaylistContext';
 import { useAuth } from '../context/AuthContext';
@@ -124,8 +124,18 @@ export default function PlaylistView() {
       // Get all already-downloaded IDs upfront for O(1) lookup
       const downloadedIds = await getDownloadedVideoIds();
       const toDownload = songs.filter(s => !downloadedIds.has(s.videoId || s.id));
-      const alreadyCount = songs.length - toDownload.length;
+      const alreadyDownloaded = songs.filter(s => downloadedIds.has(s.videoId || s.id));
+      const alreadyCount = alreadyDownloaded.length;
       
+      // Link the already-downloaded songs into THIS offline playlist right now
+      if (alreadyDownloaded.length > 0) {
+        const plId = `__pl__${playlistRef.id}`;
+        const plName = playlistRef.name || 'Playlist';
+        for (const song of alreadyDownloaded) {
+          await addTrackToPlaylist(plId, plName, song.videoId || song.id);
+        }
+      }
+
       if (toDownload.length === 0) {
         setDownloadProgress(`All ${songs.length} songs already downloaded!`);
         setTimeout(() => setDownloadProgress(null), 2500);

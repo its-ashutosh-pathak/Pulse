@@ -1,7 +1,6 @@
 const metaSvc = require('../services/metadata.service');
 const streamSvc = require('../services/stream.service');
 const lyricsSvc = require('../services/lyrics.service');
-const recSvc = require('../services/recommendation.service');
 const prefetchSvc = require('../services/prefetch.service');
 const settingsRepo = require('../repositories/settings.repository');
 const { successBody } = require('../utils/errorResponse');
@@ -315,4 +314,5 @@ async function proxyImage(req, res, next) {
   } catch (e) { next(e); }
 }
 
+module.exports = { home, search, suggestions, artist, ytPlaylist, play, streamProxy, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline, proxyImage };
 module.exports = { home, search, suggestions, artist, ytPlaylist, play, streamProxy, lyrics, recommendations, watchNext, resolveId, resolveArtist, albumSearch, downloadOffline, proxyImage };

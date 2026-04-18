@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronDown, Play, Disc, Music2 } from 'lucide-react';
+import { ChevronDown, Play, Disc, Music2, MoreVertical } from 'lucide-react';
+import { usePlaylists } from '../context/PlaylistContext';
 import { useAudio } from '../context/AudioContext';
 import { getHighResThumb } from '../utils';
+import SongActionMenu from '../components/SongActionMenu';
+import AddToPlaylistModal from '../components/AddToPlaylistModal';
 import './ArtistView.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -11,10 +14,59 @@ export default function ArtistView() {
   const { id }    = useParams();
   const navigate  = useNavigate();
   const { playSong, addToQueue, currentSong } = useAudio();
+  const { playlists, addSongToPlaylist } = usePlaylists();
 
   const [artist, setArtist]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
+
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedSong, setSelectedSong] = useState(null);
+  const [addedStatus, setAddedStatus]   = useState(null);
+
+  const handleAction = (action, song) => {
+    setActiveMenuId(null);
+    if (action === 'QUEUE') { addToQueue(song); return; }
+    if (action === 'PLAYLIST') { setSelectedSong(song); setShowAddModal(true); setAddedStatus(null); return; }
+    if (action === 'ALBUM') {
+      const albumId = song.albumBrowseId || song.albumId;
+      if (albumId && albumId.length > 11) { navigate(`/playlist/${albumId}`); return; }
+      else if (song.album) navigate(`/search?q=${encodeURIComponent(song.album)}`);
+      return;
+    }
+    if (action === 'ARTIST') {
+      const artistId = song.artistBrowseId || (
+        song.browseId?.startsWith('UC') || song.browseId?.startsWith('AC')
+          ? song.browseId : null
+      );
+      if (artistId) { navigate(`/artist/${artistId}`); return; }
+      const artistName = song.artist || song.title;
+      if (!artistName) return;
+      fetch(`${API}/api/artist-resolve?name=${encodeURIComponent(artistName)}`)
+        .then(r => r.json())
+        .then(json => {
+          const bid = json?.data?.browseId;
+          if (bid) navigate(`/artist/${bid}`);
+          else navigate(`/search?q=${encodeURIComponent(artistName)}`);
+        })
+        .catch(() => navigate(`/search?q=${encodeURIComponent(artistName)}`));
+    }
+  };
+
+  const handleAddToPlaylist = async (playlistId) => {
+    if (!selectedSong) return;
+    await addSongToPlaylist(playlistId, selectedSong);
+    setAddedStatus(playlistId);
+    setTimeout(() => { setShowAddModal(false); setSelectedSong(null); setAddedStatus(null); }, 1200);
+  };
+
+  // Close menus on outside click
+  useEffect(() => {
+    const close = () => setActiveMenuId(null);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -100,7 +152,7 @@ export default function ArtistView() {
           <section className="artist-section">
             <h2 className="artist-section-title">Popular</h2>
             <div className="artist-song-list">
-              {artist.topSongs.map((song, i) => {
+              {artist.topSongs.slice(0, 5).map((song, i) => {
                 const isNowPlaying = currentSong?.id === song.id;
                 return (
                   <div
@@ -121,11 +173,31 @@ export default function ArtistView() {
                       <p className={isNowPlaying ? 'accent' : ''}>{song.title}</p>
                       <span>{song.album || song.artist}</span>
                     </div>
-                    {song.duration && <span className="artist-song-duration">{song.duration}</span>}
+                    <div className="action-wrapper" style={{ position: 'relative' }}>
+                      <button className="action-menu-trigger" onClick={e => { e.stopPropagation(); setActiveMenuId(activeMenuId === (song.id || i) ? null : (song.id || i)); }}>
+                        <MoreVertical size={18} />
+                      </button>
+                      {activeMenuId === (song.id || i) && (
+                        <SongActionMenu song={song} onAction={handleAction} onClose={() => setActiveMenuId(null)} />
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
+            {artist.songsBrowseId && (
+              <div className="artist-view-more-container" style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+                <button 
+                  className="artist-view-more-btn" 
+                  onClick={() => navigate(`/playlist/${artist.songsBrowseId}`)}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '8px 24px', borderRadius: '30px', fontSize: '13px', cursor: 'pointer', transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                >
+                  View all
+                </button>
+              </div>
+            )}
           </section>
         )}
 
@@ -169,6 +241,15 @@ export default function ArtistView() {
           </section>
         )}
       </div>
+
+      {showAddModal && (
+        <AddToPlaylistModal
+          playlists={playlists}
+          onClose={() => { setShowAddModal(false); setSelectedSong(null); setAddedStatus(null); }}
+          onAdd={handleAddToPlaylist}
+          addedStatus={addedStatus}
+        />
+      )}
     </div>
   );
 }

@@ -331,7 +331,7 @@ export default function Library() {
       {showRenameModal && (
         <div className="modal-overlay" onClick={() => setShowRenameModal(false)}>
           <div className="standard-modal glass" onClick={e => e.stopPropagation()}>
-            <h3>Rename Pulse</h3>
+            <h3>Rename Playlist</h3>
             <p>Enter a new name for your playlist.</p>
             <form onSubmit={handleRename}>
               <input
@@ -357,9 +357,9 @@ export default function Library() {
             <div className="trash-icon-unified">
               <Trash2 size={32} color="#ff4d4d" />
             </div>
-            <h3>Delete Pulse?</h3>
+            <h3>Delete Playlist?</h3>
             <p>
-              Are you sure you want to delete <strong>"{editingPlaylist.name}"</strong>? This pulse will be lost forever.
+              Are you sure you want to delete <strong>"{editingPlaylist.name}"</strong>? This playlist will be lost forever.
             </p>
             <div className="modal-actions-unified">
               <button className="cancel-pill" onClick={() => setShowDeleteModal(false)}>Cancel</button>

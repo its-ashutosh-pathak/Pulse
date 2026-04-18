@@ -7,12 +7,8 @@ const { RATE_LIMIT_GENERAL } = require('./config/constants');
 const env            = require('./config/env');
 
 // Routes
-const authRoutes     = require('./routes/auth.routes');
 const musicRoutes    = require('./routes/music.routes');
-const playlistRoutes = require('./routes/playlist.routes');
 const statsRoutes    = require('./routes/stats.routes');
-const settingsRoutes = require('./routes/settings.routes');
-const likesRoutes    = require('./routes/likes.routes');
 const healthRoutes   = require('./routes/health.routes');
 const importRoutes   = require('./routes/import.routes');
 
@@ -34,6 +30,8 @@ const corsOptions = {
     if (allowed === '*' || origin === allowed) return callback(null, true);
     // Also allow *.vercel.app previews so PR deploys work
     if (/\.vercel\.app$/.test(origin)) return callback(null, true);
+    // Allow local development server
+    if (origin.startsWith('http://localhost:')) return callback(null, true);
     return callback(null, false);
   },
   credentials: true,
@@ -52,13 +50,9 @@ app.get('/', (req, res) => {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/health',    healthRoutes);
-app.use('/auth',      rateLimiter(RATE_LIMIT_GENERAL), authRoutes);
 app.use('/api/import', importRoutes);                                    // /api/import/spotify — has its own rate limiter in the route
 app.use('/api',       rateLimiter(RATE_LIMIT_GENERAL), musicRoutes);    // /api/home, /api/search, /api/play, etc.
-app.use('/playlists', rateLimiter(RATE_LIMIT_GENERAL), playlistRoutes);
 app.use('/stats',     statsRoutes);
-app.use('/settings',  settingsRoutes);
-app.use('/songs',     rateLimiter(RATE_LIMIT_GENERAL), likesRoutes);
 
 // ── 404 catch ─────────────────────────────────────────────────────────────────
 app.use((req, res) => {

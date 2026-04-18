@@ -19,7 +19,7 @@ const getThumb = (item, size = 200) =>
 
 export default function Search() {
   const { playlists, addSongToPlaylist } = usePlaylists();
-  const { playSong, currentSong, addToQueue } = useAudio();
+  const { playSong, currentSong, addToQueue, replaceQueue } = useAudio();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -132,6 +132,7 @@ export default function Search() {
     }
     const vid = item.videoId || item.id || '';
     if (vid.length === 11) {
+      replaceQueue([]);
       playSong(item);
       setHistory(prev => [item, ...prev.filter(s => (s.videoId || s.id) !== vid)].slice(0, 10));
     } else if (item.browseId) {

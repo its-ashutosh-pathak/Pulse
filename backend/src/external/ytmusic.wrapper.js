@@ -197,12 +197,23 @@ function normTrack(track, albumTitle = '', albumThumb = '') {
     return null;
   }
 
+  const albumBrowseId = String(
+    track.album?.id || track.album?.browseId || track.album?.browse_id ||
+    track.albumBrowseId || track.album_browse_id || ''
+  );
+
+  const artistBrowseId = String(
+    track.artists?.[0]?.id || track.artists?.[0]?.browseId || track.artists?.[0]?.channel_id || ''
+  );
+
   return {
     id: videoId,
     videoId,
     title: String(track.title || track.name || 'Unknown'),
     artist: parseArtists(track.artists) || 'Unknown',
+    artistBrowseId,
     album: String(track.album?.name || albumTitle || ''),
+    albumBrowseId,
     thumbnail: getThumb(track) || albumThumb,
     duration: track.duration?.seconds ?? (typeof track.duration === 'number' ? track.duration : 0),
     type: 'SONG',
@@ -482,6 +493,7 @@ async function getArtist(browseId) {
   let topSongs = [];
   let albums = [];
   let singles = [];
+  let songsBrowseId = null;
 
   for (const section of (data.sections || [])) {
     const sTitle = String(
@@ -493,7 +505,14 @@ async function getArtist(browseId) {
     const contents = flattenSection(section);
 
     if (sTitle.includes('song') || sTitle.includes('popular') || sTitle.includes('track')) {
-      topSongs = contents.map((t) => normTrack(t)).filter(Boolean).slice(0, 10);
+      songsBrowseId = section.endpoint?.payload?.browseId || section.endpoint?.payload?.playlistId || null;
+      topSongs = contents.map((t) => {
+        const parsed = normTrack(t);
+        if (!parsed) return null;
+        if (!parsed.artist || parsed.artist === 'Unknown') parsed.artist = name;
+        if (!parsed.artistBrowseId) parsed.artistBrowseId = browseId;
+        return parsed;
+      }).filter(Boolean).slice(0, 10);
 
     } else if (sTitle.includes('album')) {
       albums = contents.map((a) => ({
@@ -515,8 +534,8 @@ async function getArtist(browseId) {
     }
   }
 
-  logger.info('ytmusic_artist', { browseId, name });
-  return { browseId, name, description, thumbnail: thumb, subscribers, topSongs, albums, singles };
+  logger.info('ytmusic_artist', { browseId, name, songsBrowseId });
+  return { browseId, name, description, thumbnail: thumb, subscribers, songsBrowseId, topSongs, albums, singles };
 }
 
 /**

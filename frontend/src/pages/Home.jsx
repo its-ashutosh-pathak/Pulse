@@ -154,6 +154,7 @@ export default function Home() {
   const handlePlay = async (song) => {
     const videoId = song.videoId || '';
     if (videoId.length === 11) {
+      replaceQueue([]);
       playSong(song);
     } else if (song.type === 'SINGLE') {
       const collectionId = song.playlistId || song.browseId || song.id;

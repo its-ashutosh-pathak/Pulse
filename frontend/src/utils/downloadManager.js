@@ -152,46 +152,70 @@ export async function downloadSong(song, contextPlaylist = null, authToken = '')
   emitDl(videoId, 0, 'downloading');
 
   try {
-    const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-    const audioRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/download/${videoId}`, { headers });
-    if (!audioRes.ok) throw new Error(`Could not download stream (${audioRes.status})`);
+    // 1. Check if already downloaded
+    const alreadyExists = await isDownloaded(videoId);
+    let trackMeta = null;
 
-    // Read stream chunks for progress
-    const contentLength = +audioRes.headers.get('Content-Length') || +audioRes.headers.get('content-length') || 0;
-    const reader = audioRes.body.getReader();
-    let receivedLength = 0;
-    const chunks = [];
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-      receivedLength += value.length;
-      if (contentLength) {
-        emitDl(videoId, receivedLength / contentLength, 'downloading');
-      } else {
-        // fake progress if no content length (rare)
-        emitDl(videoId, Math.min(0.9, (receivedLength / 5000000)), 'downloading');
+    if (alreadyExists) {
+      // Simulate an instant successful download
+      emitDl(videoId, 1, 'downloading');
+      trackMeta = await idbGet('tracks', videoId);
+      if (!trackMeta) {
+          // If metadata is somehow missing but blob exists, reconstruct it
+          trackMeta = {
+              videoId,
+              title: song.title || 'Unknown',
+              artist: song.artist || 'Unknown',
+              album: song.album || '',
+              thumbnail: song.thumbnail || song.cover || '',
+              cover: song.cover || song.thumbnail || '',
+              duration: song.duration || 0,
+              downloadedAt: Date.now(),
+          };
+          await idbPut('tracks', trackMeta);
       }
-    }
+    } else {
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+        const audioRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/download/${videoId}`, { headers });
+        if (!audioRes.ok) throw new Error(`Could not download stream (${audioRes.status})`);
 
-    const audioBlob = new Blob(chunks, { type: audioRes.headers.get('Content-Type') || 'audio/webm' });
+        // Read stream chunks for progress
+        const contentLength = +audioRes.headers.get('Content-Length') || +audioRes.headers.get('content-length') || 0;
+        const reader = audioRes.body.getReader();
+        let receivedLength = 0;
+        const chunks = [];
 
-    // 3. Persist audio blob
-    await idbPut('audio', { videoId, blob: audioBlob, mimeType: audioBlob.type, downloadedAt: Date.now() });
+        while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedLength += value.length;
+        if (contentLength) {
+            emitDl(videoId, receivedLength / contentLength, 'downloading');
+        } else {
+            // fake progress if no content length (rare)
+            emitDl(videoId, Math.min(0.9, (receivedLength / 5000000)), 'downloading');
+        }
+        }
 
-    // 4. Persist track metadata (strip blob-heavy fields, keep lightweight meta)
-    const trackMeta = {
-      videoId,
-      title: song.title || 'Unknown',
-      artist: song.artist || 'Unknown',
-      album: song.album || '',
-      thumbnail: song.thumbnail || song.cover || '',
-      cover: song.cover || song.thumbnail || '',
-      duration: song.duration || 0,
-      downloadedAt: Date.now(),
-    };
-    await idbPut('tracks', trackMeta);
+        const audioBlob = new Blob(chunks, { type: audioRes.headers.get('Content-Type') || 'audio/webm' });
+
+        // 3. Persist audio blob
+        await idbPut('audio', { videoId, blob: audioBlob, mimeType: audioBlob.type, downloadedAt: Date.now() });
+
+        // 4. Persist track metadata (strip blob-heavy fields, keep lightweight meta)
+        trackMeta = {
+        videoId,
+        title: song.title || 'Unknown',
+        artist: song.artist || 'Unknown',
+        album: song.album || '',
+        thumbnail: song.thumbnail || song.cover || '',
+        cover: song.cover || song.thumbnail || '',
+        duration: song.duration || 0,
+        downloadedAt: Date.now(),
+        };
+        await idbPut('tracks', trackMeta);
+    } // End network download
 
     // 5. Add to global "Downloads" playlist
     await addTrackToPlaylist(GLOBAL_DL_ID, 'Downloads', videoId);
@@ -203,12 +227,37 @@ export async function downloadSong(song, contextPlaylist = null, authToken = '')
       await addTrackToPlaylist(plId, plName, videoId);
     }
 
-    // 7. Cache lyrics in the background (fire-and-forget — never blocks the download)
-    const lyricsApi = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    fetch(`${lyricsApi}/api/lyrics/${videoId}`, { headers })
-      .then(r => r.json())
-      .then(json => { if (json?.success && json.data) saveLyricsCache(videoId, json.data); })
-      .catch(() => { /* Lyrics are optional — silently skip if unavailable */ });
+    // 7. Background scan to link song to ANY existing Firestore playlists the user has
+    // This allows downloading from the 'Search' page to magically appear in your offline 'Favorites' playlist!
+    import('../firebase').then(async ({ db }) => {
+        const { getAuth } = await import('firebase/auth');
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const user = getAuth().currentUser;
+        if (user) {
+            try {
+                const q = query(collection(db, 'playlists'), where('createdBy', '==', user.uid));
+                const snap = await getDocs(q);
+                snap.forEach(docSnap => {
+                    const pl = docSnap.data();
+                    const songs = pl.songs || [];
+                    if (songs.some(s => (s.videoId || s.id) === videoId)) {
+                        addTrackToPlaylist(`__pl__${docSnap.id}`, pl.name || 'Playlist', videoId);
+                    }
+                });
+            } catch (err) {
+                console.warn('[Sync] Offline Playlist Scan skipped:', err.message);
+            }
+        }
+    });
+
+    if (!alreadyExists) {
+        // 8. Cache lyrics in the background (fire-and-forget — never blocks the download)
+        const lyricsApi = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        fetch(`${lyricsApi}/api/lyrics/${videoId}`, authToken ? { headers: { Authorization: `Bearer ${authToken}` } } : {})
+        .then(r => r.json())
+        .then(json => { if (json?.success && json.data) saveLyricsCache(videoId, json.data); })
+        .catch(() => { /* Lyrics are optional — silently skip if unavailable */ });
+    }
 
     emitDl(videoId, 1, 'done');
     return trackMeta;

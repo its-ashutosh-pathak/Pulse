@@ -1,0 +1,2597 @@
+{
+  "header": {
+    "type": "MusicImmersiveHeader",
+    "title": {
+      "text": "Arijit Singh",
+      "runs": [
+        {
+          "text": "Arijit Singh",
+          "bold": false,
+          "bracket": false,
+          "deemphasize": false,
+          "italics": false,
+          "strikethrough": false,
+          "error_underline": false,
+          "underline": false
+        }
+      ],
+      "rtl": false
+    },
+    "menu": {
+      "type": "Menu",
+      "items": [
+        {
+          "type": "MenuNavigationItem",
+          "text": "Share",
+          "icon_type": "SHARE",
+          "endpoint": {
+            "type": "NavigationEndpoint",
+            "name": "shareEntityEndpoint",
+            "payload": {
+              "serializedShareEntity": "GhhVQ1V2eXdZMGZXalhteHZzYldwNTlZZUE%3D",
+              "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+            },
+            "metadata": {},
+            "command": {
+              "type": "ShareEntityEndpoint"
+            }
+          }
+        }
+      ],
+      "flexible_items": [],
+      "top_level_buttons": [],
+      "accessibility": {
+        "accessibility_data": {
+          "label": "Action menu"
+        }
+      }
+    },
+    "more_button": {
+      "type": "ToggleButton",
+      "text": {
+        "text": "More",
+        "runs": [
+          {
+            "text": "More",
+            "bold": false,
+            "bracket": false,
+            "deemphasize": false,
+            "italics": false,
+            "strikethrough": false,
+            "error_underline": false,
+            "underline": false
+          }
+        ],
+        "rtl": false
+      },
+      "toggled_text": {
+        "text": "Less",
+        "runs": [
+          {
+            "text": "Less",
+            "bold": false,
+            "bracket": false,
+            "deemphasize": false,
+            "italics": false,
+            "strikethrough": false,
+            "error_underline": false,
+            "underline": false
+          }
+        ],
+        "rtl": false
+      },
+      "is_toggled": false,
+      "is_disabled": false,
+      "icon_type": "EXPAND",
+      "endpoint": {
+        "type": "NavigationEndpoint",
+        "payload": {},
+        "metadata": {}
+      },
+      "toggled_endpoint": {
+        "type": "NavigationEndpoint",
+        "payload": {},
+        "metadata": {}
+      }
+    },
+    "play_button": null,
+    "share_endpoint": {
+      "type": "NavigationEndpoint",
+      "name": "shareEntityEndpoint",
+      "payload": {
+        "serializedShareEntity": "GhhVQ1V2eXdZMGZXalhteHZzYldwNTlZZUE%3D",
+        "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+      },
+      "metadata": {},
+      "command": {
+        "type": "ShareEntityEndpoint"
+      }
+    },
+    "start_radio_button": null,
+    "subscription_button": {
+      "type": "SubscribeButton",
+      "button_text": {
+        "rtl": false
+      },
+      "subscribed": false,
+      "enabled": true,
+      "item_type": "FREE",
+      "channel_id": "UCUvywY0fWjXmxvsbWp59YeA",
+      "show_preferences": false,
+      "subscribed_text": {
+        "text": "Subscribed",
+        "runs": [
+          {
+            "text": "Subscribed",
+            "bold": false,
+            "bracket": false,
+            "deemphasize": false,
+            "italics": false,
+            "strikethrough": false,
+            "error_underline": false,
+            "underline": false
+          }
+        ],
+        "rtl": false
+      },
+      "unsubscribed_text": {
+        "text": "Subscribe",
+        "runs": [
+          {
+            "text": "Subscribe",
+            "bold": false,
+            "bracket": false,
+            "deemphasize": false,
+            "italics": false,
+            "strikethrough": false,
+            "error_underline": false,
+            "underline": false
+          }
+        ],
+        "rtl": false
+      },
+      "unsubscribe_text": {
+        "text": "Unsubscribe",
+        "runs": [
+          {
+            "text": "Unsubscribe",
+            "bold": false,
+            "bracket": false,
+            "deemphasize": false,
+            "italics": false,
+            "strikethrough": false,
+            "error_underline": false,
+            "underline": false
+          }
+        ],
+        "rtl": false
+      },
+      "notification_preference_button": null,
+      "service_endpoints": [
+        {
+          "type": "NavigationEndpoint",
+          "name": "subscribeEndpoint",
+          "payload": {
+            "channelIds": [
+              "UCUvywY0fWjXmxvsbWp59YeA"
+            ],
+            "params": "EgIIGxgA"
+          },
+          "metadata": {},
+          "command": {
+            "type": "SubscribeEndpoint"
+          }
+        },
+        {
+          "type": "NavigationEndpoint",
+          "name": "signalServiceEndpoint",
+          "payload": {
+            "signal": "CLIENT_SIGNAL",
+            "actions": [
+              {
+                "openPopupAction": {
+                  "popup": {
+                    "confirmDialogRenderer": {
+                      "trackingParams": "CAgQxjgiEwipxquokPeTAxXjLrcAHZRjKGA=",
+                      "dialogMessages": [
+                        {
+                          "runs": [
+                            {
+                              "text": "Unsubscribe from "
+                            },
+                            {
+                              "text": "Arijit Singh"
+                            },
+                            {
+                              "text": "?"
+                            }
+                          ]
+                        }
+                      ],
+                      "confirmButton": {
+                        "buttonRenderer": {
+                          "style": "STYLE_BRAND",
+                          "size": "SIZE_DEFAULT",
+                          "text": {
+                            "runs": [
+                              {
+                                "text": "Unsubscribe"
+                              }
+                            ]
+                          },
+                          "serviceEndpoint": {
+                            "clickTrackingParams": "CAoQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                            "unsubscribeEndpoint": {
+                              "channelIds": [
+                                "UCUvywY0fWjXmxvsbWp59YeA"
+                              ]
+                            }
+                          },
+                          "trackingParams": "CAoQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                        }
+                      },
+                      "cancelButton": {
+                        "buttonRenderer": {
+                          "style": "STYLE_TEXT",
+                          "size": "SIZE_DEFAULT",
+                          "text": {
+                            "runs": [
+                              {
+                                "text": "Cancel"
+                              }
+                            ]
+                          },
+                          "trackingParams": "CAkQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                        }
+                      }
+                    }
+                  },
+                  "popupType": "DIALOG"
+                }
+              }
+            ]
+          },
+          "metadata": {},
+          "command": {
+            "type": "SignalServiceEndpoint",
+            "actions": [
+              {
+                "type": "OpenPopupAction",
+                "popup": {
+                  "type": "ConfirmDialog",
+                  "title": {
+                    "rtl": false
+                  },
+                  "confirm_button": {
+                    "type": "Button",
+                    "text": "Unsubscribe",
+                    "style": "STYLE_BRAND",
+                    "size": "SIZE_DEFAULT",
+                    "endpoint": {
+                      "type": "NavigationEndpoint",
+                      "name": "unsubscribeEndpoint",
+                      "payload": {
+                        "channelIds": [
+                          "UCUvywY0fWjXmxvsbWp59YeA"
+                        ]
+                      },
+                      "metadata": {},
+                      "command": {
+                        "type": "UnsubscribeEndpoint"
+                      }
+                    }
+                  },
+                  "cancel_button": {
+                    "type": "Button",
+                    "text": "Cancel",
+                    "style": "STYLE_TEXT",
+                    "size": "SIZE_DEFAULT",
+                    "endpoint": {
+                      "type": "NavigationEndpoint",
+                      "payload": {},
+                      "metadata": {}
+                    }
+                  },
+                  "dialog_messages": [
+                    {
+                      "text": "Unsubscribe from Arijit Singh?",
+                      "runs": [
+                        {
+                          "text": "Unsubscribe from ",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        },
+                        {
+                          "text": "Arijit Singh",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        },
+                        {
+                          "text": "?",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    }
+                  ]
+                },
+                "popup_type": "DIALOG"
+              }
+            ],
+            "signal": "CLIENT_SIGNAL"
+          }
+        }
+      ],
+      "subscribe_accessibility_label": "Subscribe to this channel. 2",
+      "unsubscribe_accessibility_label": "Unsubscribe from this channel. 2"
+    },
+    "description": {
+      "rtl": false
+    },
+    "thumbnail": {
+      "type": "MusicThumbnail",
+      "contents": [
+        {
+          "url": "https://yt3.googleusercontent.com/2GSAnm1J42B6eQLxVZbGxBl4EqRSnHcZ8S2lNttQ9o7Oqj_4a4gQrMuHpkjserYc_0SnFzXVKTn2v9Fw=w1400-h583-p-l90-rj",
+          "width": 1400,
+          "height": 583
+        },
+        {
+          "url": "https://yt3.googleusercontent.com/2GSAnm1J42B6eQLxVZbGxBl4EqRSnHcZ8S2lNttQ9o7Oqj_4a4gQrMuHpkjserYc_0SnFzXVKTn2v9Fw=w816-h340-p-l90-rj",
+          "width": 816,
+          "height": 340
+        },
+        {
+          "url": "https://yt3.googleusercontent.com/2GSAnm1J42B6eQLxVZbGxBl4EqRSnHcZ8S2lNttQ9o7Oqj_4a4gQrMuHpkjserYc_0SnFzXVKTn2v9Fw=w540-h225-p-l90-rj",
+          "width": 540,
+          "height": 225
+        }
+      ]
+    }
+  },
+  "sections": [
+    {
+      "type": "MusicCarouselShelf",
+      "header": {
+        "type": "MusicCarouselShelfBasicHeader",
+        "title": {
+          "text": "Singles & EPs",
+          "runs": [
+            {
+              "text": "Singles & EPs",
+              "bold": false,
+              "bracket": false,
+              "deemphasize": false,
+              "italics": false,
+              "strikethrough": false,
+              "error_underline": false,
+              "underline": false
+            }
+          ],
+          "rtl": false
+        }
+      },
+      "contents": [
+        {
+          "type": "MusicTwoRowItem",
+          "title": {
+            "text": "Jab Talak (From “Cocktail 2”)",
+            "runs": [
+              {
+                "text": "Jab Talak (From “Cocktail 2”)",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "browseEndpoint",
+                  "payload": {
+                    "browseId": "MPREb_KumxBlprpWU",
+                    "params": "ggMrGilPTEFLNXV5X25Pd1czMk9Yd1F0YUdVRlFMOXNoWkhDM2QyYlc1MGNERQ%3D%3D",
+                    "browseEndpointContextSupportedConfigs": {
+                      "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "api_url": "/browse"
+                  },
+                  "command": {
+                    "type": "BrowseEndpoint"
+                  }
+                },
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "endpoint": {
+              "type": "NavigationEndpoint",
+              "name": "browseEndpoint",
+              "payload": {
+                "browseId": "MPREb_KumxBlprpWU",
+                "params": "ggMrGilPTEFLNXV5X25Pd1czMk9Yd1F0YUdVRlFMOXNoWkhDM2QyYlc1MGNERQ%3D%3D",
+                "browseEndpointContextSupportedConfigs": {
+                  "browseEndpointContextMusicConfig": {
+                    "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                  }
+                }
+              },
+              "metadata": {
+                "api_url": "/browse"
+              },
+              "command": {
+                "type": "BrowseEndpoint"
+              }
+            },
+            "rtl": false
+          },
+          "endpoint": {
+            "type": "NavigationEndpoint",
+            "name": "browseEndpoint",
+            "payload": {
+              "browseId": "MPREb_KumxBlprpWU",
+              "params": "ggMrGilPTEFLNXV5X25Pd1czMk9Yd1F0YUdVRlFMOXNoWkhDM2QyYlc1MGNERQ%3D%3D",
+              "browseEndpointContextSupportedConfigs": {
+                "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_ALBUM"
+                }
+              }
+            },
+            "metadata": {
+              "api_url": "/browse"
+            },
+            "command": {
+              "type": "BrowseEndpoint"
+            }
+          },
+          "id": "MPREb_KumxBlprpWU",
+          "subtitle": {
+            "text": "Single • 2026",
+            "runs": [
+              {
+                "text": "Single",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": " • ",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": "2026",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "rtl": false
+          },
+          "badges": null,
+          "item_type": "album",
+          "year": "2026",
+          "artists": [],
+          "thumbnail": [
+            {
+              "url": "https://yt3.googleusercontent.com/2GSAnm1J42B6eQLxVZbGxBl4EqRSnHcZ8S2lNttQ9o7Oqj_4a4gQrMuHpkjserYc_0SnFzXVKTn2v9Fw=w544-h544-l90-rj",
+              "width": 544,
+              "height": 544
+            },
+            {
+              "url": "https://yt3.googleusercontent.com/2GSAnm1J42B6eQLxVZbGxBl4EqRSnHcZ8S2lNttQ9o7Oqj_4a4gQrMuHpkjserYc_0SnFzXVKTn2v9Fw=w226-h226-l90-rj",
+              "width": 226,
+              "height": 226
+            }
+          ],
+          "thumbnail_overlay": {
+            "type": "MusicItemThumbnailOverlay",
+            "content": {
+              "type": "MusicPlayButton",
+              "endpoint": {
+                "type": "NavigationEndpoint",
+                "name": "watchPlaylistEndpoint",
+                "payload": {
+                  "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE"
+                },
+                "metadata": {
+                  "api_url": "/next"
+                }
+              },
+              "play_icon_type": "PLAY_ARROW",
+              "pause_icon_type": "PAUSE",
+              "icon_color": 4294967295,
+              "accessibility_play_data": {
+                "accessibility_data": {
+                  "label": "Play Jab Talak (From “Cocktail 2”)"
+                }
+              },
+              "accessibility_pause_data": {
+                "accessibility_data": {
+                  "label": "Pause Jab Talak (From “Cocktail 2”)"
+                }
+              }
+            },
+            "content_position": "MUSIC_ITEM_THUMBNAIL_OVERLAY_CONTENT_POSITION_BOTTOM_RIGHT",
+            "display_style": "MUSIC_ITEM_THUMBNAIL_OVERLAY_DISPLAY_STYLE_HOVER"
+          },
+          "menu": {
+            "type": "Menu",
+            "items": [
+              {
+                "type": "MenuNavigationItem",
+                "text": "Shuffle play",
+                "icon_type": "MUSIC_SHUFFLE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE",
+                    "params": "wAEB8gECKAE%3D"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Start mix",
+                "icon_type": "MIX",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDAMPLOLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE",
+                    "params": "wAEB"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Play next",
+                "icon_type": "QUEUE_PLAY_NEXT",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CEcQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AFTER_CURRENT_VIDEO",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CEcQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Album will play next"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CEgQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Add to queue",
+                "icon_type": "ADD_TO_REMOTE_QUEUE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CEUQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AT_END",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CEUQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Album added to queue"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CEYQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "ToggleMenuServiceItem",
+                "text": {
+                  "text": "Save album to library",
+                  "runs": [
+                    {
+                      "text": "Save album to library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "toggled_text": {
+                  "text": "Remove album from library",
+                  "runs": [
+                    {
+                      "text": "Remove album from library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "icon_type": "BOOKMARK_BORDER",
+                "toggled_icon_type": "BOOKMARK",
+                "default_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Save favorites to your library after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CEQQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CEQQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Save favorites to your library after signing in",
+                      "runs": [
+                        {
+                          "text": "Save favorites to your library after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                },
+                "toggled_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "likeEndpoint",
+                  "payload": {
+                    "status": "INDIFFERENT",
+                    "target": {
+                      "playlistId": "OLAK5uy_nOwW32OXwQtaGUFQL9shZHC3d2bW50cDE"
+                    }
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "LikeEndpoint"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Save to playlist",
+                "icon_type": "ADD_TO_PLAYLIST",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Make playlists and share them after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CEIQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CEIQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Make playlists and share them after signing in",
+                      "runs": [
+                        {
+                          "text": "Make playlists and share them after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Share",
+                "icon_type": "SHARE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "shareEntityEndpoint",
+                  "payload": {
+                    "serializedShareEntity": "EilPTEFLNXV5X25Pd1czMk9Yd1F0YUdVRlFMOXNoWkhDM2QyYlc1MGNERQ%3D%3D",
+                    "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "ShareEntityEndpoint"
+                  }
+                }
+              }
+            ],
+            "flexible_items": [],
+            "top_level_buttons": [],
+            "accessibility": {
+              "accessibility_data": {
+                "label": "Action menu"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "MusicCarouselShelf",
+      "header": {
+        "type": "MusicCarouselShelfBasicHeader",
+        "title": {
+          "text": "Featured on",
+          "runs": [
+            {
+              "text": "Featured on",
+              "bold": false,
+              "bracket": false,
+              "deemphasize": false,
+              "italics": false,
+              "strikethrough": false,
+              "error_underline": false,
+              "underline": false
+            }
+          ],
+          "rtl": false
+        }
+      },
+      "contents": [
+        {
+          "type": "MusicTwoRowItem",
+          "title": {
+            "text": "Bollywood Hitlist",
+            "runs": [
+              {
+                "text": "Bollywood Hitlist",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "browseEndpoint",
+                  "payload": {
+                    "browseId": "VLRDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                    "browseEndpointContextSupportedConfigs": {
+                      "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "api_url": "/browse"
+                  },
+                  "command": {
+                    "type": "BrowseEndpoint"
+                  }
+                },
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "endpoint": {
+              "type": "NavigationEndpoint",
+              "name": "browseEndpoint",
+              "payload": {
+                "browseId": "VLRDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                "browseEndpointContextSupportedConfigs": {
+                  "browseEndpointContextMusicConfig": {
+                    "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                  }
+                }
+              },
+              "metadata": {
+                "api_url": "/browse"
+              },
+              "command": {
+                "type": "BrowseEndpoint"
+              }
+            },
+            "rtl": false
+          },
+          "endpoint": {
+            "type": "NavigationEndpoint",
+            "name": "browseEndpoint",
+            "payload": {
+              "browseId": "VLRDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+              "browseEndpointContextSupportedConfigs": {
+                "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                }
+              }
+            },
+            "metadata": {
+              "api_url": "/browse"
+            },
+            "command": {
+              "type": "BrowseEndpoint"
+            }
+          },
+          "id": "VLRDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+          "subtitle": {
+            "text": "Playlist • YouTube Music",
+            "runs": [
+              {
+                "text": "Playlist",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": " • ",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": "YouTube Music",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "rtl": false
+          },
+          "badges": null,
+          "item_type": "playlist",
+          "item_count": null,
+          "thumbnail": [
+            {
+              "url": "https://yt3.googleusercontent.com/KO28djDtDFuCk4o1__b9reVhbxvUVus3_hc6yMuPBpykHTE5worS_YJc7cZ3c21uW1P6qYoXtTEE3Rk=w544-h544-l90-rj",
+              "width": 544,
+              "height": 544
+            },
+            {
+              "url": "https://yt3.googleusercontent.com/KO28djDtDFuCk4o1__b9reVhbxvUVus3_hc6yMuPBpykHTE5worS_YJc7cZ3c21uW1P6qYoXtTEE3Rk=w226-h226-l90-rj",
+              "width": 226,
+              "height": 226
+            }
+          ],
+          "thumbnail_overlay": {
+            "type": "MusicItemThumbnailOverlay",
+            "content": {
+              "type": "MusicPlayButton",
+              "endpoint": {
+                "type": "NavigationEndpoint",
+                "name": "watchPlaylistEndpoint",
+                "payload": {
+                  "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                  "params": "wAEB"
+                },
+                "metadata": {
+                  "api_url": "/next"
+                }
+              },
+              "play_icon_type": "PLAY_ARROW",
+              "pause_icon_type": "PAUSE",
+              "icon_color": 4294967295,
+              "accessibility_play_data": {
+                "accessibility_data": {
+                  "label": "Play Bollywood Hitlist"
+                }
+              },
+              "accessibility_pause_data": {
+                "accessibility_data": {
+                  "label": "Pause Bollywood Hitlist"
+                }
+              }
+            },
+            "content_position": "MUSIC_ITEM_THUMBNAIL_OVERLAY_CONTENT_POSITION_BOTTOM_RIGHT",
+            "display_style": "MUSIC_ITEM_THUMBNAIL_OVERLAY_DISPLAY_STYLE_HOVER"
+          },
+          "menu": {
+            "type": "Menu",
+            "items": [
+              {
+                "type": "MenuNavigationItem",
+                "text": "Shuffle play",
+                "icon_type": "MUSIC_SHUFFLE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                    "params": "wAEB8gECGAE%3D"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Start mix",
+                "icon_type": "MIX",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDAMPLRDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                    "params": "wAEB"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Play next",
+                "icon_type": "QUEUE_PLAY_NEXT",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CDYQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AFTER_CURRENT_VIDEO",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CDYQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist will play next"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CDcQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Add to queue",
+                "icon_type": "ADD_TO_REMOTE_QUEUE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CDQQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AT_END",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CDQQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist added to queue"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CDUQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "ToggleMenuServiceItem",
+                "text": {
+                  "text": "Save playlist to library",
+                  "runs": [
+                    {
+                      "text": "Save playlist to library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "toggled_text": {
+                  "text": "Remove playlist from library",
+                  "runs": [
+                    {
+                      "text": "Remove playlist from library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "icon_type": "BOOKMARK_BORDER",
+                "toggled_icon_type": "BOOKMARK",
+                "default_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Save favorites to your library after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CDMQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CDMQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Save favorites to your library after signing in",
+                      "runs": [
+                        {
+                          "text": "Save favorites to your library after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                },
+                "toggled_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "likeEndpoint",
+                  "payload": {
+                    "status": "INDIFFERENT",
+                    "target": {
+                      "playlistId": "RDCLAK5uy_n9Fbdw7e6ap-98_A-8JYBmPv64v-Uaq1g"
+                    }
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "LikeEndpoint"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Save to playlist",
+                "icon_type": "ADD_TO_PLAYLIST",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Make playlists and share them after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CDEQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CDEQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Make playlists and share them after signing in",
+                      "runs": [
+                        {
+                          "text": "Make playlists and share them after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Share",
+                "icon_type": "SHARE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "shareEntityEndpoint",
+                  "payload": {
+                    "serializedShareEntity": "EitSRENMQUs1dXlfbjlGYmR3N2U2YXAtOThfQS04SllCbVB2NjR2LVVhcTFn",
+                    "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "ShareEntityEndpoint"
+                  }
+                }
+              }
+            ],
+            "flexible_items": [],
+            "top_level_buttons": [],
+            "accessibility": {
+              "accessibility_data": {
+                "label": "Action menu"
+              }
+            }
+          }
+        },
+        {
+          "type": "MusicTwoRowItem",
+          "title": {
+            "text": "Bollywood Dance Hitlist",
+            "runs": [
+              {
+                "text": "Bollywood Dance Hitlist",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "browseEndpoint",
+                  "payload": {
+                    "browseId": "VLRDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                    "browseEndpointContextSupportedConfigs": {
+                      "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "api_url": "/browse"
+                  },
+                  "command": {
+                    "type": "BrowseEndpoint"
+                  }
+                },
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "endpoint": {
+              "type": "NavigationEndpoint",
+              "name": "browseEndpoint",
+              "payload": {
+                "browseId": "VLRDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                "browseEndpointContextSupportedConfigs": {
+                  "browseEndpointContextMusicConfig": {
+                    "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                  }
+                }
+              },
+              "metadata": {
+                "api_url": "/browse"
+              },
+              "command": {
+                "type": "BrowseEndpoint"
+              }
+            },
+            "rtl": false
+          },
+          "endpoint": {
+            "type": "NavigationEndpoint",
+            "name": "browseEndpoint",
+            "payload": {
+              "browseId": "VLRDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+              "browseEndpointContextSupportedConfigs": {
+                "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                }
+              }
+            },
+            "metadata": {
+              "api_url": "/browse"
+            },
+            "command": {
+              "type": "BrowseEndpoint"
+            }
+          },
+          "id": "VLRDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+          "subtitle": {
+            "text": "Playlist • YouTube Music",
+            "runs": [
+              {
+                "text": "Playlist",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": " • ",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": "YouTube Music",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "rtl": false
+          },
+          "badges": null,
+          "item_type": "playlist",
+          "item_count": null,
+          "thumbnail": [
+            {
+              "url": "https://yt3.googleusercontent.com/pmrzscKL6RWYnYqHLtelBo-N1pnOu6texOzpTGcB0nLyU-BFRS6RjEKGw5YLmAUd8S1nTHVAypyk2w=w544-h544-l90-rj",
+              "width": 544,
+              "height": 544
+            },
+            {
+              "url": "https://yt3.googleusercontent.com/pmrzscKL6RWYnYqHLtelBo-N1pnOu6texOzpTGcB0nLyU-BFRS6RjEKGw5YLmAUd8S1nTHVAypyk2w=w226-h226-l90-rj",
+              "width": 226,
+              "height": 226
+            }
+          ],
+          "thumbnail_overlay": {
+            "type": "MusicItemThumbnailOverlay",
+            "content": {
+              "type": "MusicPlayButton",
+              "endpoint": {
+                "type": "NavigationEndpoint",
+                "name": "watchPlaylistEndpoint",
+                "payload": {
+                  "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                  "params": "wAEB"
+                },
+                "metadata": {
+                  "api_url": "/next"
+                }
+              },
+              "play_icon_type": "PLAY_ARROW",
+              "pause_icon_type": "PAUSE",
+              "icon_color": 4294967295,
+              "accessibility_play_data": {
+                "accessibility_data": {
+                  "label": "Play Bollywood Dance Hitlist"
+                }
+              },
+              "accessibility_pause_data": {
+                "accessibility_data": {
+                  "label": "Pause Bollywood Dance Hitlist"
+                }
+              }
+            },
+            "content_position": "MUSIC_ITEM_THUMBNAIL_OVERLAY_CONTENT_POSITION_BOTTOM_RIGHT",
+            "display_style": "MUSIC_ITEM_THUMBNAIL_OVERLAY_DISPLAY_STYLE_HOVER"
+          },
+          "menu": {
+            "type": "Menu",
+            "items": [
+              {
+                "type": "MenuNavigationItem",
+                "text": "Shuffle play",
+                "icon_type": "MUSIC_SHUFFLE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                    "params": "wAEB8gECGAE%3D"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Start mix",
+                "icon_type": "MIX",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDAMPLRDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                    "params": "wAEB"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Play next",
+                "icon_type": "QUEUE_PLAY_NEXT",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CCcQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AFTER_CURRENT_VIDEO",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CCcQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist will play next"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CCgQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Add to queue",
+                "icon_type": "ADD_TO_REMOTE_QUEUE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CCUQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AT_END",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CCUQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist added to queue"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CCYQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "ToggleMenuServiceItem",
+                "text": {
+                  "text": "Save playlist to library",
+                  "runs": [
+                    {
+                      "text": "Save playlist to library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "toggled_text": {
+                  "text": "Remove playlist from library",
+                  "runs": [
+                    {
+                      "text": "Remove playlist from library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "icon_type": "BOOKMARK_BORDER",
+                "toggled_icon_type": "BOOKMARK",
+                "default_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Save favorites to your library after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CCQQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CCQQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Save favorites to your library after signing in",
+                      "runs": [
+                        {
+                          "text": "Save favorites to your library after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                },
+                "toggled_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "likeEndpoint",
+                  "payload": {
+                    "status": "INDIFFERENT",
+                    "target": {
+                      "playlistId": "RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk"
+                    }
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "LikeEndpoint"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Save to playlist",
+                "icon_type": "ADD_TO_PLAYLIST",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Make playlists and share them after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CCIQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CCIQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Make playlists and share them after signing in",
+                      "runs": [
+                        {
+                          "text": "Make playlists and share them after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Share",
+                "icon_type": "SHARE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "shareEntityEndpoint",
+                  "payload": {
+                    "serializedShareEntity": "EitSRENMQUs1dXlfa2pOQkJXcXlRX0N5MTRCMFA0eHJjS2dkMzlDUmpYWEtr",
+                    "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "ShareEntityEndpoint"
+                  }
+                }
+              }
+            ],
+            "flexible_items": [],
+            "top_level_buttons": [],
+            "accessibility": {
+              "accessibility_data": {
+                "label": "Action menu"
+              }
+            }
+          }
+        },
+        {
+          "type": "MusicTwoRowItem",
+          "title": {
+            "text": "New Music Hindi",
+            "runs": [
+              {
+                "text": "New Music Hindi",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "browseEndpoint",
+                  "payload": {
+                    "browseId": "VLRDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                    "browseEndpointContextSupportedConfigs": {
+                      "browseEndpointContextMusicConfig": {
+                        "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "api_url": "/browse"
+                  },
+                  "command": {
+                    "type": "BrowseEndpoint"
+                  }
+                },
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "endpoint": {
+              "type": "NavigationEndpoint",
+              "name": "browseEndpoint",
+              "payload": {
+                "browseId": "VLRDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                "browseEndpointContextSupportedConfigs": {
+                  "browseEndpointContextMusicConfig": {
+                    "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                  }
+                }
+              },
+              "metadata": {
+                "api_url": "/browse"
+              },
+              "command": {
+                "type": "BrowseEndpoint"
+              }
+            },
+            "rtl": false
+          },
+          "endpoint": {
+            "type": "NavigationEndpoint",
+            "name": "browseEndpoint",
+            "payload": {
+              "browseId": "VLRDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+              "browseEndpointContextSupportedConfigs": {
+                "browseEndpointContextMusicConfig": {
+                  "pageType": "MUSIC_PAGE_TYPE_PLAYLIST"
+                }
+              }
+            },
+            "metadata": {
+              "api_url": "/browse"
+            },
+            "command": {
+              "type": "BrowseEndpoint"
+            }
+          },
+          "id": "VLRDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+          "subtitle": {
+            "text": "Playlist • YouTube Music",
+            "runs": [
+              {
+                "text": "Playlist",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": " • ",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              },
+              {
+                "text": "YouTube Music",
+                "bold": false,
+                "bracket": false,
+                "deemphasize": false,
+                "italics": false,
+                "strikethrough": false,
+                "error_underline": false,
+                "underline": false
+              }
+            ],
+            "rtl": false
+          },
+          "badges": null,
+          "item_type": "playlist",
+          "item_count": null,
+          "thumbnail": [
+            {
+              "url": "https://yt3.googleusercontent.com/7tu5R2j1wNnQrE20CPeTq8yjlZeIlFfRWRwEbTpuavREK3V3YbCBtvrebznEvIxq_HPifBIRq3clxbg=w544-h544-l90-rj",
+              "width": 544,
+              "height": 544
+            },
+            {
+              "url": "https://yt3.googleusercontent.com/7tu5R2j1wNnQrE20CPeTq8yjlZeIlFfRWRwEbTpuavREK3V3YbCBtvrebznEvIxq_HPifBIRq3clxbg=w226-h226-l90-rj",
+              "width": 226,
+              "height": 226
+            }
+          ],
+          "thumbnail_overlay": {
+            "type": "MusicItemThumbnailOverlay",
+            "content": {
+              "type": "MusicPlayButton",
+              "endpoint": {
+                "type": "NavigationEndpoint",
+                "name": "watchPlaylistEndpoint",
+                "payload": {
+                  "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                  "params": "wAEB"
+                },
+                "metadata": {
+                  "api_url": "/next"
+                }
+              },
+              "play_icon_type": "PLAY_ARROW",
+              "pause_icon_type": "PAUSE",
+              "icon_color": 4294967295,
+              "accessibility_play_data": {
+                "accessibility_data": {
+                  "label": "Play New Music Hindi"
+                }
+              },
+              "accessibility_pause_data": {
+                "accessibility_data": {
+                  "label": "Pause New Music Hindi"
+                }
+              }
+            },
+            "content_position": "MUSIC_ITEM_THUMBNAIL_OVERLAY_CONTENT_POSITION_BOTTOM_RIGHT",
+            "display_style": "MUSIC_ITEM_THUMBNAIL_OVERLAY_DISPLAY_STYLE_HOVER"
+          },
+          "menu": {
+            "type": "Menu",
+            "items": [
+              {
+                "type": "MenuNavigationItem",
+                "text": "Shuffle play",
+                "icon_type": "MUSIC_SHUFFLE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                    "params": "wAEB8gECGAE%3D"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Start mix",
+                "icon_type": "MIX",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "watchPlaylistEndpoint",
+                  "payload": {
+                    "playlistId": "RDAMPLRDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                    "params": "wAEB"
+                  },
+                  "metadata": {
+                    "api_url": "/next"
+                  }
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Play next",
+                "icon_type": "QUEUE_PLAY_NEXT",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CBgQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AFTER_CURRENT_VIDEO",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CBgQvu4FGAIiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist will play next"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CBkQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuServiceItem",
+                "text": "Add to queue",
+                "icon_type": "ADD_TO_REMOTE_QUEUE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "queueAddEndpoint",
+                  "payload": {
+                    "queueTarget": {
+                      "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc",
+                      "onEmptyQueue": {
+                        "clickTrackingParams": "CBYQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "watchEndpoint": {
+                          "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc"
+                        }
+                      }
+                    },
+                    "queueInsertPosition": "INSERT_AT_END",
+                    "commands": [
+                      {
+                        "clickTrackingParams": "CBYQ--8FGAMiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                        "addToToastAction": {
+                          "item": {
+                            "notificationTextRenderer": {
+                              "successResponseText": {
+                                "runs": [
+                                  {
+                                    "text": "Playlist added to queue"
+                                  }
+                                ]
+                              },
+                              "trackingParams": "CBcQyscDIhMIqcarqJD3kwMV4y63AB2UYyhg"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "ToggleMenuServiceItem",
+                "text": {
+                  "text": "Save playlist to library",
+                  "runs": [
+                    {
+                      "text": "Save playlist to library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "toggled_text": {
+                  "text": "Remove playlist from library",
+                  "runs": [
+                    {
+                      "text": "Remove playlist from library",
+                      "bold": false,
+                      "bracket": false,
+                      "deemphasize": false,
+                      "italics": false,
+                      "strikethrough": false,
+                      "error_underline": false,
+                      "underline": false
+                    }
+                  ],
+                  "rtl": false
+                },
+                "icon_type": "BOOKMARK_BORDER",
+                "toggled_icon_type": "BOOKMARK",
+                "default_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Save favorites to your library after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CBUQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CBUQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Save favorites to your library after signing in",
+                      "runs": [
+                        {
+                          "text": "Save favorites to your library after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                },
+                "toggled_endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "likeEndpoint",
+                  "payload": {
+                    "status": "INDIFFERENT",
+                    "target": {
+                      "playlistId": "RDCLAK5uy_nNhhgRET3NcJ4SJBvqhAIJ6t7vjsQYowc"
+                    }
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "LikeEndpoint"
+                  }
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Save to playlist",
+                "icon_type": "ADD_TO_PLAYLIST",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "modalEndpoint",
+                  "payload": {
+                    "modal": {
+                      "modalWithTitleAndButtonRenderer": {
+                        "title": {
+                          "runs": [
+                            {
+                              "text": "Save this for later"
+                            }
+                          ]
+                        },
+                        "content": {
+                          "runs": [
+                            {
+                              "text": "Make playlists and share them after signing in"
+                            }
+                          ]
+                        },
+                        "button": {
+                          "buttonRenderer": {
+                            "style": "STYLE_BLUE_TEXT",
+                            "isDisabled": false,
+                            "text": {
+                              "runs": [
+                                {
+                                  "text": "Sign in"
+                                }
+                              ]
+                            },
+                            "navigationEndpoint": {
+                              "clickTrackingParams": "CBMQ8FsiEwipxquokPeTAxXjLrcAHZRjKGDKAQRWeA0Y",
+                              "signInEndpoint": {
+                                "hack": true
+                              }
+                            },
+                            "trackingParams": "CBMQ8FsiEwipxquokPeTAxXjLrcAHZRjKGA="
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "modal": {
+                    "type": "ModalWithTitleAndButton",
+                    "title": {
+                      "text": "Save this for later",
+                      "runs": [
+                        {
+                          "text": "Save this for later",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "content": {
+                      "text": "Make playlists and share them after signing in",
+                      "runs": [
+                        {
+                          "text": "Make playlists and share them after signing in",
+                          "bold": false,
+                          "bracket": false,
+                          "deemphasize": false,
+                          "italics": false,
+                          "strikethrough": false,
+                          "error_underline": false,
+                          "underline": false
+                        }
+                      ],
+                      "rtl": false
+                    },
+                    "button": {
+                      "type": "Button",
+                      "text": "Sign in",
+                      "style": "STYLE_BLUE_TEXT",
+                      "is_disabled": false,
+                      "endpoint": {
+                        "type": "NavigationEndpoint",
+                        "name": "signInEndpoint",
+                        "payload": {
+                          "hack": true
+                        },
+                        "metadata": {}
+                      }
+                    }
+                  },
+                  "metadata": {}
+                }
+              },
+              {
+                "type": "MenuNavigationItem",
+                "text": "Share",
+                "icon_type": "SHARE",
+                "endpoint": {
+                  "type": "NavigationEndpoint",
+                  "name": "shareEntityEndpoint",
+                  "payload": {
+                    "serializedShareEntity": "EitSRENMQUs1dXlfbk5oaGdSRVQzTmNKNFNKQnZxaEFJSjZ0N3Zqc1FZb3dj",
+                    "sharePanelType": "SHARE_PANEL_TYPE_UNIFIED_SHARE_PANEL"
+                  },
+                  "metadata": {},
+                  "command": {
+                    "type": "ShareEntityEndpoint"
+                  }
+                }
+              }
+            ],
+            "flexible_items": [],
+            "top_level_buttons": [],
+            "accessibility": {
+              "accessibility_data": {
+                "label": "Action menu"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

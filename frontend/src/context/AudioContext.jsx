@@ -693,6 +693,22 @@ export function AudioProvider({ children }) {
       // Ensure Web Audio context is resumed (requires user gesture)
       ensureWebAudioCtx();
 
+      // Proactive Queue Fetching — only when the queue is empty.
+      // We eagerly fire this before blob resolution so even cached offline songs queue properly.
+      if (!normalizedSong._contextId && queueRef.current.length === 0) {
+        Promise.resolve(user ? user.getIdToken() : '').then(token => {
+          fetch(`${API}/api/watch-next/${normalizedSong.id}`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.json())
+            .then(res => {
+              const tracks = res.data || [];
+              if (res?.success && Array.isArray(tracks) && tracks.length > 0) {
+                setQueue(tracks);
+                setBaseQueue([normalizedSong, ...tracks]);
+              }
+            }).catch(console.error);
+        });
+      }
+
       // Increment load generation — any stale async play() calls will be aborted
       const myGen = ++loadGenRef.current;
       const isStale = () => loadGenRef.current !== myGen;
@@ -747,22 +763,6 @@ export function AudioProvider({ children }) {
       const nextIds = queueRef.current.slice(0, 3).map(s => s.videoId || s.id).filter(Boolean).join(',');
       const streamUrl = `${API}/api/stream/${normalizedSong.id}?token=${encodeURIComponent(token)}${nextIds ? `&next=${nextIds}` : ''}`;
       playUrl(streamUrl);
-
-      // Proactive Queue Fetching — only when the queue is empty.
-      // This prevents suggestions from replacing the current queue every time
-      // a new song plays from the existing queue.
-      if (!normalizedSong._contextId && queueRef.current.length === 0) {
-        fetch(`${API}/api/watch-next/${normalizedSong.id}`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.json())
-          .then(res => {
-            const tracks = res.data || [];
-            if (res?.success && Array.isArray(tracks) && tracks.length > 0) {
-              setQueue(tracks);
-              setBaseQueue([normalizedSong, ...tracks]);
-            }
-          })
-          .catch(err => console.error('Failed to pre-fetch watch-next:', err));
-      }
     } catch (err) {
       console.error('Failed to load stream:', err);
       setIsLoading(false);
@@ -777,21 +777,17 @@ export function AudioProvider({ children }) {
       if (prev.length > 0) {
         const [nextSong, ...rest] = prev;
         playSong(nextSong);
+        
+        // If repeat ALL is on, push the currently playing song to the back of the queue
+        if (repeatModeRef.current === 'all' && currentSongRef.current) {
+          return [...rest, currentSongRef.current];
+        }
         return rest;
       }
 
-      // If repeat ALL and queue empty, restart from baseQueue
-      // Include the currently playing song at the beginning so the full cycle replays
+      // If repeat ALL and queue empty (fallback edge-case), safely restart cycle from baseQueue
       if (repeatModeRef.current === 'all' && baseQueue.length > 0) {
-        // Build the full repeat list: currentSong + original baseQueue (deduplicated)
-        const cs = currentSongRef.current;
         let fullList = [...baseQueue];
-        if (cs) {
-          const csId = cs.videoId || cs.id;
-          // Ensure currentSong is at the front of the repeat cycle
-          fullList = fullList.filter(s => (s.videoId || s.id) !== csId);
-          fullList.unshift(cs);
-        }
         if (isShuffled) {
           fullList = fullList.sort(() => Math.random() - 0.5);
         }
@@ -877,11 +873,12 @@ export function AudioProvider({ children }) {
 
   const replaceQueue = useCallback((newQueueArray) => {
     setBaseQueue(newQueueArray);
+    let finalQueue = newQueueArray;
     if (isShuffled) {
-      setQueue([...newQueueArray].sort(() => Math.random() - 0.5));
-    } else {
-      setQueue(newQueueArray);
+      finalQueue = [...newQueueArray].sort(() => Math.random() - 0.5);
     }
+    setQueue(finalQueue);
+    queueRef.current = finalQueue; // Sync ref instantly to avoid race condition in playSong
   }, [isShuffled]);
 
   const toggleShuffle = useCallback(() => {

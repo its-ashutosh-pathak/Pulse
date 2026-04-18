@@ -135,18 +135,8 @@ export default function Settings() {
     document.documentElement.style.setProperty('--accent-cyan', accentColor);
     document.documentElement.style.setProperty('--accent-pink', secondary);
 
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       localStorage.setItem('pulse_accent_color', accentColor);
-      if (user) {
-        try {
-          const t = await user.getIdToken();
-          await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-            body: JSON.stringify({ accentColor })
-          });
-        } catch(e) {}
-      }
     }, 600);
     return () => clearTimeout(timer);
   }, [accentColor, user]);
@@ -158,48 +148,9 @@ export default function Settings() {
     localStorage.setItem('pulse_crossfade', String(crossfade));
     localStorage.setItem('pulse_data_saver', String(dataSaver));
 
-    if (!user) return;
-    const timer = setTimeout(async () => {
-      try {
-        const t = await user.getIdToken();
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-          body: JSON.stringify({
-            streamingQuality: toBackendQuality(streamingQuality),
-            downloadQuality: toBackendQuality(downloadQuality),
-            crossfadeDuration: crossfade,
-            dataSaverMode: dataSaver
-          })
-        });
-      } catch(e) {}
-    }, 600);
-    return () => clearTimeout(timer);
   }, [streamingQuality, downloadQuality, crossfade, dataSaver, user]);
 
-  // Load backend settings on mount
-  useEffect(() => {
-    if (!user) return;
-    let isMounted = true;
-    user.getIdToken().then(t => {
-      fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/settings`, {
-        headers: { Authorization: `Bearer ${t}` }
-      })
-      .then(r => r.json())
-      .then(json => {
-        if (isMounted && json.success && json.data) {
-          const s = json.data;
-          if (s.streamingQuality) setStreamingQuality(toFrontendQuality(s.streamingQuality));
-          if (s.downloadQuality) setDownloadQuality(toFrontendQuality(s.downloadQuality));
-          if (s.crossfadeDuration !== undefined) setCrossfade(s.crossfadeDuration);
-          if (s.dataSaverMode !== undefined) setDataSaver(s.dataSaverMode);
-          if (s.accentColor && s.accentColor !== accentColor) setAccentColor(s.accentColor);
-        }
-      })
-      .catch(() => {});
-    });
-    return () => { isMounted = false; };
-  }, [user]);
+
   // Click Outside to Close
   useEffect(() => {
     const handleClickOutside = (event) => {

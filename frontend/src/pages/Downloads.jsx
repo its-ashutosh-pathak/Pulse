@@ -61,6 +61,8 @@ export default function Downloads() {
   const [activeFolder, setActiveFolder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+  const [deleteSongTarget, setDeleteSongTarget] = useState(null);
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState(null);
 
   // ── Playlist action menu ──────────────────────────────────────────────────
   const [menuOpenId, setMenuOpenId] = useState(null); // id of playlist whose menu is open
@@ -176,10 +178,15 @@ export default function Downloads() {
     }
   };
 
-  const handleDelete = async (e, videoId) => {
+  const triggerDeleteSong = (e, track) => {
     e.stopPropagation();
-    setDeletingId(videoId);
-    await removeDownload(videoId);
+    setDeleteSongTarget(track);
+  };
+
+  const confirmDeleteSong = async () => {
+    if (!deleteSongTarget) return;
+    setDeletingId(deleteSongTarget.videoId);
+    await removeDownload(deleteSongTarget.videoId);
     // Refresh and update activeFolder in-place
     const all = await getAllOfflinePlaylists();
     setPlaylists(all);
@@ -188,6 +195,7 @@ export default function Downloads() {
       setActiveFolder(refreshed || null);
     }
     setDeletingId(null);
+    setDeleteSongTarget(null);
   };
 
   const handleRenamePlaylist = async () => {
@@ -202,12 +210,18 @@ export default function Downloads() {
     }
   };
 
-  const handleDeletePlaylist = async (pl) => {
+  const triggerDeletePlaylist = (pl) => {
     setMenuOpenId(null);
-    await deleteOfflinePlaylist(pl.id);
+    setDeleteFolderTarget(pl);
+  };
+
+  const confirmDeletePlaylist = async () => {
+    if (!deleteFolderTarget) return;
+    await deleteOfflinePlaylist(deleteFolderTarget.id);
     const all = await getAllOfflinePlaylists();
     setPlaylists(all);
-    if (activeFolder?.id === pl.id) setActiveFolder(null);
+    if (activeFolder?.id === deleteFolderTarget.id) setActiveFolder(null);
+    setDeleteFolderTarget(null);
   };
 
   const handleShuffle = async (tracks) => {
@@ -321,7 +335,7 @@ export default function Downloads() {
                         }}>
                           <Music size={14} /> Edit Songs
                         </button>
-                        <button className="del-opt" onClick={() => handleDeletePlaylist(pl)}>
+                        <button className="del-opt" onClick={() => triggerDeletePlaylist(pl)}>
                           <Trash2 size={14} /> Delete Folder
                         </button>
                       </div>
@@ -472,7 +486,7 @@ export default function Downloads() {
                 <div className="action-wrapper">
                   <button
                     className={`dl-delete-btn action-icon-btn ${deletingId === track.videoId ? 'deleting' : ''}`}
-                    onClick={e => handleDelete(e, track.videoId)}
+                    onClick={e => triggerDeleteSong(e, track)}
                     disabled={!!deletingId}
                   >
                     <Trash2 size={16} />
@@ -575,9 +589,9 @@ export default function Downloads() {
               maxLength={60}
               placeholder="Playlist name"
             />
-            <div className="modal-btn-row">
-              <button className="modal-cancel-btn" onClick={() => setRenameTarget(null)}>Cancel</button>
-              <button className="modal-confirm-btn" onClick={handleRenamePlaylist} disabled={!renameVal.trim()}>Save</button>
+            <div className="modal-actions-unified" style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <button className="cancel-pill" onClick={() => setRenameTarget(null)}>Cancel</button>
+              <button className="confirm-pill" onClick={handleRenamePlaylist} disabled={!renameVal.trim()}>Rename</button>
             </div>
           </div>
         </div>
@@ -603,6 +617,44 @@ export default function Downloads() {
                 </div>
               ))}
               {editSongsTarget.tracks.length === 0 && <p className="empty-edit">No songs left.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Song Modal ── */}
+      {deleteSongTarget && (
+        <div className="modal-overlay" onClick={() => setDeleteSongTarget(null)}>
+          <div className="standard-modal glass" onClick={e => e.stopPropagation()}>
+            <div className="trash-icon-unified">
+              <Trash2 size={32} color="#ff4d4d" />
+            </div>
+            <h3>Delete Song?</h3>
+            <p>
+              Are you sure you want to remove <strong>"{deleteSongTarget.title}"</strong> from your downloads?
+            </p>
+            <div className="modal-actions-unified" style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <button className="cancel-pill" onClick={() => setDeleteSongTarget(null)}>Cancel</button>
+              <button className="confirm-pill delete-variant" onClick={confirmDeleteSong}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Folder Modal ── */}
+      {deleteFolderTarget && (
+        <div className="modal-overlay" onClick={() => setDeleteFolderTarget(null)}>
+          <div className="standard-modal glass" onClick={e => e.stopPropagation()}>
+            <div className="trash-icon-unified">
+              <Trash2 size={32} color="#ff4d4d" />
+            </div>
+            <h3>Delete Folder?</h3>
+            <p>
+              Are you sure you want to delete the folder <strong>"{deleteFolderTarget.name}"</strong>? This offline playlist will be lost forever.
+            </p>
+            <div className="modal-actions-unified" style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <button className="cancel-pill" onClick={() => setDeleteFolderTarget(null)}>Cancel</button>
+              <button className="confirm-pill delete-variant" onClick={confirmDeletePlaylist}>Delete</button>
             </div>
           </div>
         </div>
