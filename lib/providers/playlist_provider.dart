@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -116,14 +117,14 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       },
       onError: (e) {
         // ignore: avoid_print
-        print('[Playlist] Sync error: $e');
+        debugPrint('[Playlist] Sync error: $e');
         state = state.copyWith(loading: false);
       },
     );
   }
 
   // ── Create Playlist ──
-  Future<String?> createPlaylist({String name = 'New Playlist'}) async {
+  Future<String?> createPlaylist({String name = 'New Playlist', List<Song> initialSongs = const []}) async {
     final auth = ref.read(authProvider);
     if (auth.user == null) return null;
 
@@ -133,7 +134,11 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         'createdBy': auth.user!.uid,
         'ownerName': auth.displayName ?? 'Pulse User',
         'members': [auth.user!.uid],
-        'songs': [],
+        'songs': initialSongs.map((s) => <String, dynamic>{
+          ...s.toJson(),
+          'addedByUid': auth.user!.uid,
+          'addedByName': auth.displayName ?? 'Pulse User',
+        }).toList(),
         'visibility': 'Public',
         'createdAt': FieldValue.serverTimestamp(),
         'lastUpdated': FieldValue.serverTimestamp(),
@@ -141,7 +146,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       return docRef.id;
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Create error: $e');
+      debugPrint('[Playlist] Create error: $e');
       rethrow;
     }
   }
@@ -172,7 +177,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       });
       return docRef.id;
     } catch (e) {
-      print('[Playlist] Import error: $e');
+      debugPrint('[Playlist] Import error: $e');
       return null;
     }
   }
@@ -206,7 +211,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       });
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Add song error: $e');
+      debugPrint('[Playlist] Add song error: $e');
       rethrow;
     }
   }
@@ -246,7 +251,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       return docRef.id;
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Copy error: $e');
+      debugPrint('[Playlist] Copy error: $e');
       return null;
     }
   }
@@ -259,13 +264,18 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       if (songIndex < 0 || songIndex >= newSongs.length) return;
       newSongs.removeAt(songIndex);
 
+      if (newSongs.isEmpty) {
+        await deletePlaylist(playlistId);
+        return;
+      }
+
       await _db.collection('playlists').doc(playlistId).update({
         'songs': newSongs.map((s) => s.toJson()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       });
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Remove song error: $e');
+      debugPrint('[Playlist] Remove song error: $e');
     }
   }
 
@@ -281,7 +291,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       });
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Update error: $e');
+      debugPrint('[Playlist] Update error: $e');
     }
   }
 
@@ -291,7 +301,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       await _db.collection('playlists').doc(playlistId).delete();
     } catch (e) {
       // ignore: avoid_print
-      print('[Playlist] Delete error: $e');
+      debugPrint('[Playlist] Delete error: $e');
     }
   }
 
@@ -305,7 +315,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         });
       } catch (e) {
         // ignore: avoid_print
-        print('[Playlist] lastPlayedAt update failed: $e');
+        debugPrint('[Playlist] lastPlayedAt update failed: $e');
       }
     });
   }
@@ -354,7 +364,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         liked = Playlist(id: docRef.id, name: 'Liked Songs', songs: const []);
       } catch (e) {
         // ignore: avoid_print
-        print('[Playlist] Failed to create Liked Songs: $e');
+        debugPrint('[Playlist] Failed to create Liked Songs: $e');
         return;
       }
     }
@@ -378,3 +388,4 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
 final playlistProvider = NotifierProvider<PlaylistNotifier, PlaylistState>(
   PlaylistNotifier.new,
 );
+

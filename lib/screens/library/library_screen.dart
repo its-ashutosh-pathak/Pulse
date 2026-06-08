@@ -10,6 +10,7 @@ import '../../data/models/playlist.dart';
 import '../../data/models/song.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/audio_provider.dart';
+import '../../providers/import_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/playing_bars.dart';
 
@@ -79,6 +80,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final playlistState = ref.watch(playlistProvider);
+    final importState = ref.watch(importProvider);
     final playlists = playlistState.playlists;
     final accent = Theme.of(context).colorScheme.primary;
 
@@ -140,10 +142,64 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           ),
                         ],
                       ),
-
                     ],
                   ),
                 ),
+
+                // ── Import Banners ──
+                if (importState.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Column(
+                      children: importState.values.map((task) {
+                        return GlassContainer(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          borderRadius: 12,
+                          child: Row(
+                            children: [
+                              task.status == 'done' 
+                                  ? const Icon(LucideIcons.checkCircle2, color: Colors.green, size: 20)
+                                  : task.status == 'error'
+                                      ? const Icon(LucideIcons.alertCircle, color: Colors.red, size: 20)
+                                      : const SizedBox(
+                                          width: 16, height: 16,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      task.status == 'done' ? 'Imported ${task.name}' : 'Importing ${task.name}...',
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (task.status == 'fetching')
+                                      const Text('Fetching playlist...', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
+                                    else if (task.status == 'matching')
+                                      Text('Matching songs: ${task.processedSongs} / ${task.totalSongs}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary))
+                                    else if (task.status == 'saving')
+                                      const Text('Saving to library...', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
+                                    else if (task.status == 'done')
+                                      const Text('Tap to dismiss', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
+                                    else if (task.status == 'error')
+                                      const Text('Failed to import', style: TextStyle(fontSize: 11, color: Colors.redAccent))
+                                  ],
+                                ),
+                              ),
+                              if (task.status == 'done' || task.status == 'error')
+                                IconButton(
+                                  icon: const Icon(LucideIcons.x, size: 16),
+                                  onPressed: () => ref.read(importProvider.notifier).dismissTask(task.id),
+                                )
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
 
                 // ── Playlist list ──
                 Expanded(
@@ -451,7 +507,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                               ),
                               const SizedBox(width: 8),
                               ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: accent),
+                                style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                                 onPressed: () async {
                                   if (_editSongsPlaylist != null) {
                                     final songMaps = _editSongsList
@@ -604,14 +660,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   label: 'Import from YT Music',
                   subtitle: 'Paste a playlist URL',
-                  onTap: () {
-                    setState(() {
-                      _showAddOptions = false;
-                      _selectedImportSource = 'ytmusic';
-                      _importUrlController.clear();
-                      _showImportModal = true;
-                    });
-                  },
+                  comingSoon: true,
+                  onTap: null,
                 ),
                 const SizedBox(height: 10),
                 _AddOptionItem(
@@ -622,14 +672,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   label: 'Import from Spotify',
                   subtitle: 'Paste a playlist URL',
-                  onTap: () {
-                    setState(() {
-                      _showAddOptions = false;
-                      _selectedImportSource = 'spotify';
-                      _importUrlController.clear();
-                      _showImportModal = true;
-                    });
-                  },
+                  comingSoon: true,
+                  onTap: null,
                 ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -715,9 +759,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           final url = _importUrlController.text.trim();
                           if (url.isNotEmpty) {
                             setState(() => _showImportModal = false);
-                            final browseId = _extractBrowseId(url);
-                            if (browseId != null) {
-                              if (isPulse) {
+                            
+                            if (isPulse) {
+                              final browseId = _extractBrowseId(url);
+                              if (browseId != null) {
                                 // Import pulse playlist
                                 final newId = await ref.read(playlistProvider.notifier).importPulsePlaylist(browseId);
                                 if (newId != null && mounted) {
@@ -727,13 +772,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                     const SnackBar(content: Text('Failed to import Pulse playlist')),
                                   );
                                 }
-                              } else {
-                                context.push('/playlist/$browseId');
+                              }
+                            } else {
+                              // Spotify or YT Music bulk import
+                              ref.read(importProvider.notifier).startImport(url);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Import started in background.')),
+                                );
                               }
                             }
                           }
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: accent),
+                        style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                         child: const Text('Import'),
                       ),
                     ],
@@ -801,6 +852,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                       onPressed: () {
                         final name = _createController.text.trim();
                         if (name.isNotEmpty) {
@@ -859,6 +911,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                       onPressed: () async {
                         final name = _renameController.text.trim();
                         if (name.isNotEmpty && _editingPlaylist != null) {
@@ -913,7 +966,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     const SizedBox(width: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.danger),
+                          backgroundColor: AppColors.danger,
+                          foregroundColor: AppColors.background),
                       onPressed: () async {
                         if (_editingPlaylist != null) {
                           await ref.read(playlistProvider.notifier)
@@ -1191,43 +1245,67 @@ class _AddOptionItem extends StatelessWidget {
   final Widget? iconWidget;
   final String label;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool comingSoon;
 
   const _AddOptionItem({
     this.iconWidget, required this.label,
-    required this.subtitle, required this.onTap,
+    required this.subtitle, this.onTap,
+    this.comingSoon = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: GlassContainer(
-        borderRadius: 14,
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.surface,
+      child: Opacity(
+        opacity: comingSoon ? 0.5 : 1.0,
+        child: GlassContainer(
+          borderRadius: 14,
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.surface,
+                ),
+                child: Center(
+                  child: iconWidget ?? const Icon(LucideIcons.plus, size: 20),
+                ),
               ),
-              child: Center(
-                child: iconWidget ?? const Icon(LucideIcons.plus, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600)),
+                    Text(subtitle, style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600)),
-                Text(subtitle, style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary)),
-              ],
-            ),
-          ],
+              if (comingSoon)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    'Coming Soon',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

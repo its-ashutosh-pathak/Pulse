@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/constants/app_constants.dart';
@@ -25,7 +26,7 @@ class UpdateNotifier extends _$UpdateNotifier {
 
   Future<AppUpdateInfo?> _checkForUpdates() async {
     try {
-      print('--- Checking for updates ---');
+      debugPrint('--- Checking for updates ---');
       final doc = await FirebaseFirestore.instance
           .collection('app_settings')
           .doc('version')
@@ -36,11 +37,11 @@ class UpdateNotifier extends _$UpdateNotifier {
         final latestVersion = data['latest_version'] as String?;
         final downloadUrl = data['download_url'] as String?;
 
-        print('Firebase version: $latestVersion, App version: $kAppVersion');
+        debugPrint('Firebase version: $latestVersion, App version: $kAppVersion');
 
         if (latestVersion != null && downloadUrl != null) {
           final isAvailable = _isVersionGreaterThan(latestVersion, kAppVersion);
-          print('Is update available? $isAvailable');
+          debugPrint('Is update available? $isAvailable');
           
           final cleanUrl = downloadUrl.replaceAll('"', '').replaceAll("'", "").trim();
           return AppUpdateInfo(
@@ -50,10 +51,10 @@ class UpdateNotifier extends _$UpdateNotifier {
           );
         }
       } else {
-        print('Version document does not exist!');
+        debugPrint('Version document does not exist!');
       }
     } catch (e) {
-      print('Failed to check for updates (Firebase Error): $e');
+      debugPrint('Failed to check for updates (Firebase Error): $e');
     }
     return null;
   }
@@ -74,8 +75,9 @@ class UpdateNotifier extends _$UpdateNotifier {
         if (p1 < p2) return false;
       }
     } catch (e) {
-      print('Version parse error: $e');
+      debugPrint('Version parse error: $e');
     }
     return false;
   }
 }
+

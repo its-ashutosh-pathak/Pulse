@@ -276,17 +276,15 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
-              // Rank / Playing bars
+              // Rank
               SizedBox(
                 width: 28,
                 child: Center(
-                  child: isPlaying
-                      ? PlayingBars(color: accent, height: 14, isPaused: !audio.isPlaying)
-                      : Text('${index + 1}',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600,
-                              color: isPlaying
-                                  ? accent : AppColors.textSecondary)),
+                  child: Text('${index + 1}',
+                      style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600,
+                          color: isPlaying
+                              ? accent : AppColors.textSecondary)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -295,11 +293,23 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
                 borderRadius: BorderRadius.circular(6),
                 child: SizedBox(
                   width: 44, height: 44,
-                  child: CachedNetworkImage(
-                    imageUrl: ThumbnailUtils.getHighRes(song.thumbnail),
-                    fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) =>
-                        Container(color: AppColors.surface),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: ThumbnailUtils.getHighRes(song.thumbnail),
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) =>
+                            Container(color: AppColors.surface),
+                      ),
+                      if (isPlaying)
+                        Container(
+                          color: Colors.black54,
+                          child: Center(
+                            child: PlayingBars(color: accent, height: 16, isPaused: !audio.isPlaying),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),

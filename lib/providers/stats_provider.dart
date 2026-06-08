@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +52,7 @@ class StatsNotifier extends Notifier<StatsState> {
   Future<void> loadStats(String timeframe, {bool force = false}) async {
     final user = ref.read(authProvider).user;
     if (user == null) {
-      print('[Stats] No user found — skipping stats load');
+      debugPrint('[Stats] No user found — skipping stats load');
       return;
     }
 
@@ -67,7 +68,7 @@ class StatsNotifier extends Notifier<StatsState> {
     }
 
     final uid = user.uid;
-    print('[Stats] Loading stats for uid=$uid timeframe=$timeframe');
+    debugPrint('[Stats] Loading stats for uid=$uid timeframe=$timeframe');
     final days = {'day': 0, 'week': 7, 'month': 30, 'year': 365}[timeframe] ?? 7;
     final cutoffString = DateTime.now()
         .subtract(Duration(days: days))
@@ -95,7 +96,7 @@ class StatsNotifier extends Notifier<StatsState> {
       'artistStats',
     );
 
-    print('[Stats] Results — life:${lifeSnap?.docs.length ?? 'null'}, period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
+    debugPrint('[Stats] Results — life:${lifeSnap?.docs.length ?? 'null'}, period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
 
     // Lifetime stats
     int lifetimeSeconds = 0;
@@ -217,7 +218,7 @@ class StatsNotifier extends Notifier<StatsState> {
       return await future;
     } catch (e) {
       // ignore: avoid_print
-      print('[Stats] Query error ($label): $e');
+      debugPrint('[Stats] Query error ($label): $e');
       return null;
     }
   }
@@ -226,3 +227,4 @@ class StatsNotifier extends Notifier<StatsState> {
 final statsProvider = NotifierProvider<StatsNotifier, StatsState>(
   StatsNotifier.new,
 );
+

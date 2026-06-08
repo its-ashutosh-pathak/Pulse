@@ -34,13 +34,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleSubmit() async {
+    final name = _nameC.text.trim();
+    final email = _emailC.text.trim();
+    final password = _passwordC.text;
+
+    if (_isSignup && name.isEmpty) {
+      setState(() => _error = 'Please enter your name');
+      return;
+    }
+    if (email.isEmpty) {
+      setState(() => _error = 'Please enter your email address');
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => _error = 'Please enter your password');
+      return;
+    }
+
     setState(() { _submitting = true; _error = ''; });
     try {
       final auth = ref.read(authProvider.notifier);
       if (_isSignup) {
-        await auth.signupWithEmail(_emailC.text.trim(), _passwordC.text, _nameC.text.trim());
+        await auth.signupWithEmail(email, password, name);
       } else {
-        await auth.loginWithEmail(_emailC.text.trim(), _passwordC.text);
+        await auth.loginWithEmail(email, password);
       }
       if (mounted) context.go('/');
     } catch (e) {

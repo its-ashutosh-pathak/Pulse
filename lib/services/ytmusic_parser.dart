@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../data/models/song.dart';
 import '../data/models/home_section.dart';
 import '../data/models/artist.dart';
@@ -194,6 +195,76 @@ class YtMusicParser {
     return null;
   }
 
+  /// Helper to extract continuation from a contents array's last item
+  static String? _extractContinuationFromContents(List<dynamic>? contents) {
+    if (contents == null || contents.isEmpty) return null;
+    final lastItem = contents.last;
+    if (lastItem is Map && lastItem.containsKey('continuationItemRenderer')) {
+      final renderer = lastItem['continuationItemRenderer'];
+      return renderer?['continuationEndpoint']?['continuationCommand']?['token'] as String?;
+    }
+    return null;
+  }
+
+  /// Extracts the continuation token from a playlist or playlist continuation response.
+  static String? extractPlaylistContinuation(Map<String, dynamic> data) {
+    try {
+      // 1. Single Column Browse (Standard playlists)
+      final singleTabContent = data['contents']?['singleColumnBrowseResultsRenderer']
+          ?['tabs']?[0]?['tabRenderer']?['content']?['sectionListRenderer']?['contents'];
+      if (singleTabContent != null && singleTabContent is List) {
+        for (var section in singleTabContent) {
+          final shelf = section['musicPlaylistShelfRenderer'];
+          if (shelf != null) {
+            final continuations = shelf['continuations'] as List?;
+            if (continuations != null && continuations.isNotEmpty) {
+              return continuations[0]?['nextContinuationData']?['continuation'] as String?;
+            }
+            final cont = _extractContinuationFromContents(shelf['contents'] as List?);
+            if (cont != null) return cont;
+          }
+        }
+      }
+
+      // 2. Two Column Browse (Some large playlists or albums)
+      final twoColContent = data['contents']?['twoColumnBrowseResultsRenderer']
+          ?['secondaryContents']?['sectionListRenderer'];
+      if (twoColContent != null) {
+        final continuations = twoColContent['continuations'] as List?;
+        if (continuations != null && continuations.isNotEmpty) {
+          return continuations[0]?['nextContinuationData']?['continuation'] as String?;
+        }
+        final contents = twoColContent['contents'] as List?;
+        if (contents != null) {
+          for (var section in contents) {
+            final shelf = section['musicPlaylistShelfRenderer'];
+            if (shelf != null) {
+              final conts = shelf['continuations'] as List?;
+              if (conts != null && conts.isNotEmpty) {
+                return conts[0]?['nextContinuationData']?['continuation'] as String?;
+              }
+              final cont = _extractContinuationFromContents(shelf['contents'] as List?);
+              if (cont != null) return cont;
+            }
+          }
+        }
+      }
+      
+      // 3. Continuation response
+      final contContents = data['continuationContents']?['musicPlaylistShelfContinuation'] ?? 
+                           data['continuationContents']?['sectionListContinuation'];
+      if (contContents != null) {
+        final continuations = contContents['continuations'] as List?;
+        if (continuations != null && continuations.isNotEmpty) {
+          return continuations[0]?['nextContinuationData']?['continuation'] as String?;
+        }
+        final cont = _extractContinuationFromContents(contContents['contents'] as List?);
+        if (cont != null) return cont;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Parses sections from a continuation response payload.
   static List<HomeSection> parseHomeContinuation(Map<String, dynamic> data) {
     final sections = <HomeSection>[];
@@ -377,6 +448,25 @@ class YtMusicParser {
                 }
               }
             }
+          }
+        }
+      }
+
+      // Path 3: Playlist continuation response
+      if (contents.isEmpty) {
+        final contContents = data['continuationContents']?['musicPlaylistShelfContinuation'];
+        if (contContents != null) {
+          final items = contContents['contents'] as List?;
+          if (items != null) {
+            for (var item in items) {
+              final song = _parseResponsiveListItem(item);
+              if (song != null && song.videoId.isNotEmpty) tracks.add(song);
+            }
+          }
+        } else {
+          final secCont = data['continuationContents']?['sectionListContinuation'];
+          if (secCont != null) {
+            contents = List<dynamic>.from(secCont['contents'] ?? []);
           }
         }
       }
@@ -591,3 +681,4 @@ class YtMusicParser {
     return results.length > 1 ? results.sublist(1) : results;
   }
 }
+

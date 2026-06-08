@@ -271,6 +271,20 @@ class _MarqueeTextState extends State<_MarqueeText>
 
   @override
   Widget build(BuildContext context) {
+    // Check if word count is <= 2
+    final wordCount = widget.text.trim().split(RegExp(r'\s+')).length;
+    
+    if (wordCount <= 2) {
+      // Text has 2 words or fewer, no need for marquee
+      return Text(
+        widget.text, 
+        style: widget.style, 
+        maxLines: 1, 
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+
+    // Text has more than 2 words, animate marquee
     return SingleChildScrollView(
       controller: _controller,
       scrollDirection: Axis.horizontal,

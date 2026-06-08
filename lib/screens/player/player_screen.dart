@@ -42,6 +42,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   final _musicApi = MusicApi();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final song = ref.read(audioProvider).currentSong;
+      if (song != null) {
+        _fetchLyricsIfNeeded(song);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _lyricsScrollController.dispose();
     super.dispose();
@@ -469,7 +480,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   // ── Lyrics view ──
   Widget _buildLyricsView(AudioState audio, Color accent) {
-    final activeIndex = _findActiveLineIndex(audio.progress.inSeconds.toDouble());
+    final activeIndex = _findActiveLineIndex(audio.progress.inMilliseconds / 1000.0);
 
     // Auto-scroll
     WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -11,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/download_provider.dart';
 import '../../widgets/glass_container.dart';
-import '../../widgets/glass_container.dart';
 import '../../widgets/playing_bars.dart';
 
 /// Downloads screen — port of Downloads.jsx.
@@ -596,7 +595,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: accent),
+                      style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                       onPressed: () async {
                         if (_editingPlaylist != null && _renameController.text.trim().isNotEmpty) {
                           await ref.read(downloadProvider.notifier).renameOfflinePlaylist(
@@ -652,7 +651,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: AppColors.background),
                       onPressed: () async {
                         if (_editingPlaylist != null) {
                           if (_editingPlaylist!.id == '__downloads__') {
@@ -722,7 +721,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                               ),
                               const SizedBox(width: 8),
                               ElevatedButton(
-                                style: ElevatedButton.styleFrom(backgroundColor: accent),
+                                style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: AppColors.background),
                                 onPressed: () async {
                                   if (_editSongsPlaylist != null) {
                                     if (_editSongsPlaylist!.id == '__downloads__') {

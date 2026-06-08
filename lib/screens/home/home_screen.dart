@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 24),
 
               // ── Recent Playlists ──
-              if (playlists.isNotEmpty) ...[
+              if (playlists.where((p) => ((p.songs as List<dynamic>?) ?? []).isNotEmpty).isNotEmpty) ...[
                 Text('Recent Playlists',
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
@@ -156,7 +156,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ── Recent Playlists Grid (2-col horizontal cards) ──
   Widget _buildRecentPlaylistsGrid(List<dynamic> playlists, AudioState audio) {
-    final items = playlists.take(6).toList();
+    final items = playlists.where((pl) {
+      final songs = (pl.songs as List<dynamic>?) ?? [];
+      return songs.isNotEmpty;
+    }).take(6).toList();
     return GridView.builder(
       padding: EdgeInsets.zero,
       shrinkWrap: true,

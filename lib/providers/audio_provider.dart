@@ -104,9 +104,24 @@ class AudioNotifier extends Notifier<AudioState> {
   String? _preloadedNextSongId;
   bool _isPreloadingNext = false;
 
+  int _consecutiveFailures = 0;
+
+  bool _isInitialized = false;
+
   @override
   AudioState build() {
     ref.onDispose(_dispose);
+    
+    // Sync the notification/lock screen like button when playlists change from the app UI
+    ref.listen(playlistProvider, (previous, next) {
+      if (!_isInitialized) return;
+      final current = state.currentSong;
+      if (current != null) {
+        final isLiked = ref.read(playlistProvider.notifier).isLiked(current.videoId);
+        _handler.updateLikedState(isLiked);
+      }
+    });
+
     // Initialization is deferred — must call initialize() after handler is ready.
     return const AudioState();
   }
@@ -114,6 +129,8 @@ class AudioNotifier extends Notifier<AudioState> {
   /// Initialize with the audio handler (must be called after AudioService.init).
   void initialize(PulseAudioHandler handler) {
     _handler = handler;
+    _isInitialized = true;
+    
     _crossfadeEngine = CrossfadeEngine(
       primaryPlayer: _handler.primaryPlayer,
       crossfadePlayer: _handler.crossfadePlayer,
@@ -207,12 +224,9 @@ class AudioNotifier extends Notifier<AudioState> {
       }
     });
 
-    // Completion event (replaces onEnded, lines 240-253)
-    _eventSub = player.playbackEventStream.listen((event) {
-      if (event.processingState == ProcessingState.completed) {
-        _onTrackEnded();
-      }
-    });
+    // Event stream listener was here, but removed because PulseAudioHandler
+    // already listens to playbackEventStream and invokes onTrackEnded,
+    // which is mapped to _onTrackEnded() in initialize().
   }
 
   /// Called when a track finishes playing (not via crossfade).
@@ -273,6 +287,9 @@ class AudioNotifier extends Notifier<AudioState> {
     _statsThresholdReached = false;
     final myGen = ++_loadGeneration;
     bool isStale() => _loadGeneration != myGen;
+
+    // Force audio_service to buffering state so it holds the background wake lock
+    _handler.setBufferingState();
 
     final shouldClearContext = normalizedSong.playlistId == '__suggested__' ||
         (clearQueue && contextPlaylistId == null);
@@ -356,19 +373,29 @@ class AudioNotifier extends Notifier<AudioState> {
       );
       if (isStale()) return;
       await player.play();
+      _consecutiveFailures = 0; // Reset on success
 
       // (Queue fetching was moved to the top of the method for parallel execution)
     } catch (e) {
       debugPrint('[AudioProvider] playSong error: $e');
       if (!isStale()) {
         state = state.copyWith(isLoading: false);
+        
+        _consecutiveFailures++;
+        if (_consecutiveFailures <= 3) {
+          debugPrint('[AudioProvider] Auto-skipping to next song due to failure...');
+          playNext();
+        } else {
+          // Hard stop after 3 consecutive failures to prevent infinite looping
+          _handler.stopCurrent(); // Clears buffering state and drops wake lock
+          scaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: const Text('Playback failed. Check your internet connection.'),
+              backgroundColor: Colors.red.shade800,
+            ),
+          );
+        }
       }
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text('Failed to play: Could not extract stream. Try again.'),
-          backgroundColor: Colors.red.shade800,
-        ),
-      );
     }
   }
 

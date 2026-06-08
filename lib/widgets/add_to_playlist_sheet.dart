@@ -72,7 +72,7 @@ class AddToPlaylistSheet extends ConsumerWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: accent.withOpacity(0.1),
+                          color: accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(LucideIcons.plus, color: accent),

@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import '../models/song.dart';
 import '../models/home_section.dart';
 import '../models/artist.dart';
 import '../models/playlist.dart';
 import '../models/lyrics.dart';
+import '../local/download_db.dart';
 import '../../services/ytmusic_api.dart';
 import '../../services/stream_extractor.dart';
+import '../../services/ytmusic_parser.dart';
 import 'package:dio/dio.dart';
 
 /// Music API service — now acts as a bridge to the client-side YtMusicApi.
@@ -63,8 +66,34 @@ class MusicApi {
   }
 
   /// Get a YT Music playlist/album.
+  /// If full=true, fetches up to 1000 songs using pagination continuations.
   Future<Playlist> getPlaylist(String id, {bool full = false}) async {
-    return _api.getPlaylist(id);
+    if (!full) return _api.getPlaylist(id);
+
+    try {
+      final rawBrowse = await _api.getRawBrowse(id);
+      Playlist playlist = YtMusicParser.parsePlaylist(rawBrowse, id);
+      String? continuation = YtMusicParser.extractPlaylistContinuation(rawBrowse);
+      int maxPages = 10; // Cap at 1000 songs (100 per page)
+      
+      while (continuation != null && maxPages > 0) {
+        final contData = await _api.getRawContinuation(continuation);
+        final contPlaylist = YtMusicParser.parsePlaylist(contData, id);
+        
+        if (contPlaylist.songs.isEmpty) break;
+        
+        final combinedSongs = List<Song>.from(playlist.songs)..addAll(contPlaylist.songs);
+        playlist = playlist.copyWith(songs: combinedSongs);
+        
+        continuation = YtMusicParser.extractPlaylistContinuation(contData);
+        maxPages--;
+      }
+      return playlist;
+    } catch (e) {
+      debugPrint('Error fetching full playlist: $e');
+      // Fallback
+      return _api.getPlaylist(id);
+    }
   }
 
   /// Get raw stream URL asynchronously using client-side extraction.
@@ -80,6 +109,12 @@ class MusicApi {
   /// Get lyrics by song metadata — preferred method.
   Future<Lyrics?> getLyricsBySong(Song song) async {
     try {
+      // 1. Check local cache first
+      final cached = await DownloadDb.instance.getCachedLyrics(song.videoId);
+      if (cached != null) {
+        return Lyrics.fromJson(cached);
+      }
+
       final dio = Dio();
       
       // Clean YouTube-specific tags from title (e.g. "Song (Official Audio)", "Song [Music Video]")
@@ -87,6 +122,7 @@ class MusicApi {
       
       final trackName = Uri.encodeComponent(cleanTitle);
       final artistName = Uri.encodeComponent(song.artist);
+      final q = Uri.encodeComponent('$cleanTitle ${song.artist}');
       final duration = song.duration; // It's already in seconds!
 
       // Try exact match first
@@ -141,7 +177,7 @@ class MusicApi {
 
       // Fallback: search endpoint
       final searchRes = await dio.get(
-        'https://lrclib.net/api/search?track_name=$trackName&artist_name=$artistName',
+        'https://lrclib.net/api/search?q=$q',
         options: Options(
           headers: {'User-Agent': 'Pulse Music App v1.0'},
           validateStatus: (status) => status != null && status < 500,
@@ -196,3 +232,4 @@ class MusicApi {
     return null;
   }
 }
+

@@ -4,12 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/playlist_provider.dart';
-import '../../providers/download_provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/stats_provider.dart';
 import '../../data/api/music_api.dart';
@@ -95,8 +92,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final stats = ref.watch(statsProvider);
-    final playlists = ref.watch(playlistProvider);
-    final downloads = ref.watch(downloadProvider);
     final accent = Theme.of(context).colorScheme.primary;
     final secondary = AppColors.computeSecondary(accent);
 
@@ -475,22 +470,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     await ref.read(authProvider.notifier).logout();
                     if (context.mounted) context.go('/login');
                   }, danger: true),
-                  _actionTile(LucideIcons.refreshCw, 'Debug Update Check', () async {
-                    try {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checking Firebase...')));
-                      final doc = await FirebaseFirestore.instance.collection('app_settings').doc('version').get();
-                      if (!doc.exists) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Doc does not exist!')));
-                        return;
-                      }
-                      final data = doc.data();
-                      final v = data?['latest_version'];
-                      final url = data?['download_url'];
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Firebase returned: v=$v, url=$url'), duration: const Duration(seconds: 5)));
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Firebase Error: $e'), duration: const Duration(seconds: 5)));
-                    }
-                  }),
                 ],
               ),
             ),

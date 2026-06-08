@@ -102,6 +102,13 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
     await _activePlayer.stop();
   }
 
+  /// Force the OS to think we are buffering (holds wake lock during network requests)
+  void setBufferingState() {
+    playbackState.add(playbackState.value.copyWith(
+      processingState: AudioProcessingState.buffering,
+    ));
+  }
+
   // ── BaseAudioHandler overrides (OS media control callbacks) ──
 
   @override

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -98,7 +99,7 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       // Firestore sync failed — still allow auth to succeed
       // ignore: avoid_print
-      print('[Auth] Firestore sync error: $e');
+      debugPrint('[Auth] Firestore sync error: $e');
     }
 
     state = AuthState(
@@ -246,7 +247,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }, SetOptions(merge: true));
 
       await batch.commit();
-      print('[Auth] Stats written: videoId=$videoId, seconds=$actualSeconds, artist=$artist');
+      debugPrint('[Auth] Stats written: videoId=$videoId, seconds=$actualSeconds, artist=$artist');
       
       // 4. Update History (separately to not fail the stats batch)
       await _db
@@ -261,7 +262,7 @@ class AuthNotifier extends Notifier<AuthState> {
       
     } catch (e) {
       // ignore: avoid_print
-      print('[Auth] Direct stats update failed: $e');
+      debugPrint('[Auth] Direct stats update failed: $e');
     }
   }
 
@@ -277,3 +278,4 @@ class AuthNotifier extends Notifier<AuthState> {
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
+

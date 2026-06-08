@@ -12,6 +12,7 @@ import '../providers/audio_provider.dart';
 import '../providers/download_provider.dart';
 import 'glass_container.dart';
 import 'add_to_playlist_sheet.dart';
+import 'multi_artist_sheet.dart';
 
 /// Song action bottom sheet — port of SongActionMenu.jsx.
 /// Shows: Add to Queue, Add to Playlist, Go to Album, Go to Artist, Download.
@@ -140,6 +141,7 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
                   context: context,
                   backgroundColor: Colors.transparent,
                   isScrollControlled: true,
+                  useRootNavigator: true,
                   builder: (_) => AddToPlaylistSheet(song: widget.song),
                 );
               },
@@ -279,6 +281,24 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
   }
 
   Future<void> _goToArtist() async {
+    final artistNames = widget.song.artist
+        .split(RegExp(r',\s*|\s+&\s+|\s+feat\.?\s+|\s+ft\.?\s+', caseSensitive: false))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    if (artistNames.length > 1) {
+      Navigator.pop(context);
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        useRootNavigator: true,
+        builder: (_) => MultiArtistSheet(artistNames: artistNames),
+      );
+      return;
+    }
+
     setState(() => _loadingAction = 'ARTIST');
     // Capture router BEFORE any await — context may be invalid after async gap + pop.
     final router = GoRouter.of(context);
