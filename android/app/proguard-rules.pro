@@ -1,0 +1,9 @@
+-keep class com.ryanheise.audioservice.** { *; }
+-keep class com.ryanheise.just_audio.** { *; }
+-keep class com.google.firebase.** { *; }
+-keep class io.flutter.plugins.firebase.auth.** { *; }
+-keep class io.flutter.plugins.firebase.firestore.** { *; }
+-keep class io.flutter.plugins.googlesignin.** { *; }
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+-keep class android.support.v4.media.** { *; }
+-keep class androidx.media.** { *; }

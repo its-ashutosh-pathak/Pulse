@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "360258546308",
+    "project_id": "pulse-by-ap",
+    "storage_bucket": "pulse-by-ap.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360258546308:android:5d34ef95c27d79e80af0d1",
+        "android_client_info": {
+          "package_name": "com.ashutosh.pulse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUDMSkKB-_hL9bl45P5BxVEVXDrS7C4_8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:360258546308:android:e3165370da4c53000af0d1",
+        "android_client_info": {
+          "package_name": "com.pulse.pulse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUDMSkKB-_hL9bl45P5BxVEVXDrS7C4_8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
