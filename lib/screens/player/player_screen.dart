@@ -40,6 +40,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   List<_LyricLine>? _parsedLines;
   final _lyricsScrollController = ScrollController();
   final _musicApi = MusicApi();
+  final Map<int, GlobalKey> _lyricKeys = {};
+  int _lastAutoScrolledIndex = -1;
 
   @override
   void initState() {
@@ -482,16 +484,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   Widget _buildLyricsView(AudioState audio, Color accent) {
     final activeIndex = _findActiveLineIndex(audio.progress.inMilliseconds / 1000.0);
 
-    // Auto-scroll
+    // Auto-scroll only when active index changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (activeIndex >= 0 && _lyricsScrollController.hasClients) {
-        final offset = (activeIndex * 44.0) -
-            (_lyricsScrollController.position.viewportDimension / 2);
-        _lyricsScrollController.animateTo(
-          offset.clamp(0, _lyricsScrollController.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      if (activeIndex >= 0 && activeIndex != _lastAutoScrolledIndex) {
+        _lastAutoScrolledIndex = activeIndex;
+        final key = _lyricKeys[activeIndex];
+        if (key != null && key.currentContext != null) {
+          Scrollable.ensureVisible(
+            key.currentContext!,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       }
     });
 
@@ -502,32 +507,36 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         aspectRatio: 1,
         child: GlassContainer(
         borderRadius: 20, blur: 20,
-        padding: const EdgeInsets.all(20),
         child: _lyricsState == 'loading'
             ? const Center(child: CircularProgressIndicator(color: Colors.white))
             : _lyricsState == 'error' || _parsedLines == null || _parsedLines!.isEmpty
                 ? const Center(child: Text('No lyrics available', style: TextStyle(color: Colors.white70)))
-                : ListView.builder(
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 120),
                     controller: _lyricsScrollController,
-                    itemCount: _parsedLines!.length,
-                    itemBuilder: (_, i) {
-                      final line = _parsedLines![i];
-            final isActive = i == activeIndex;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text(
-                line.text.isEmpty ? '\u00a0' : line.text,
-                style: TextStyle(
-                  fontSize: isActive ? 18 : 15,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isActive ? accent : Colors.white38,
-                  height: 1.5,
-                ),
-              ),
-            );
-          },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: List.generate(_parsedLines!.length, (i) {
+                        _lyricKeys[i] ??= GlobalKey();
+                        final line = _parsedLines![i];
+                        final isActive = i == activeIndex;
+                        return Padding(
+                          key: _lyricKeys[i],
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Text(
+                            line.text.isEmpty ? '\u00a0' : line.text,
+                            style: TextStyle(
+                              fontSize: isActive ? 18 : 15,
+                              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                              color: isActive ? accent : Colors.white38,
+                              height: 1.5,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
         ),
-      ),
       ),
     );
   }
