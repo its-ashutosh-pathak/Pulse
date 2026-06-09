@@ -135,11 +135,13 @@ class AuthNotifier extends Notifier<AuthState> {
     String password,
     String displayName,
   ) async {
-    final result = await _auth.createUserWithEmailAndPassword(
+    await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-    await result.user?.updateDisplayName(displayName);
+    // Update both Firebase Auth and Firestore to prevent race conditions 
+    // where _onAuthChanged writes "Pulse User" before the name is set.
+    await updateUserProfile(displayName: displayName);
   }
 
   // ── Update Profile (mirrors updateUserProfile in AuthContext.jsx) ──

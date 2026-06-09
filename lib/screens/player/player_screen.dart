@@ -31,8 +31,6 @@ class PlayerScreen extends ConsumerStatefulWidget {
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   bool _showLyrics = false;
   double _flipDirection = 1.0;
-  bool _isDragging = false;
-  double _dragProgress = 0;
   double _sheetExtent = 0.08; // Min extent for the queue handle
 
   // Lyrics
@@ -62,8 +60,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final audio = ref.watch(audioProvider);
-    final song = audio.currentSong;
+    final audioData = ref.watch(audioProvider.select((a) => (
+      song: a.currentSong,
+      isPlaying: a.isPlaying,
+      isLoading: a.isLoading,
+      isShuffled: a.isShuffled,
+      repeatMode: a.repeatMode,
+      queue: a.queue,
+    )));
+    final song = audioData.song;
     final accent = Theme.of(context).colorScheme.primary;
 
     if (song == null) return _buildNoSong(context, accent);
@@ -76,13 +81,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     });
 
     final thumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 800);
-    final displayProgress = _isDragging
-        ? Duration(milliseconds: _dragProgress.toInt())
-        : audio.progress;
-    final progressFraction = audio.duration.inMilliseconds > 0
-        ? (displayProgress.inMilliseconds / audio.duration.inMilliseconds)
-            .clamp(0.0, 1.0)
-        : 0.0;
 
     // Watch playlist state so Like button updates reactively
     // ignore: unused_local_variable
@@ -213,7 +211,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                         );
                       },
                       child: _showLyrics
-                          ? _buildLyricsView(audio, accent)
+                          ? Consumer(
+                              builder: (context, ref, _) {
+                                final audioState = ref.watch(audioProvider);
+                                return _buildLyricsView(audioState, accent);
+                              },
+                            )
                           : _buildArtView(thumb, song, accent),
                     ),
                   ),
@@ -277,51 +280,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       const SizedBox(height: 8),
 
                       // ── Seek bar ──
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 28),
-                        child: Column(
-                          children: [
-                            SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                trackHeight: _isDragging ? 5 : 3,
-                                thumbShape: RoundSliderThumbShape(
-                                    enabledThumbRadius: _isDragging ? 8 : 5),
-                              ),
-                              child: Slider(
-                                value: progressFraction,
-                                onChangeStart: (_) =>
-                                    setState(() => _isDragging = true),
-                                onChanged: (v) => setState(() =>
-                                    _dragProgress =
-                                        v * audio.duration.inMilliseconds),
-                                onChangeEnd: (v) {
-                                  setState(() => _isDragging = false);
-                                  ref.read(audioProvider.notifier).seek(Duration(
-                                      milliseconds:
-                                          (v * audio.duration.inMilliseconds)
-                                              .toInt()));
-                                },
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(formatDuration(displayProgress.inSeconds),
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary)),
-                                  Text(formatDuration(audio.duration.inSeconds),
-                                      style: const TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary)),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const _SeekBar(),
 
                       const SizedBox(height: 8),
 
@@ -334,7 +293,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                             GestureDetector(
                               onTap: () => ref.read(audioProvider.notifier).toggleShuffle(),
                               child: Icon(LucideIcons.shuffle, size: 24,
-                                  color: audio.isShuffled ? accent : Colors.white),
+                                  color: audioData.isShuffled ? accent : Colors.white),
                             ),
                             GestureDetector(
                               onTap: () => ref.read(audioProvider.notifier).playPrev(),
@@ -349,13 +308,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                                   color: Colors.white,
                                 ),
                                 child: Center(
-                                  child: audio.isLoading
+                                  child: audioData.isLoading
                                       ? SizedBox(
                                           width: 28, height: 28,
                                           child: CircularProgressIndicator(
                                               strokeWidth: 3, color: accent))
                                       : Icon(
-                                          audio.isPlaying
+                                          audioData.isPlaying
                                               ? Icons.pause
                                               : Icons.play_arrow,
                                           size: 44, color: Colors.black),
@@ -369,11 +328,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                             GestureDetector(
                               onTap: () => ref.read(audioProvider.notifier).toggleRepeat(),
                               child: Icon(
-                                audio.repeatMode == ap.RepeatMode.one
+                                audioData.repeatMode == ap.RepeatMode.one
                                     ? LucideIcons.repeat1
                                     : LucideIcons.repeat,
                                 size: 24,
-                                color: audio.repeatMode != ap.RepeatMode.off
+                                color: audioData.repeatMode != ap.RepeatMode.off
                                     ? accent : Colors.white,
                               ),
                             ),
@@ -406,7 +365,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           maxChildSize: 0.4,
           snap: true,
           builder: (context, scrollController) {
-            return _buildUpNext(audio, accent, scrollController);
+            return _buildUpNext(audioData.queue, accent, scrollController);
           },
         ),
       ),
@@ -552,7 +511,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   // ── Up Next ──
-  Widget _buildUpNext(AudioState audio, Color accent, ScrollController scrollController) {
+  Widget _buildUpNext(List<Song> queue, Color accent, ScrollController scrollController) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -591,7 +550,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           SliverToBoxAdapter(
             child: Opacity(
               opacity: ((_sheetExtent - 0.11) / 0.12).clamp(0.0, 1.0),
-              child: audio.queue.isEmpty
+              child: queue.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.only(top: 32),
                     child: Center(
@@ -603,28 +562,56 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.only(top: 16, bottom: 32),
-                    itemCount: audio.queue.length,
+                    itemCount: queue.length,
                     onReorder: (oldIndex, newIndex) {
                       ref.read(audioProvider.notifier).reorderQueue(oldIndex, newIndex);
                     },
                     itemBuilder: (_, i) {
-                      final s = audio.queue[i];
-                      return SongTile(
+                      final s = queue[i];
+                      return Dismissible(
                         key: ValueKey('${s.id}_$i'),
-                        song: s,
-                        onTap: () => ref.read(audioProvider.notifier).playFromQueue(i),
-                        onLongPress: () => showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          isScrollControlled: true,
-                          builder: (_) => SongActionSheet(song: s),
+                        direction: DismissDirection.horizontal,
+                        onDismissed: (_) {
+                          ref.read(audioProvider.notifier).removeFromQueue(i);
+                        },
+                        background: ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                            child: Container(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              alignment: Alignment.centerLeft,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: const Icon(LucideIcons.trash2, color: Colors.white),
+                            ),
+                          ),
                         ),
-                        trailing: ReorderableDragStartListener(
-                          index: i,
-                          child: const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Icon(LucideIcons.equal,
-                                size: 20, color: AppColors.textSecondary),
+                        secondaryBackground: ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                            child: Container(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: const Icon(LucideIcons.trash2, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        child: SongTile(
+                          song: s,
+                          onTap: () => ref.read(audioProvider.notifier).playFromQueue(i),
+                          onLongPress: () => showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (_) => SongActionSheet(song: s),
+                          ),
+                          trailing: ReorderableDragStartListener(
+                            index: i,
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(LucideIcons.equal,
+                                  size: 20, color: AppColors.textSecondary),
+                            ),
                           ),
                         ),
                       );
@@ -716,4 +703,65 @@ class _LyricLine {
   final double? time;
   final String text;
   _LyricLine({this.time, required this.text});
+}
+
+class _SeekBar extends ConsumerStatefulWidget {
+  const _SeekBar();
+  @override
+  ConsumerState<_SeekBar> createState() => _SeekBarState();
+}
+
+class _SeekBarState extends ConsumerState<_SeekBar> {
+  bool _isDragging = false;
+  double _dragProgress = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final audio = ref.watch(audioProvider);
+    final displayProgress = _isDragging
+        ? Duration(milliseconds: _dragProgress.toInt())
+        : audio.progress;
+    final progressFraction = audio.duration.inMilliseconds > 0
+        ? (displayProgress.inMilliseconds / audio.duration.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: RepaintBoundary(
+        child: Column(
+          children: [
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: _isDragging ? 5 : 3,
+                thumbShape: RoundSliderThumbShape(
+                    enabledThumbRadius: _isDragging ? 8 : 5),
+              ),
+              child: Slider(
+                value: progressFraction,
+                onChangeStart: (_) => setState(() => _isDragging = true),
+                onChanged: (v) => setState(() => _dragProgress = v * audio.duration.inMilliseconds),
+                onChangeEnd: (v) {
+                  setState(() => _isDragging = false);
+                  ref.read(audioProvider.notifier).seek(Duration(
+                      milliseconds: (v * audio.duration.inMilliseconds).toInt()));
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(formatDuration(displayProgress.inSeconds),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(formatDuration(audio.duration.inSeconds),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -140,6 +141,15 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> skipToPrevious() async {
     onSkipToPrevious?.call();
+  }
+
+  @override
+  Future<void> onTaskRemoved() async {
+    await stop();
+    // Give audio_service a fraction of a second to cleanly tear down the 
+    // native foreground service and remove the notification before we kill the process.
+    await Future.delayed(const Duration(milliseconds: 200));
+    exit(0);
   }
 
   @override

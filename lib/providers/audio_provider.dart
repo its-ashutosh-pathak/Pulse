@@ -527,6 +527,14 @@ class AudioNotifier extends Notifier<AudioState> {
     state = state.copyWith(queue: updatedQueue);
   }
 
+  /// Remove a song from the queue
+  void removeFromQueue(int index) {
+    if (index < 0 || index >= state.queue.length) return;
+    final updatedQueue = List<Song>.from(state.queue);
+    updatedQueue.removeAt(index);
+    state = state.copyWith(queue: updatedQueue);
+  }
+
   // ── Shuffle / Repeat toggles ───────────────────────────────────────────────
   // Port of toggleShuffle (line 887) and toggleRepeat (line 903).
 

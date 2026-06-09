@@ -87,22 +87,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomeScreen(),
-            ),
+            builder: (context, state) => const HomeScreen(),
           ),
           GoRoute(
             path: '/library',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: LibraryScreen(),
-            ),
+            builder: (context, state) => const LibraryScreen(),
           ),
           GoRoute(
             path: '/search',
-            pageBuilder: (context, state) => NoTransitionPage(
-              key: state.pageKey,
-              child: SearchScreen(initialQuery: state.uri.queryParameters['q']),
-            ),
+            builder: (context, state) => SearchScreen(initialQuery: state.uri.queryParameters['q']),
           ),
           GoRoute(
             path: '/settings',
