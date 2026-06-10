@@ -174,7 +174,11 @@ class CrossfadeEngine {
   /// Cancel an in-progress crossfade (e.g., user manually plays a different song).
   /// Mirrors the cancel logic in AudioContext.jsx playSong() lines 667-674.
   void cancelCrossfade() {
-    if (!_isCrossfading) return;
+    if (!_isCrossfading) {
+      _isPrepared = false;
+      _crossfadePlayer.stop();
+      return;
+    }
     _rampTimer?.cancel();
     _rampTimer = null;
     _isCrossfading = false;

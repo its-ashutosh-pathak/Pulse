@@ -183,6 +183,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
         // 2. Trigger crossfade
         if (!_crossfadeEngine.isCrossfading &&
+            !_isCrossfadePending &&
             timeLeftSeconds <= fadeSeconds &&
             timeLeftSeconds > 0) {
           _triggerCrossfade(fadeSeconds);
@@ -647,6 +648,8 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Future<void> _triggerCrossfade(int fadeSeconds) async {
+    final myGen = _loadGeneration;
+
     // Determine the next song to crossfade into
     Song? nextSong;
     List<Song> remainingQueue = state.queue;
@@ -687,14 +690,20 @@ class AudioNotifier extends Notifier<AudioState> {
         }
       } catch (e) {
         debugPrint('[AudioProvider] Crossfade fallback extraction failed: $e');
-        _isCrossfadePending = false;
-        // Song ended naturally with no crossfade, fall through to normal next
-        playNext();
+        if (_loadGeneration == myGen) {
+          _isCrossfadePending = false;
+          playNext();
+        }
         return;
       }
     }
 
     _preloadedNextSongId = null;
+
+    if (_loadGeneration != myGen) {
+      _isCrossfadePending = false;
+      return;
+    }
 
     try {
       final success = await _crossfadeEngine.startCrossfade(
@@ -703,17 +712,21 @@ class AudioNotifier extends Notifier<AudioState> {
         localFilePath: localPath,
       );
 
+      if (_loadGeneration != myGen) return;
+
       if (success) {
         _pendingCrossfadeSong = nextSong;
         _pendingCrossfadeQueue = remainingQueue;
       } else {
-        playNext();
+        if (_loadGeneration == myGen) playNext();
       }
     } catch (e) {
       debugPrint('[AudioProvider] startCrossfade threw: $e');
-      playNext();
+      if (_loadGeneration == myGen) playNext();
     } finally {
-      _isCrossfadePending = false;
+      if (_loadGeneration == myGen) {
+        _isCrossfadePending = false;
+      }
     }
   }
 

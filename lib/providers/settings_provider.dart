@@ -13,9 +13,9 @@ class SettingsState {
   final Color accentColor;
 
   const SettingsState({
-    this.streamingQuality = 'automatic',
+    this.streamingQuality = 'high',
     this.downloadQuality = 'high',
-    this.crossfadeDuration = 0,
+    this.crossfadeDuration = 9,
     this.dataSaverMode = false,
     this.accentColor = const Color(0xFF865AA4),
   });
@@ -54,9 +54,9 @@ class SettingsNotifier extends Notifier<SettingsState> {
   Future<void> _loadFromDisk() async {
     final prefs = await SharedPreferences.getInstance();
     state = state.copyWith(
-      streamingQuality: _toFrontend(prefs.getString('pulse_streaming_quality') ?? 'auto'),
+      streamingQuality: _toFrontend(prefs.getString('pulse_streaming_quality') ?? 'high'),
       downloadQuality: _toFrontend(prefs.getString('pulse_download_quality') ?? 'high'),
-      crossfadeDuration: prefs.getInt('pulse_crossfade') ?? 0,
+      crossfadeDuration: prefs.getInt('pulse_crossfade') ?? 9,
       dataSaverMode: prefs.getBool('pulse_data_saver') ?? false,
       accentColor: Color(prefs.getInt('pulse_accent_color_int') ?? 0xFF865AA4),
     );
