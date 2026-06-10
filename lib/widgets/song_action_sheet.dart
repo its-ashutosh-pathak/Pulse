@@ -22,6 +22,7 @@ class SongActionSheet extends ConsumerStatefulWidget {
   final VoidCallback? onRemove;
   final bool showRemoveDownload;
   final VoidCallback? onRemoveDownload;
+  final String? removeDownloadLabel;
   final Playlist? contextPlaylist;
 
   const SongActionSheet({
@@ -31,6 +32,7 @@ class SongActionSheet extends ConsumerStatefulWidget {
     this.onRemove,
     this.showRemoveDownload = false,
     this.onRemoveDownload,
+    this.removeDownloadLabel,
     this.contextPlaylist,
   });
 
@@ -188,7 +190,7 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
             if (widget.showRemoveDownload) ...[
               if (!widget.showRemove) const Divider(height: 16, indent: 20, endIndent: 20),
               _ActionItem(
-                icon: LucideIcons.trash2, label: 'Remove from Downloads',
+                icon: LucideIcons.trash2, label: widget.removeDownloadLabel ?? 'Remove from Downloads',
                 danger: true,
                 onTap: () {
                   widget.onRemoveDownload?.call();

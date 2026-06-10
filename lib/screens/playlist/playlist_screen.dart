@@ -78,9 +78,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       return;
     }
 
-    // Don't fetch YTM for Firestore IDs
-    final isYtm = ['VL', 'PL', 'RD', 'OL', 'MPRE'].any((p) => id.startsWith(p));
-    if (!isYtm) return;
+    // Don't fetch YTM if we already know it's a Firestore playlist
+    final firestorePlaylist = ref.read(playlistProvider).playlists.cast<dynamic>().firstWhere(
+      (p) => p.id == id, orElse: () => null,
+    );
+    if (firestorePlaylist != null) return;
 
     setState(() { _ytmLoading = true; _ytmError = false; });
     _musicApi.getPlaylist(id, full: true).then((pl) {
@@ -522,6 +524,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               .removeSongFromPlaylist(widget.playlistId, index);
         },
         showRemoveDownload: isOffline,
+        removeDownloadLabel: isDownloadsPlaylist ? 'Remove from Downloads' : 'Remove from Playlist',
         onRemoveDownload: () async {
           if (isDownloadsPlaylist) {
             // Delete from device memory entirely

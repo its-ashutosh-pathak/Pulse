@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/models/song.dart';
 import '../data/models/playlist.dart';
 import 'auth_provider.dart';
-
+import '../data/local/download_db.dart';
+import 'download_provider.dart';
 // ── Playlist State ──────────────────────────────────────────────────────────
 
 class PlaylistState {
@@ -199,7 +200,24 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         );
       }
 
-      await ref2.update({
+      // 1. Sync to offline playlist immediately (Natively Offline)
+      try {
+        final downloadNotifier = ref.read(downloadProvider.notifier);
+        final isDownloaded = await downloadNotifier.isDownloaded(song.videoId);
+        if (isDownloaded) {
+          final playlistName = snap.data()?['name'] ?? 'Playlist';
+          await DownloadDb.instance.addTrackToPlaylist(
+            '__pl__$playlistId',
+            playlistName,
+            song.videoId,
+          );
+        }
+      } catch (e) {
+        debugPrint('[Playlist] Offline sync error: $e');
+      }
+
+      // 2. Sync to Firestore in the background (No await)
+      ref2.update({
         'songs': FieldValue.arrayUnion([
           {
             ...song.toJson(),
@@ -208,6 +226,8 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
           }
         ]),
         'lastUpdated': FieldValue.serverTimestamp(),
+      }).catchError((e) {
+        debugPrint('[Playlist] Background sync error: $e');
       });
     } catch (e) {
       // ignore: avoid_print
@@ -269,9 +289,25 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         return;
       }
 
-      await _db.collection('playlists').doc(playlistId).update({
+      // 1. Sync removal with offline DB immediately (Natively Offline)
+      try {
+        final downloadedSongs = await DownloadDb.instance.getAllTracks();
+        final downloadedIds = downloadedSongs.map((s) => s.videoId).toSet();
+        final offlineVideoIds = newSongs
+            .map((s) => s.videoId)
+            .where((id) => downloadedIds.contains(id))
+            .toList();
+        await DownloadDb.instance.updateOfflinePlaylistSongs('__pl__$playlistId', offlineVideoIds);
+      } catch (e) {
+        debugPrint('[Playlist] Offline sync error: $e');
+      }
+
+      // 2. Sync to Firestore in the background (No await)
+      _db.collection('playlists').doc(playlistId).update({
         'songs': newSongs.map((s) => s.toJson()).toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
+      }).catchError((e) {
+        debugPrint('[Playlist] Background sync error: $e');
       });
     } catch (e) {
       // ignore: avoid_print
@@ -298,9 +334,18 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
   // ── Delete Playlist ──
   Future<void> deletePlaylist(String playlistId) async {
     try {
-      await _db.collection('playlists').doc(playlistId).delete();
+      // 1. Delete offline playlist first (Natively Offline)
+      try {
+        await DownloadDb.instance.deleteOfflinePlaylist('__pl__$playlistId');
+      } catch (e) {
+        debugPrint('[Playlist] Offline delete error: $e');
+      }
+
+      // 2. Delete from Firestore in background
+      _db.collection('playlists').doc(playlistId).delete().catchError((e) {
+        debugPrint('[Playlist] Background delete error: $e');
+      });
     } catch (e) {
-      // ignore: avoid_print
       debugPrint('[Playlist] Delete error: $e');
     }
   }

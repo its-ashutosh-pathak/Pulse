@@ -25,6 +25,7 @@ class DownloadsScreen extends ConsumerStatefulWidget {
 class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
   List<Song> _songs = [];
   List<Playlist> _offlinePlaylists = [];
+  List<Playlist> _baseOfflinePlaylists = [];
   bool _loading = true;
   bool _showClearConfirm = false;
   bool _showRenameModal = false;
@@ -56,6 +57,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
       _sortKey = prefs.getString('pulse_dl_sort_key') ?? 'recent';
       _sortOrder = prefs.getString('pulse_dl_sort_order') ?? 'desc';
     });
+    _applySorting();
   }
 
   Future<void> _savePrefs() async {
@@ -85,7 +87,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
       final allPlaylists = songs.isNotEmpty ? [globalDownloadsPlaylist, ...validPlaylists] : validPlaylists;
 
       if (mounted) {
-        setState(() { _songs = songs; _offlinePlaylists = allPlaylists; _loading = false; });
+        setState(() { _songs = songs; _baseOfflinePlaylists = allPlaylists; _loading = false; });
         _applySorting();
       }
     } catch (_) {
@@ -100,19 +102,30 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
   }
 
   void _applySorting() {
-    _offlinePlaylists.sort((a, b) {
-      if (a.id == '__downloads__') return -1;
-      if (b.id == '__downloads__') return 1;
+    var playlists = List<Playlist>.from(_baseOfflinePlaylists);
+    
+    Playlist? downloadsPlaylist;
+    final dlIdx = playlists.indexWhere((p) => p.id == '__downloads__');
+    if (dlIdx != -1) {
+      downloadsPlaylist = playlists.removeAt(dlIdx);
+    }
 
-      if (_sortKey == 'alpha') {
+    if (_sortKey == 'alpha') {
+      playlists.sort((a, b) {
         final cmp = a.name.toLowerCase().compareTo(b.name.toLowerCase());
         return _sortOrder == 'desc' ? cmp : -cmp;
-      } else {
-        final timeA = a.createdAt?.millisecondsSinceEpoch ?? 0;
-        final timeB = b.createdAt?.millisecondsSinceEpoch ?? 0;
-        final cmp = timeB - timeA;
-        return _sortOrder == 'asc' ? cmp : -cmp;
+      });
+    } else {
+      if (_sortOrder == 'asc') {
+        playlists = playlists.reversed.toList();
       }
+    }
+
+    setState(() {
+      _offlinePlaylists = [
+        if (downloadsPlaylist != null) downloadsPlaylist,
+        ...playlists,
+      ];
     });
   }
 
@@ -162,8 +175,9 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                           _SortButton(
                             sortKey: _sortKey,
                             sortOrder: _sortOrder,
-                            onTap: () => setState(() =>
+                            onTapMenu: () => setState(() =>
                                 _showSortDropdown = !_showSortDropdown),
+                            onTapToggle: () => _handleSort(_sortKey),
                           ),
                           const SizedBox(width: 4),
                           // View toggle
@@ -850,33 +864,47 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
 class _SortButton extends StatelessWidget {
   final String sortKey;
   final String sortOrder;
-  final VoidCallback onTap;
+  final VoidCallback onTapMenu;
+  final VoidCallback onTapToggle;
 
   const _SortButton({
-    required this.sortKey, required this.sortOrder, required this.onTap});
+    required this.sortKey, required this.sortOrder, required this.onTapMenu, required this.onTapToggle});
 
   @override
   Widget build(BuildContext context) {
     final label = sortKey == 'alpha' ? 'A-Z' : 'Recent';
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: AppColors.surface,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(LucideIcons.arrowUpDown, size: 16, color: AppColors.textSecondary),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-            const SizedBox(width: 4),
-            Icon(sortOrder == 'asc' ? LucideIcons.arrowUp : LucideIcons.arrowDown,
-                size: 14, color: AppColors.textSecondary),
-          ],
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: AppColors.surface,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: onTapMenu,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, top: 8, bottom: 8, right: 4),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.arrowUpDown, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onTapToggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4, top: 8, bottom: 8, right: 12),
+              child: Icon(sortOrder == 'asc' ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                  size: 14, color: AppColors.textSecondary),
+            ),
+          ),
+        ],
       ),
     );
   }

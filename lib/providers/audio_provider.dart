@@ -237,7 +237,10 @@ class AudioNotifier extends Notifier<AudioState> {
     if (_crossfadeEngine.isCrossfading || _isCrossfadePending) return;
 
     if (state.repeatMode == RepeatMode.one) {
-      // Handled natively by LoopMode.one on the player itself.
+      // If native LoopMode.one fails (common with offline files on some Android devices), 
+      // this fallback will manually restart the song.
+      _crossfadeEngine.primaryPlayer.seek(Duration.zero);
+      _crossfadeEngine.primaryPlayer.play();
     } else {
       playNext();
     }
@@ -568,7 +571,20 @@ class AudioNotifier extends Notifier<AudioState> {
       RepeatMode.all => RepeatMode.one,
       RepeatMode.one => RepeatMode.off,
     };
-    state = state.copyWith(repeatMode: next);
+
+    var newQueue = state.queue;
+    var newBaseQueue = state.baseQueue;
+
+    // When turning on repeat queue, ensure the currently playing song is in the queue
+    // so it doesn't get lost when the queue loops around.
+    if (next == RepeatMode.all && state.currentSong != null) {
+      if (!newBaseQueue.any((s) => s.videoId == state.currentSong!.videoId)) {
+        newBaseQueue = [...newBaseQueue, state.currentSong!];
+        newQueue = [...newQueue, state.currentSong!];
+      }
+    }
+
+    state = state.copyWith(repeatMode: next, queue: newQueue, baseQueue: newBaseQueue);
 
     // Report to OS
     _handler.setRepeatMode(switch (next) {
