@@ -15,6 +15,8 @@ import '../../widgets/app_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+
 /// Global navigator keys for shell route nesting.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -24,6 +26,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    observers: [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ],
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       if (authState.loading) return null;
@@ -44,12 +49,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       // ── Login (no shell) ──
       GoRoute(
+        name: 'Login',
         path: '/login',
         builder: (context, state) => const LoginScreen(),
       ),
 
       // ── Full-screen player (no bottom nav) ──
       GoRoute(
+        name: 'Player',
         parentNavigatorKey: _rootNavigatorKey,
         path: '/player',
         pageBuilder: (context, state) {
@@ -83,33 +90,43 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Main shell (with bottom nav + mini player) ──
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
+        observers: [
+          FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+        ],
         builder: (context, state, child) => AppScaffold(child: child),
         routes: [
           GoRoute(
+            name: 'Home',
             path: '/',
             builder: (context, state) => const HomeScreen(),
           ),
           GoRoute(
+            name: 'Library',
             path: '/library',
             builder: (context, state) => const LibraryScreen(),
           ),
           GoRoute(
+            name: 'Search',
             path: '/search',
             builder: (context, state) => SearchScreen(initialQuery: state.uri.queryParameters['q']),
           ),
           GoRoute(
+            name: 'Settings',
             path: '/settings',
             builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
+            name: 'Profile',
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
           GoRoute(
+            name: 'Downloads',
             path: '/downloads',
             builder: (context, state) => const DownloadsScreen(),
           ),
           GoRoute(
+            name: 'Playlist',
             path: '/playlist/:id',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
@@ -117,6 +134,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            name: 'Artist',
             path: '/artist/:id',
             pageBuilder: (context, state) => MaterialPage(
               key: state.pageKey,
@@ -124,6 +142,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            name: 'Import',
             path: '/import',
             builder: (context, state) => const ImportScreen(),
           ),
