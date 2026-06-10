@@ -53,6 +53,7 @@ dependencies:
   lucide_icons: ^0.257.0
   youtube_explode_dart: 2.5.3  # PINNED: v3.x requires Deno runtime (not available on Android)
   speech_to_text: ^7.4.0
+  flutter_cache_manager: ^3.4.1
                                  # v2.5.3 is the last version with built-in Dart JSEngine
 
 dev_dependencies:

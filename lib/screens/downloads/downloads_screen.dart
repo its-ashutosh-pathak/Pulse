@@ -84,7 +84,10 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
       final validPlaylists = playlists.where((pl) => pl.songs.isNotEmpty).toList();
       final allPlaylists = songs.isNotEmpty ? [globalDownloadsPlaylist, ...validPlaylists] : validPlaylists;
 
-      if (mounted) setState(() { _songs = songs; _offlinePlaylists = allPlaylists; _loading = false; });
+      if (mounted) {
+        setState(() { _songs = songs; _offlinePlaylists = allPlaylists; _loading = false; });
+        _applySorting();
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
@@ -97,13 +100,19 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
   }
 
   void _applySorting() {
-    _songs.sort((a, b) {
+    _offlinePlaylists.sort((a, b) {
+      if (a.id == '__downloads__') return -1;
+      if (b.id == '__downloads__') return 1;
+
       if (_sortKey == 'alpha') {
-        final cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
-        return _sortOrder == 'asc' ? -cmp : cmp;
+        final cmp = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        return _sortOrder == 'desc' ? cmp : -cmp;
+      } else {
+        final timeA = a.createdAt?.millisecondsSinceEpoch ?? 0;
+        final timeB = b.createdAt?.millisecondsSinceEpoch ?? 0;
+        final cmp = timeB - timeA;
+        return _sortOrder == 'asc' ? cmp : -cmp;
       }
-      // 'recent' — keep original order (download order)
-      return 0;
     });
   }
 

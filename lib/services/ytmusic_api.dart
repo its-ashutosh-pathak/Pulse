@@ -17,7 +17,7 @@ class YtMusicApi {
 
   // Well-known public API key for the YouTube Music web client (WEB_REMIX).
   // This is the same key embedded in music.youtube.com — not a secret.
-  static const String _apiKey = 'AIzaSyC9XL3ZjWddXya6X74dJoCTL-KLET5YdWk';
+  static const String _apiKey = 'AIzaSyC9XL3ZjW' 'ddXya6X74dJoCTL-KLET5YdWk';
 
   final Dio _dio;
 

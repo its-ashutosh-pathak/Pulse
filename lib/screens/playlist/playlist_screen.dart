@@ -134,13 +134,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           s.title.toLowerCase().contains(q) ||
           s.artist.toLowerCase().contains(q)).toList();
     }
-    songsToRender.sort((a, b) {
-      if (_sortKey == 'alpha') {
-        final cmp = a.title.compareTo(b.title);
+    if (_sortKey == 'alpha') {
+      songsToRender.sort((a, b) {
+        final cmp = a.title.toLowerCase().compareTo(b.title.toLowerCase());
         return _sortOrder == 'desc' ? cmp : -cmp;
+      });
+    } else {
+      if (_sortOrder == 'asc') {
+        songsToRender = songsToRender.reversed.toList();
       }
-      return 0; // Keep original order for 'recent'
-    });
+    }
 
     // Stats
     final totalMinutes = (sourceSongs.length * 3.5).round();

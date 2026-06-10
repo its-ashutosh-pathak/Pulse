@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import '../core/utils/thumbnail_utils.dart';
 import '../data/api/music_api.dart';
 import '../data/local/download_db.dart';
 import '../data/models/song.dart';
@@ -209,6 +212,37 @@ class DownloadNotifier extends Notifier<DownloadState> {
         }
       } catch (_) {
         // Lyrics caching is best-effort
+      }
+
+      // Also pre-cache thumbnails forever
+      try {
+        if (song.thumbnail.isNotEmpty) {
+          final smallThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 120);
+          final largeThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 500);
+
+          Future<void> cacheImage(String url) async {
+            final res = await Dio().get<List<int>>(
+              url,
+              options: Options(responseType: ResponseType.bytes),
+            );
+            if (res.data != null) {
+              final bytes = Uint8List.fromList(res.data!);
+              await DefaultCacheManager().putFile(
+                url,
+                bytes,
+                fileExtension: 'jpg',
+                maxAge: const Duration(days: 36500),
+              );
+            }
+          }
+
+          await cacheImage(smallThumb);
+          if (smallThumb != largeThumb) {
+            await cacheImage(largeThumb);
+          }
+        }
+      } catch (e) {
+        debugPrint('[Download] Thumbnail caching failed: $e');
       }
 
       // Mark complete
