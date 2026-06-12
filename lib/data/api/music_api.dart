@@ -115,7 +115,10 @@ class MusicApi {
         return Lyrics.fromJson(cached);
       }
 
-      final dio = Dio();
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 20),
+      ));
       
       // Clean YouTube-specific tags from title (e.g. "Song (Official Audio)", "Song [Music Video]")
       final cleanTitle = song.title.replaceAll(RegExp(r'\s*[\(\[](official|music video|lyric|audio|video|feat\.|ft\.).*?[\)\]]', caseSensitive: false), '').trim();

@@ -223,7 +223,10 @@ class DownloadNotifier extends Notifier<DownloadState> {
       try {
         if (song.thumbnail.isNotEmpty) {
           final largeThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 500);
-          final res = await Dio().get<List<int>>(
+          final res = await Dio(BaseOptions(
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 20),
+          )).get<List<int>>(
             largeThumb,
             options: Options(responseType: ResponseType.bytes),
           );
@@ -374,6 +377,7 @@ class DownloadNotifier extends Notifier<DownloadState> {
   }
 
   void _markError(String videoId, String error) {
+    debugPrint('[Download] Download failed for $videoId: $error');
     final updated = Map<String, DownloadProgress>.from(state.activeDownloads);
     final existing = updated[videoId];
     updated[videoId] = DownloadProgress(

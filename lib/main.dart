@@ -21,9 +21,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Request notification permission for Android 13+ lock screen / media controls
-  await Permission.notification.request();
-
   // Initialize audio_service for background playback + lock screen controls.
   // This creates the Android foreground service / iOS audio session.
   PulseAudioHandler? audioHandler;
@@ -77,6 +74,10 @@ class _PulseAppState extends ConsumerState<PulseApp> {
         final handler = ref.read(audioHandlerProvider);
         ref.read(audioProvider.notifier).initialize(handler);
         _audioInitialized = true;
+        
+        // Request notification permission for Android 13+ lock screen / media controls
+        // Safely done here so it doesn't block background headless launches
+        Permission.notification.request();
       }
     });
   }
