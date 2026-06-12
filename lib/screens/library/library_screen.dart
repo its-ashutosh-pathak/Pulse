@@ -127,33 +127,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                 onTap: () => context.push('/downloads'),
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
-                                  child: const Icon(LucideIcons.download,
+                                  child: const Icon(LucideIcons.hardDrive,
                                       size: 18, color: AppColors.textSecondary),
                                 ),
                               ),
-                              if (activeCount > 0)
-                                GestureDetector(
-                                  onTap: () => context.push('/downloading'),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            value: totalProgress,
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(accent),
-                                            backgroundColor: AppColors.glassBorder,
-                                          ),
-                                        ),
-                                        Icon(LucideIcons.arrowDown, size: 10, color: accent),
-                                      ],
-                                    ),
-                                  ),
+                              GestureDetector(
+                                onTap: () => context.push('/downloading'),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  child: const Icon(LucideIcons.download, size: 18, color: AppColors.textSecondary),
                                 ),
+                              ),
                               const SizedBox(width: 4),
                               // View toggle
                               GestureDetector(
@@ -698,8 +682,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                   label: 'Import from YT Music',
                   subtitle: 'Paste a playlist URL',
-                  comingSoon: true,
-                  onTap: null,
+                  comingSoon: false,
+                  onTap: () {
+                    setState(() {
+                      _showAddOptions = false;
+                      _selectedImportSource = 'ytmusic';
+                      _importUrlController.clear();
+                      _showImportModal = true;
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
                 _AddOptionItem(

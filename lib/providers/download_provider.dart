@@ -100,6 +100,10 @@ class DownloadNotifier extends Notifier<DownloadState> {
     return const DownloadState();
   }
 
+  final List<_DownloadTask> _queue = [];
+  int _activeTaskCount = 0;
+  static const int _maxConcurrent = 5;
+
   Future<void> _refreshCounts() async {
     final count = await _db.getDownloadCount();
     final size = await _db.getTotalSize();
@@ -109,17 +113,38 @@ class DownloadNotifier extends Notifier<DownloadState> {
   Future<bool> isDownloaded(String videoId) => _db.isDownloaded(videoId);
   Future<String?> getFilePath(String videoId) => _db.getFilePath(videoId);
 
-  Future<void> downloadSong(Song song, {Playlist? contextPlaylist}) async {
+  void downloadSong(Song song, {Playlist? contextPlaylist}) {
     final videoId = song.videoId;
     if (videoId.isEmpty) return;
 
     if (state.activeDownloads.containsKey(videoId)) {
       final active = state.activeDownloads[videoId]!;
-      if (!active.isPaused && active.error == null) return; // Already downloading
+      if (!active.isPaused && active.error == null) return; // Already downloading/queued
     }
     
     final cancelToken = CancelToken();
     _updateProgress(videoId, 0.0, song: song, cancelToken: cancelToken, isPaused: false);
+
+    _queue.add(_DownloadTask(song: song, contextPlaylist: contextPlaylist, cancelToken: cancelToken));
+    _processQueue();
+  }
+
+  Future<void> _processQueue() async {
+    if (_queue.isEmpty || _activeTaskCount >= _maxConcurrent) return;
+
+    final task = _queue.removeAt(0);
+    _activeTaskCount++;
+    
+    try {
+      await _executeDownload(task.song, task.cancelToken, contextPlaylist: task.contextPlaylist);
+    } finally {
+      _activeTaskCount--;
+      _processQueue();
+    }
+  }
+
+  Future<void> _executeDownload(Song song, CancelToken cancelToken, {Playlist? contextPlaylist}) async {
+    final videoId = song.videoId;
 
     if (await _db.isDownloaded(videoId)) {
       _markComplete(videoId);
@@ -224,8 +249,8 @@ class DownloadNotifier extends Notifier<DownloadState> {
         if (song.thumbnail.isNotEmpty) {
           final largeThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 500);
           final res = await Dio(BaseOptions(
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 20),
+            connectTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 300),
           )).get<List<int>>(
             largeThumb,
             options: Options(responseType: ResponseType.bytes),
@@ -307,10 +332,11 @@ class DownloadNotifier extends Notifier<DownloadState> {
   }
 
   Future<void> cancelAndRemoveDownload(String videoId) async {
-    final active = state.activeDownloads[videoId];
-    if (active != null) {
-      active.cancelToken?.cancel('cancelled');
-      _markComplete(videoId);
+    _queue.removeWhere((t) => t.song.videoId == videoId);
+    if (state.activeDownloads.containsKey(videoId)) {
+      final active = state.activeDownloads[videoId]!;
+      active.cancelToken?.cancel();
+      _markComplete(videoId); // Removes from active state
     }
     final appDir = await getApplicationDocumentsDirectory();
     final tempPath = p.join(appDir.path, 'downloads', '$videoId.tmp');
@@ -388,6 +414,14 @@ class DownloadNotifier extends Notifier<DownloadState> {
     );
     state = state.copyWith(activeDownloads: updated);
   }
+}
+
+class _DownloadTask {
+  final Song song;
+  final Playlist? contextPlaylist;
+  final CancelToken cancelToken;
+
+  _DownloadTask({required this.song, this.contextPlaylist, required this.cancelToken});
 }
 
 final downloadProvider = NotifierProvider<DownloadNotifier, DownloadState>(

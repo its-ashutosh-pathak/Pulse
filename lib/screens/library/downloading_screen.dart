@@ -31,14 +31,9 @@ class DownloadingScreen extends ConsumerWidget {
           children: [
             // Top Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 20, 16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(LucideIcons.arrowLeft, size: 22),
-                  ),
-                  const SizedBox(width: 8),
                   Text(
                     'Downloading',
                     style: Theme.of(context).textTheme.headlineLarge,

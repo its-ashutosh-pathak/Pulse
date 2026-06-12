@@ -116,8 +116,8 @@ class MusicApi {
       }
 
       final dio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 20),
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 300),
       ));
       
       // Clean YouTube-specific tags from title (e.g. "Song (Official Audio)", "Song [Music Video]")

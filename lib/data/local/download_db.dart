@@ -318,6 +318,7 @@ class DownloadDb {
     final rows = await db.rawQuery('''
       SELECT 
         op.id as playlistId, op.name as playlistName, op.createdAt,
+        (SELECT COUNT(*) FROM playlist_tracks WHERE playlistId = op.id) as trackCount,
         (SELECT dt.thumbnail 
          FROM playlist_tracks pt 
          JOIN downloaded_tracks dt ON pt.videoId = dt.videoId 
@@ -334,6 +335,7 @@ class DownloadDb {
         name: row['playlistName'] as String,
         type: 'OFFLINE_PLAYLIST',
         songs: [], // Lazy loaded
+        totalTracks: row['trackCount'] as int?,
         thumbnail: row['thumbnail'] as String?,
       );
     }).toList();

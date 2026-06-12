@@ -7,7 +7,7 @@ import '../../providers/import_provider.dart';
 import '../../widgets/glass_container.dart';
 
 /// Import Playlist screen — port of ImportPlaylist.jsx.
-/// Paste YT Music / Spotify URLs to import playlists.
+/// Paste YT Music URLs to import playlists.
 class ImportScreen extends ConsumerStatefulWidget {
   const ImportScreen({super.key});
 
@@ -78,14 +78,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                     children: [
                       Icon(LucideIcons.music2, size: 18, color: accent),
                       const SizedBox(width: 8),
-                      const Text('Import from YouTube Music or Spotify',
+                      const Text('Import from YouTube Music',
                           style: TextStyle(fontSize: 15,
                               fontWeight: FontWeight.w600)),
                     ],
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Paste a public YouTube Music or Spotify playlist URL to import it into your Pulse library in the background.',
+                    'Paste a public YouTube Music playlist URL to import it into your Pulse library in the background.',
                     style: TextStyle(fontSize: 12,
                         color: AppColors.textSecondary, height: 1.5),
                   ),
@@ -114,7 +114,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                       controller: _urlC,
                       style: const TextStyle(fontSize: 13),
                       decoration: const InputDecoration(
-                        hintText: 'https://open.spotify.com/playlist/...',
+                        hintText: 'https://music.youtube.com/playlist?list=...',
                         hintStyle: TextStyle(fontSize: 12,
                             color: AppColors.textSecondary),
                         border: InputBorder.none,

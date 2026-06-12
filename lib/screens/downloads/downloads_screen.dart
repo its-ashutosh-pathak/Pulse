@@ -84,7 +84,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
         thumbnail: songs.isNotEmpty ? songs.first.thumbnail : null,
       );
 
-      final validPlaylists = playlists.where((pl) => pl.songs.isNotEmpty).toList();
+      final validPlaylists = playlists.where((pl) => (pl.totalTracks ?? 0) > 0).toList();
       final allPlaylists = songs.isNotEmpty ? [globalDownloadsPlaylist, ...validPlaylists] : validPlaylists;
 
       if (mounted) {
@@ -351,7 +351,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
 
   Widget _buildListView(AudioState audio) {
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const EdgeInsets.only(bottom: 180),
       itemCount: _offlinePlaylists.length,
       itemBuilder: (context, i) {
         final pl = _offlinePlaylists[i];
@@ -395,7 +395,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
           ),
           title: Text(pl.name, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          subtitle: Text('${pl.songs.length} songs', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          subtitle: Text('${pl.totalTracks ?? pl.songs.length} songs', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           trailing: GestureDetector(
             onTap: () => _showPlaylistMenu(pl),
             child: const Padding(
@@ -473,7 +473,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                       children: [
                         Text(pl.name, maxLines: 1, overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                        Text('${pl.songs.length} songs', maxLines: 1, overflow: TextOverflow.ellipsis,
+                        Text('${pl.totalTracks ?? pl.songs.length} songs', maxLines: 1, overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                       ],
                     ),

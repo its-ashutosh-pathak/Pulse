@@ -382,7 +382,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 120),
+                            padding: const EdgeInsets.only(bottom: 180),
                             itemCount: songsToRender.length,
                             itemBuilder: (context, i) {
                               final song = songsToRender[i];
