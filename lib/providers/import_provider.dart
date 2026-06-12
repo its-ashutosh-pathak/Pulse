@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ImportTask {
@@ -39,25 +39,10 @@ class ImportTask {
 }
 
 class ImportNotifier extends StateNotifier<Map<String, ImportTask>> {
-  final Ref _ref;
-
-  ImportNotifier(this._ref) : super({});
+  ImportNotifier() : super({});
 
   Future<void> startImport(String url) async {
     // Temporarily disabled / Coming Soon
-  }
-
-  void _updateTask(String taskId, {String? name, int? totalSongs, int? processedSongs, String? status}) {
-    if (!state.containsKey(taskId)) return;
-    state = {
-      ...state,
-      taskId: state[taskId]!.copyWith(
-        name: name,
-        totalSongs: totalSongs,
-        processedSongs: processedSongs,
-        status: status,
-      )
-    };
   }
 
   void dismissTask(String taskId) {
@@ -68,6 +53,5 @@ class ImportNotifier extends StateNotifier<Map<String, ImportTask>> {
 }
 
 final importProvider = StateNotifierProvider<ImportNotifier, Map<String, ImportTask>>((ref) {
-  return ImportNotifier(ref);
+  return ImportNotifier();
 });
-

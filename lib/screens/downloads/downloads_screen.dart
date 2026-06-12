@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -368,9 +369,11 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                     child: songsList.length >= 4
                         ? _QuadCover(songs: songsList.take(4).toList())
                         : (thumb.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: thumb, fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) => Container(color: AppColors.surface))
+                            ? (!thumb.startsWith('http')
+                                ? Image.file(File(thumb), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                                : CachedNetworkImage(
+                                    imageUrl: thumb, fit: BoxFit.cover,
+                                    errorWidget: (_, __, ___) => Container(color: AppColors.surface)))
                             : Container(color: AppColors.surface, child: const Icon(LucideIcons.listMusic, color: AppColors.textSecondary))),
                   ),
                   if (audio.contextPlaylistId == pl.id)
@@ -434,10 +437,12 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                           child: songsList.length >= 4
                               ? _QuadCover(songs: songsList.take(4).toList())
                               : (thumb.isNotEmpty
-                                  ? CachedNetworkImage(
-                                      imageUrl: thumb, fit: BoxFit.cover,
-                                      errorWidget: (_, __, ___) =>
-                                          Container(color: AppColors.surface))
+                                  ? (!thumb.startsWith('http')
+                                      ? Image.file(File(thumb), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                                      : CachedNetworkImage(
+                                          imageUrl: thumb, fit: BoxFit.cover,
+                                          errorWidget: (_, __, ___) =>
+                                              Container(color: AppColors.surface)))
                                   : Container(color: AppColors.surface, child: const Icon(LucideIcons.listMusic, color: AppColors.textSecondary))),
                         ),
                         if (audio.contextPlaylistId == pl.id)
@@ -801,10 +806,12 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                                         child: SizedBox(
                                           width: 40, height: 40,
                                           child: thumb.isNotEmpty
-                                              ? CachedNetworkImage(
-                                                  imageUrl: thumb, fit: BoxFit.cover,
-                                                  errorWidget: (_, __, ___) =>
-                                                      Container(color: AppColors.surface))
+                                              ? (!thumb.startsWith('http')
+                                                  ? Image.file(File(thumb), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                                                  : CachedNetworkImage(
+                                                      imageUrl: thumb, fit: BoxFit.cover,
+                                                      errorWidget: (_, __, ___) =>
+                                                          Container(color: AppColors.surface)))
                                               : Container(color: AppColors.surface),
                                         ),
                                       ),
@@ -949,8 +956,10 @@ class _QuadCover extends StatelessWidget {
       children: songs.map((s) {
         final url = ThumbnailUtils.getHighRes(s.thumbnail, size: 120);
         return url.isNotEmpty
-            ? CachedNetworkImage(imageUrl: url, fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => Container(color: AppColors.surface))
+            ? (!url.startsWith('http')
+                ? Image.file(File(url), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                : CachedNetworkImage(imageUrl: url, fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => Container(color: AppColors.surface)))
             : Container(color: AppColors.surface);
       }).toList(),
     );

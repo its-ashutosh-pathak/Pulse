@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -139,14 +140,23 @@ class AddToPlaylistSheet extends ConsumerWidget {
                                         child: pl.songs.length >= 4
                                             ? _QuadCover(songs: pl.songs.take(4).toList())
                                             : (pl.songs.isNotEmpty || (pl.thumbnail != null && pl.thumbnail!.isNotEmpty)
-                                                ? CachedNetworkImage(
-                                                    imageUrl: ThumbnailUtils.getHighRes(
-                                                      (pl.thumbnail != null && pl.thumbnail!.isNotEmpty) 
-                                                          ? pl.thumbnail! 
-                                                          : pl.songs.first.thumbnail, 
-                                                      size: 120),
-                                                    fit: BoxFit.cover,
-                                                    errorWidget: (_, __, ___) => Container(color: AppColors.surface))
+                                                ? (() {
+                                                    final t = (pl.thumbnail != null && pl.thumbnail!.isNotEmpty)
+                                                        ? pl.thumbnail!
+                                                        : pl.songs.first.thumbnail;
+                                                    if (!t.startsWith('http')) {
+                                                      return Image.file(
+                                                        File(t),
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (_, __, ___) => Container(color: AppColors.surface),
+                                                      );
+                                                    }
+                                                    return CachedNetworkImage(
+                                                      imageUrl: ThumbnailUtils.getHighRes(t, size: 120),
+                                                      fit: BoxFit.cover,
+                                                      errorWidget: (_, __, ___) => Container(color: AppColors.surface),
+                                                    );
+                                                  })()
                                                 : Container(
                                                     color: AppColors.surface,
                                                     child: Icon(
@@ -309,8 +319,9 @@ class _QuadCover extends StatelessWidget {
       children: songs.map((s) {
         final url = s.thumbnail.isNotEmpty ? s.thumbnail : ''; // Simple thumbnail
         return url.isNotEmpty
-            ? CachedNetworkImage(imageUrl: url, fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => Container(color: AppColors.surface))
+            ? (!url.startsWith('http')
+                ? Image.file(File(url), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                : CachedNetworkImage(imageUrl: url, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(color: AppColors.surface)))
             : Container(color: AppColors.surface);
       }).toList(),
     );

@@ -45,6 +45,7 @@ class StatsNotifier extends Notifier<StatsState> {
   final _db = FirebaseFirestore.instance;
   DateTime? _lastLoaded;
   String? _lastTimeframe;
+  bool _isBackfilling = false;
 
   @override
   StatsState build() => const StatsState();
@@ -76,10 +77,13 @@ class StatsNotifier extends Notifier<StatsState> {
         .split('T')[0];
 
     // Run each query independently — one failing won't kill the rest
-    final lifeSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('listeningStats').get(),
-      'listeningStats (all)',
-    );
+    DocumentSnapshot<Map<String, dynamic>>? userDocSnap;
+    try {
+      userDocSnap = await _db.collection('users').doc(uid).get();
+    } catch (e) {
+      debugPrint('[Stats] user doc error: $e');
+    }
+
     final periodSnap = await _safeGet(
       _db.collection('users').doc(uid).collection('listeningStats')
           .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
@@ -96,24 +100,60 @@ class StatsNotifier extends Notifier<StatsState> {
       'artistStats',
     );
 
-    debugPrint('[Stats] Results — life:${lifeSnap?.docs.length ?? 'null'}, period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
+    debugPrint('[Stats] Results — period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
 
     // Lifetime stats
     int lifetimeSeconds = 0;
-    final List<String> allDates = [];
-    if (lifeSnap != null) {
-      for (final doc in lifeSnap.docs) {
-        final d = doc.data();
-        lifetimeSeconds += ((d['totalSeconds'] ?? 0) as num).toInt();
-        if (d['date'] != null) allDates.add(d['date'] as String);
+    int accountDays = 1;
+    final userData = userDocSnap?.data();
+
+    if (userData != null && userData.containsKey('lifetimeTotalSeconds')) {
+      lifetimeSeconds = ((userData['lifetimeTotalSeconds'] ?? 0) as num).toInt();
+      final firstListened = userData['firstListenedDate'] as String?;
+      if (firstListened != null) {
+         accountDays = DateTime.now().difference(DateTime.parse(firstListened)).inDays + 1;
+      } else if (userData['createdAt'] != null) {
+         final created = (userData['createdAt'] as Timestamp).toDate();
+         accountDays = DateTime.now().difference(created).inDays + 1;
+      }
+    } else {
+      // Lazy backfill: compute from historical docs
+      if (!_isBackfilling) {
+        _isBackfilling = true;
+        try {
+          final lifeSnap = await _safeGet(
+            _db.collection('users').doc(uid).collection('listeningStats').get(),
+            'listeningStats (all)',
+          );
+          final List<String> allDates = [];
+          if (lifeSnap != null) {
+            for (final doc in lifeSnap.docs) {
+              final d = doc.data();
+              lifetimeSeconds += ((d['totalSeconds'] ?? 0) as num).toInt();
+              if (d['date'] != null) allDates.add(d['date'] as String);
+            }
+          }
+          if (allDates.length >= 2) {
+            allDates.sort();
+            accountDays = DateTime.parse(allDates.last).difference(DateTime.parse(allDates.first)).inDays + 1;
+          }
+          
+          // Save backfill back to root doc
+          try {
+            final firstListenedDate = allDates.isNotEmpty ? allDates.first : DateTime.now().toIso8601String().split('T')[0];
+            await _db.collection('users').doc(uid).set({
+              'lifetimeTotalSeconds': lifetimeSeconds,
+              'firstListenedDate': firstListenedDate,
+            }, SetOptions(merge: true));
+          } catch (e) {
+            debugPrint('[Stats] Backfill save error: $e');
+          }
+        } finally {
+          _isBackfilling = false;
+        }
       }
     }
-    int accountDays = 1;
-    if (allDates.length >= 2) {
-      allDates.sort();
-      accountDays =
-          DateTime.parse(allDates.last).difference(DateTime.parse(allDates.first)).inDays + 1;
-    }
+
     final dailyAvgMinutes = accountDays > 0
         ? (lifetimeSeconds / 60 / accountDays).round()
         : 0;

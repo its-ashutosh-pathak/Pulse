@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -97,11 +98,13 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
                     child: SizedBox(
                       width: 48, height: 48,
                       child: thumb.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: thumb, fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
-                                  Container(color: AppColors.surface))
-                          : Container(color: AppColors.surface),
+                          ? (!thumb.startsWith('http')
+                              ? Image.file(File(thumb), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                              : CachedNetworkImage(
+                                  imageUrl: thumb, fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      Container(color: AppColors.surface)))
+                          : Container(color: AppColors.surface, child: const Icon(Icons.music_note, color: AppColors.textSecondary)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -225,11 +228,29 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
   void _handleDownload() {
     if (_downloadState != 'idle' && _downloadState != 'error') return;
     ref.read(downloadProvider.notifier).downloadSong(widget.song, contextPlaylist: widget.contextPlaylist);
+    final accent = Theme.of(context).colorScheme.primary;
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Starting download...'),
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Expanded(
+              child: Text('Downloading', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                messenger.hideCurrentSnackBar();
+                router.push('/downloading');
+              },
+              child: Text('VIEW', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
         behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black,
+        duration: const Duration(seconds: 3),
       ),
     );
   }

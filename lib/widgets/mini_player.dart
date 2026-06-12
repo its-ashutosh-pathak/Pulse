@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,10 +73,13 @@ class MiniPlayer extends ConsumerWidget {
                     child: SizedBox(
                       width: 40, height: 40,
                       child: thumb.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: thumb, fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
-                                  Container(color: AppColors.surface))
+                          ? (!thumb.startsWith('http')
+                              ? Image.file(File(thumb), fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                              : CachedNetworkImage(
+                                  imageUrl: thumb, fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      Container(color: AppColors.surface)))
                           : Container(color: AppColors.surface),
                     ),
                   ),

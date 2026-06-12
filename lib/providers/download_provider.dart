@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import '../core/utils/thumbnail_utils.dart';
 import '../data/api/music_api.dart';
 import '../data/local/download_db.dart';
@@ -20,16 +19,50 @@ import '../services/stream_extractor.dart';
 
 class DownloadProgress {
   final String videoId;
+  final Song? song;
   final double progress; // 0.0 to 1.0
   final bool isComplete;
   final String? error;
+  final int receivedBytes;
+  final int totalBytes;
+  final bool isPaused;
+  final CancelToken? cancelToken;
 
   const DownloadProgress({
     required this.videoId,
+    this.song,
     this.progress = 0.0,
     this.isComplete = false,
     this.error,
+    this.receivedBytes = 0,
+    this.totalBytes = 0,
+    this.isPaused = false,
+    this.cancelToken,
   });
+
+  DownloadProgress copyWith({
+    String? videoId,
+    Song? song,
+    double? progress,
+    bool? isComplete,
+    String? error,
+    int? receivedBytes,
+    int? totalBytes,
+    bool? isPaused,
+    CancelToken? cancelToken,
+  }) {
+    return DownloadProgress(
+      videoId: videoId ?? this.videoId,
+      song: song ?? this.song,
+      progress: progress ?? this.progress,
+      isComplete: isComplete ?? this.isComplete,
+      error: error ?? this.error,
+      receivedBytes: receivedBytes ?? this.receivedBytes,
+      totalBytes: totalBytes ?? this.totalBytes,
+      isPaused: isPaused ?? this.isPaused,
+      cancelToken: cancelToken ?? this.cancelToken,
+    );
+  }
 }
 
 class DownloadState {
@@ -58,8 +91,6 @@ class DownloadState {
 
 // ── Download Provider ───────────────────────────────────────────────────────
 
-/// Manages offline downloads — replaces downloadManager.js.
-/// Downloads audio via backend proxy, saves to app directory, tracks in sqflite.
 class DownloadNotifier extends Notifier<DownloadState> {
   final _db = DownloadDb.instance;
 
@@ -75,123 +106,165 @@ class DownloadNotifier extends Notifier<DownloadState> {
     state = state.copyWith(downloadedCount: count, totalSizeBytes: size);
   }
 
-  /// Check if a track is downloaded.
   Future<bool> isDownloaded(String videoId) => _db.isDownloaded(videoId);
-
-  /// Get local file path for playback.
   Future<String?> getFilePath(String videoId) => _db.getFilePath(videoId);
 
-  /// Download a song for offline playback.
   Future<void> downloadSong(Song song, {Playlist? contextPlaylist}) async {
     final videoId = song.videoId;
     if (videoId.isEmpty) return;
 
-    // Skip if already downloaded or currently downloading
-    if (await _db.isDownloaded(videoId)) return;
-    if (state.activeDownloads.containsKey(videoId)) return;
+    if (state.activeDownloads.containsKey(videoId)) {
+      final active = state.activeDownloads[videoId]!;
+      if (!active.isPaused && active.error == null) return; // Already downloading
+    }
+    
+    final cancelToken = CancelToken();
+    _updateProgress(videoId, 0.0, song: song, cancelToken: cancelToken, isPaused: false);
 
-    // Mark as active
-    _updateProgress(videoId, 0.0);
+    if (await _db.isDownloaded(videoId)) {
+      _markComplete(videoId);
+      return;
+    }
 
     try {
-      // Get download directory
       final appDir = await getApplicationDocumentsDirectory();
       final downloadDir = Directory(p.join(appDir.path, 'downloads'));
       if (!await downloadDir.exists()) {
         await downloadDir.create(recursive: true);
       }
-      // ── PRIMARY: Get direct CDN URL via youtube_explode_dart ──
-      // Downloads directly from YouTube CDN on the user's phone IP.
-      // No backend bandwidth consumed. Fast — CDN is geographically distributed.
+
       final dlQuality = ref.read(settingsProvider).downloadQuality;
       String? directUrl;
-      String ext = 'm4a'; // default — YTE prefers m4a streams
+      String ext = 'm4a';
       try {
         directUrl = await StreamExtractor.getAudioStreamUrl(videoId, quality: dlQuality)
             .timeout(const Duration(seconds: 20));
-        // YTE v2.5.3 prefers m4a; the URL path usually reveals the container
-        if (directUrl.contains('mime=audio%2Fwebm') ||
-            directUrl.contains('mime=audio/webm')) {
+        if (directUrl.contains('mime=audio%2Fwebm') || directUrl.contains('mime=audio/webm')) {
           ext = 'webm';
-        } else if (directUrl.contains('mime=audio%2Fmp4') ||
-            directUrl.contains('mime=audio/mp4')) {
+        } else if (directUrl.contains('mime=audio%2Fmp4') || directUrl.contains('mime=audio/mp4')) {
           ext = 'm4a';
         }
       } catch (e) {
-        debugPrint('[Download] Client extraction failed: $e. Falling back to backend.');
+        debugPrint('[Download] Client extraction failed: $e');
+        throw Exception('Stream extraction failed');
       }
 
       final tempPath = p.join(downloadDir.path, '$videoId.tmp');
+      final tempFile = File(tempPath);
+      
+      int downloadedBytes = 0;
+      if (await tempFile.exists()) {
+        downloadedBytes = await tempFile.length();
+      }
 
       if (directUrl != null) {
-        // Download directly from YouTube CDN.
-        // IMPORTANT: YouTube CDN requires these headers or returns 403:
-        //   - Range: bytes=0-  → CDN serves partial content only; this triggers it
-        //   - User-Agent       → must match the client used during stream extraction
-        await Dio(BaseOptions(
+        final dio = Dio(BaseOptions(
           connectTimeout: const Duration(seconds: 20),
           receiveTimeout: const Duration(seconds: 300),
-          headers: {
-            'Range': 'bytes=0-',
-            'User-Agent':
-                'Mozilla/5.0 (Linux; Android 14; Pixel 8) '  
-                'AppleWebKit/537.36 (KHTML, like Gecko) '     
-                'Chrome/124.0.0.0 Mobile Safari/537.36',
-            'Origin': 'https://www.youtube.com',
-            'Referer': 'https://www.youtube.com/',
-          },
-        )).download(
+        ));
+        
+        final response = await dio.get<ResponseBody>(
           directUrl,
-          tempPath,
-          deleteOnError: true,
-          onReceiveProgress: (received, total) {
-            if (total > 0) {
-              _updateProgress(videoId, received / total);
-            } else {
-              // CDN may not send Content-Length for partial-content responses;
-              // show indeterminate progress (value = -1 maps to 0.5 in UI)
-              _updateProgress(videoId, 0.5);
-            }
-          },
+          cancelToken: cancelToken,
           options: Options(
-            followRedirects: true,
-            maxRedirects: 5,
-            // Accept both 200 OK and 206 Partial Content
+            responseType: ResponseType.stream,
+            headers: {
+              'Range': 'bytes=$downloadedBytes-',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+              'Origin': 'https://www.youtube.com',
+              'Referer': 'https://www.youtube.com/',
+            },
             validateStatus: (status) => status != null && status < 400,
           ),
         );
+
+        final totalHeader = response.headers.value(HttpHeaders.contentRangeHeader);
+        int totalLength = 0;
+        if (totalHeader != null && totalHeader.contains('/')) {
+          totalLength = int.tryParse(totalHeader.split('/').last) ?? 0;
+        } else {
+          totalLength = int.tryParse(response.headers.value(HttpHeaders.contentLengthHeader) ?? '0') ?? 0;
+          totalLength += downloadedBytes;
+        }
+        
+        // Add a realistic 150KB for cover art and lyrics instead of 2MB
+        final estimatedTotalData = totalLength + (150 * 1024); 
+
+        final sink = tempFile.openWrite(mode: FileMode.append);
+        int currentBytes = downloadedBytes;
+
+        try {
+          await for (final chunk in response.data!.stream) {
+            if (cancelToken.isCancelled) {
+              await sink.close();
+              return; // Paused/Cancelled
+            }
+            sink.add(chunk);
+            currentBytes += chunk.length;
+            _updateProgress(
+              videoId, 
+              totalLength > 0 ? currentBytes / totalLength : 0.5,
+              song: song,
+              receivedBytes: currentBytes,
+              totalBytes: estimatedTotalData,
+              cancelToken: cancelToken,
+            );
+          }
+        } finally {
+          await sink.close();
+        }
       }
 
-      // Move temp file to final path using detected extension
       final filePath = p.join(downloadDir.path, '$videoId.$ext');
-      await File(tempPath).rename(filePath);
+      await tempFile.rename(filePath);
 
-      // Get file size
-      final file = File(filePath);
-      final fileSize = await file.length();
+      int finalFileSize = await File(filePath).length();
 
-      // Save metadata to sqflite
+      String localThumbnailPath = song.thumbnail;
+      try {
+        if (song.thumbnail.isNotEmpty) {
+          final largeThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 500);
+          final res = await Dio().get<List<int>>(
+            largeThumb,
+            options: Options(responseType: ResponseType.bytes),
+          );
+          if (res.data != null) {
+            final coverDir = Directory(p.join(appDir.path, 'downloads', 'covers'));
+            if (!await coverDir.exists()) await coverDir.create(recursive: true);
+            final coverFile = File(p.join(coverDir.path, '$videoId.jpg'));
+            await coverFile.writeAsBytes(res.data!);
+            localThumbnailPath = coverFile.path;
+            finalFileSize += await coverFile.length();
+          }
+        }
+      } catch (e) {}
+
+      try {
+        final musicApi = MusicApi();
+        final lyrics = await musicApi.getLyricsBySong(song);
+        if (lyrics != null) {
+          await _db.cacheLyrics(videoId, lyrics.toJson());
+          // Approximate lyrics size
+          finalFileSize += lyrics.toJson().toString().length;
+        }
+      } catch (e) {}
+
       await _db.saveTrack(
         videoId: videoId,
         title: song.title,
         artist: song.artist,
         album: song.album,
-        thumbnail: song.thumbnail,
+        thumbnail: localThumbnailPath,
         duration: song.duration,
         filePath: filePath,
-        fileSize: fileSize,
+        fileSize: finalFileSize,
       );
 
-      // Add to context playlist if provided
       if (contextPlaylist != null) {
-        await _db.addTrackToPlaylist(
-          '__pl__${contextPlaylist.id}',
-          contextPlaylist.name,
-          videoId,
-        );
+        await _db.addTrackToPlaylist('__pl__${contextPlaylist.id}', contextPlaylist.name, videoId);
       }
 
-      // Background scan to link song to ANY existing user playlists
       try {
         final onlinePlaylists = ref.read(playlistProvider);
         for (final pl in onlinePlaylists.playlists) {
@@ -199,107 +272,93 @@ class DownloadNotifier extends Notifier<DownloadState> {
             await _db.addTrackToPlaylist('__pl__${pl.id}', pl.name, videoId);
           }
         }
-      } catch (e) {
-        debugPrint('[Download] Offline Playlist Scan skipped: $e');
-      }
+      } catch (e) {}
 
-      // Also pre-cache lyrics
-      try {
-        final musicApi = MusicApi();
-        final lyrics = await musicApi.getLyricsBySong(song);
-        if (lyrics != null) {
-          await _db.cacheLyrics(videoId, lyrics.toJson());
-        }
-      } catch (_) {
-        // Lyrics caching is best-effort
-      }
-
-      // Also pre-cache thumbnails forever
-      try {
-        if (song.thumbnail.isNotEmpty) {
-          final smallThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 120);
-          final largeThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 500);
-
-          Future<void> cacheImage(String url) async {
-            final res = await Dio().get<List<int>>(
-              url,
-              options: Options(responseType: ResponseType.bytes),
-            );
-            if (res.data != null) {
-              final bytes = Uint8List.fromList(res.data!);
-              await DefaultCacheManager().putFile(
-                url,
-                bytes,
-                fileExtension: 'jpg',
-                maxAge: const Duration(days: 36500),
-              );
-            }
-          }
-
-          await cacheImage(smallThumb);
-          if (smallThumb != largeThumb) {
-            await cacheImage(largeThumb);
-          }
-        }
-      } catch (e) {
-        debugPrint('[Download] Thumbnail caching failed: $e');
-      }
-
-      // Mark complete
       _markComplete(videoId);
       await _refreshCounts();
     } catch (e) {
+      if (cancelToken.isCancelled) return;
       _markError(videoId, e.toString());
     }
   }
 
-  /// Delete a downloaded track.
+  void pauseDownload(String videoId) {
+    final active = state.activeDownloads[videoId];
+    if (active != null && !active.isPaused) {
+      active.cancelToken?.cancel('paused');
+      final updated = Map<String, DownloadProgress>.from(state.activeDownloads);
+      updated[videoId] = active.copyWith(isPaused: true);
+      state = state.copyWith(activeDownloads: updated);
+    }
+  }
+
+  void resumeDownload(String videoId) {
+    final active = state.activeDownloads[videoId];
+    if (active != null && (active.isPaused || active.error != null) && active.song != null) {
+      downloadSong(active.song!);
+    }
+  }
+
+  Future<void> cancelAndRemoveDownload(String videoId) async {
+    final active = state.activeDownloads[videoId];
+    if (active != null) {
+      active.cancelToken?.cancel('cancelled');
+      _markComplete(videoId);
+    }
+    final appDir = await getApplicationDocumentsDirectory();
+    final tempPath = p.join(appDir.path, 'downloads', '$videoId.tmp');
+    final tempFile = File(tempPath);
+    if (await tempFile.exists()) {
+      await tempFile.delete();
+    }
+  }
+
   Future<void> deleteDownload(String videoId) async {
-    // Delete file from disk
+    if (state.activeDownloads.containsKey(videoId)) {
+      debugPrint('[Download] Cannot delete $videoId while it is actively downloading');
+      return;
+    }
     final filePath = await _db.getFilePath(videoId);
     if (filePath != null) {
       final file = File(filePath);
       if (await file.exists()) await file.delete();
     }
-
-    // Remove from database
+    final appDir = await getApplicationDocumentsDirectory();
+    final coverFile = File(p.join(appDir.path, 'downloads', 'covers', '$videoId.jpg'));
+    if (await coverFile.exists()) await coverFile.delete();
     await _db.deleteTrack(videoId);
     await _refreshCounts();
   }
 
-  /// Clear all downloads.
   Future<void> clearAll() async {
-    // Delete all downloaded files
+    if (state.activeDownloads.isNotEmpty) return;
     final appDir = await getApplicationDocumentsDirectory();
     final downloadDir = Directory(p.join(appDir.path, 'downloads'));
     if (await downloadDir.exists()) {
       await downloadDir.delete(recursive: true);
     }
-
     await _db.clearAll();
     state = const DownloadState();
   }
 
-  /// Get all downloaded songs.
   Future<List<Song>> getAllDownloadedSongs() => _db.getAllTracks();
-
-  /// Get all offline playlists.
   Future<List<Playlist>> getAllOfflinePlaylists() => _db.getAllOfflinePlaylists();
-
-  /// Rename an offline playlist.
   Future<void> renameOfflinePlaylist(String playlistId, String newName) => _db.renameOfflinePlaylist(playlistId, newName);
-
-  /// Update songs in an offline playlist.
   Future<void> updateOfflinePlaylistSongs(String playlistId, List<String> videoIds) => _db.updateOfflinePlaylistSongs(playlistId, videoIds);
-
-  /// Delete an offline playlist.
   Future<void> deleteOfflinePlaylist(String playlistId) => _db.deleteOfflinePlaylist(playlistId);
 
-  // ── Internal helpers ──
-
-  void _updateProgress(String videoId, double progress) {
+  void _updateProgress(String videoId, double progress, {Song? song, int receivedBytes = 0, int totalBytes = 0, CancelToken? cancelToken, bool? isPaused}) {
     final updated = Map<String, DownloadProgress>.from(state.activeDownloads);
-    updated[videoId] = DownloadProgress(videoId: videoId, progress: progress);
+    final existing = updated[videoId];
+    updated[videoId] = DownloadProgress(
+      videoId: videoId,
+      song: song ?? existing?.song,
+      progress: progress,
+      receivedBytes: receivedBytes > 0 ? receivedBytes : (existing?.receivedBytes ?? 0),
+      totalBytes: totalBytes > 0 ? totalBytes : (existing?.totalBytes ?? 0),
+      cancelToken: cancelToken ?? existing?.cancelToken,
+      isPaused: isPaused ?? existing?.isPaused ?? false,
+    );
     state = state.copyWith(activeDownloads: updated);
   }
 
@@ -311,16 +370,16 @@ class DownloadNotifier extends Notifier<DownloadState> {
 
   void _markError(String videoId, String error) {
     final updated = Map<String, DownloadProgress>.from(state.activeDownloads);
+    final existing = updated[videoId];
     updated[videoId] = DownloadProgress(
       videoId: videoId,
+      song: existing?.song,
       progress: 0,
       error: error,
     );
     state = state.copyWith(activeDownloads: updated);
   }
 }
-
-// ── Provider Registration ───────────────────────────────────────────────────
 
 final downloadProvider = NotifierProvider<DownloadNotifier, DownloadState>(
   DownloadNotifier.new,

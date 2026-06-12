@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -96,13 +97,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             Positioned.fill(
               child: ImageFiltered(
                 imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: CachedNetworkImage(
-                  imageUrl: thumb, fit: BoxFit.cover,
-                  color: Colors.black.withValues(alpha: 0.5),
-                  colorBlendMode: BlendMode.darken,
-                  errorWidget: (_, __, ___) =>
-                      Container(color: AppColors.background),
-                ),
+                child: (!thumb.startsWith('http'))
+                    ? Image.file(
+                        File(thumb), fit: BoxFit.cover,
+                        color: Colors.black.withValues(alpha: 0.5),
+                        colorBlendMode: BlendMode.darken,
+                        errorBuilder: (_, __, ___) => Container(color: AppColors.background),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: thumb, fit: BoxFit.cover,
+                        color: Colors.black.withValues(alpha: 0.5),
+                        colorBlendMode: BlendMode.darken,
+                        errorWidget: (_, __, ___) =>
+                            Container(color: AppColors.background),
+                      ),
               ),
             ),
           Positioned.fill(
@@ -394,10 +402,13 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 fit: StackFit.expand,
                 children: [
                   thumb.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: thumb, fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) =>
-                              Container(color: AppColors.surface))
+                      ? (!thumb.startsWith('http')
+                          ? Image.file(File(thumb), fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                          : CachedNetworkImage(
+                              imageUrl: thumb, fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) =>
+                                  Container(color: AppColors.surface)))
                       : Container(color: AppColors.surface),
                   if (isDownloading)
                     Container(

@@ -42,6 +42,9 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
   // FIX #12: Debounced lastPlayedAt (10-second window)
   Timer? _lastPlayedTimer;
 
+  // Lock for Liked Songs creation to prevent race conditions
+  Future<Playlist>? _likedPlaylistCreationFuture;
+
   @override
   PlaylistState build() {
     // Watch auth state — re-subscribe when user changes
@@ -135,10 +138,16 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         'createdBy': auth.user!.uid,
         'ownerName': auth.displayName ?? 'Pulse User',
         'members': [auth.user!.uid],
-        'songs': initialSongs.map((s) => <String, dynamic>{
-          ...s.toJson(),
-          'addedByUid': auth.user!.uid,
-          'addedByName': auth.displayName ?? 'Pulse User',
+        'songs': initialSongs.map((s) {
+          final json = s.toJson();
+          if (s.thumbnail.isNotEmpty && !s.thumbnail.startsWith('http')) {
+            json['thumbnail'] = 'https://i.ytimg.com/vi/${s.videoId}/hqdefault.jpg';
+          }
+          return <String, dynamic>{
+            ...json,
+            'addedByUid': auth.user!.uid,
+            'addedByName': auth.displayName ?? 'Pulse User',
+          };
         }).toList(),
         'visibility': 'Public',
         'createdAt': FieldValue.serverTimestamp(),
@@ -220,7 +229,13 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
       ref2.update({
         'songs': FieldValue.arrayUnion([
           {
-            ...song.toJson(),
+            ...(() {
+              final json = song.toJson();
+              if (song.thumbnail.isNotEmpty && !song.thumbnail.startsWith('http')) {
+                json['thumbnail'] = 'https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg';
+              }
+              return json;
+            })(),
             'addedByUid': auth.user!.uid,
             'addedByName': auth.displayName ?? 'Member',
           }
@@ -259,11 +274,17 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
 
       await _db.collection('playlists').doc(docRef.id).update({
         'songs': sourceSongs
-            .map((s) => <String, dynamic>{
-                  ...s.toJson(),
-                  'addedByUid': auth.user!.uid,
-                  'addedByName': auth.displayName ?? 'Pulse User',
-                })
+            .map((s) {
+              final json = s.toJson();
+              if (s.thumbnail.isNotEmpty && !s.thumbnail.startsWith('http')) {
+                json['thumbnail'] = 'https://i.ytimg.com/vi/${s.videoId}/hqdefault.jpg';
+              }
+              return <String, dynamic>{
+                ...json,
+                'addedByUid': auth.user!.uid,
+                'addedByName': auth.displayName ?? 'Pulse User',
+              };
+            })
             .toList(),
         'lastUpdated': FieldValue.serverTimestamp(),
       });
@@ -302,12 +323,38 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         debugPrint('[Playlist] Offline sync error: $e');
       }
 
-      // 2. Sync to Firestore in the background (No await)
-      _db.collection('playlists').doc(playlistId).update({
-        'songs': newSongs.map((s) => s.toJson()).toList(),
-        'lastUpdated': FieldValue.serverTimestamp(),
+      // 2. Sync to Firestore in the background using Transaction (Fixes race condition)
+      final targetVideoId = playlist.songs[songIndex].videoId;
+      _db.runTransaction((transaction) async {
+        final docRef = _db.collection('playlists').doc(playlistId);
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) return;
+        
+        final currentSongs = List<dynamic>.from(snapshot.data()?['songs'] ?? []);
+        
+        int serverIndex = -1;
+        
+        // Safety check 1: Try the exact index first (in case of duplicate songs)
+        if (songIndex >= 0 && songIndex < currentSongs.length) {
+          if (currentSongs[songIndex]['videoId'] == targetVideoId) {
+            serverIndex = songIndex;
+          }
+        }
+        
+        // Safety check 2: If the index shifted due to concurrent edits, fall back to videoId
+        if (serverIndex == -1) {
+          serverIndex = currentSongs.indexWhere((s) => s['videoId'] == targetVideoId);
+        }
+            
+        if (serverIndex >= 0) {
+          currentSongs.removeAt(serverIndex);
+          transaction.update(docRef, {
+            'songs': currentSongs,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+        }
       }).catchError((e) {
-        debugPrint('[Playlist] Background sync error: $e');
+        debugPrint('[Playlist] Transaction sync error: $e');
       });
     } catch (e) {
       // ignore: avoid_print
@@ -394,25 +441,36 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
 
     // Create Liked Songs playlist if it doesn't exist
     if (liked == null) {
-      try {
-        final docRef = await _db.collection('playlists').add({
-          'name': 'Liked Songs',
-          'createdBy': auth.user!.uid,
-          'ownerName': auth.displayName ?? 'Pulse User',
-          'members': [auth.user!.uid],
-          'songs': [],
-          'visibility': 'Private',
-          'createdAt': FieldValue.serverTimestamp(),
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
-        // Use temporary object until Firestore snapshot updates
-        liked = Playlist(id: docRef.id, name: 'Liked Songs', songs: const []);
-      } catch (e) {
-        // ignore: avoid_print
-        debugPrint('[Playlist] Failed to create Liked Songs: $e');
-        return;
+      if (_likedPlaylistCreationFuture != null) {
+        liked = await _likedPlaylistCreationFuture;
+      } else {
+        _likedPlaylistCreationFuture = () async {
+          final docRef = await _db.collection('playlists').add({
+            'name': 'Liked Songs',
+            'createdBy': auth.user!.uid,
+            'ownerName': auth.displayName ?? 'Pulse User',
+            'members': [auth.user!.uid],
+            'songs': [],
+            'visibility': 'Private',
+            'createdAt': FieldValue.serverTimestamp(),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+          return Playlist(id: docRef.id, name: 'Liked Songs', songs: const []);
+        }();
+
+        try {
+          liked = await _likedPlaylistCreationFuture;
+        } catch (e) {
+          debugPrint('[Playlist] Failed to create Liked Songs: $e');
+          _likedPlaylistCreationFuture = null;
+          return;
+        } finally {
+          _likedPlaylistCreationFuture = null;
+        }
       }
     }
+
+    if (liked == null) return;
 
     final index = liked.songs.indexWhere(
       (s) => s.id == song.id || s.videoId == song.id,

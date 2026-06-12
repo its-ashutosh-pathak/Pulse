@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -229,10 +230,12 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                         child: sourceSongs.length >= 4 && !isYtm
                             ? _buildQuadCover(sourceSongs.take(4).toList())
                             : (coverThumb.isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: coverThumb, fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) =>
-                                        Container(color: AppColors.surface))
+                                ? (!coverThumb.startsWith('http')
+                                    ? Image.file(File(coverThumb), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                                    : CachedNetworkImage(
+                                        imageUrl: coverThumb, fit: BoxFit.cover,
+                                        errorWidget: (_, __, ___) =>
+                                            Container(color: AppColors.surface)))
                                 : Container(color: AppColors.surface)),
                       ),
                     ),
@@ -474,14 +477,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       children: songs.map((s) {
         final url = ThumbnailUtils.getHighRes(s.thumbnail, size: 120);
         return url.isNotEmpty
-            ? CachedNetworkImage(imageUrl: url, fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => Container(color: AppColors.surface))
+            ? (!url.startsWith('http')
+                ? Image.file(File(url), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                : CachedNetworkImage(imageUrl: url, fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => Container(color: AppColors.surface)))
             : Container(color: AppColors.surface);
       }).toList(),
     );
   }
 
-  void _downloadAllSongs(List<Song> songs) {
+  Future<void> _downloadAllSongs(List<Song> songs) async {
     final downloads = ref.read(downloadProvider.notifier);
     
     final isOffline = widget.playlistId.startsWith('__pl__') || widget.playlistId == '__downloads__';
@@ -491,15 +496,56 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final isYtm = _ytmPlaylist != null && firestorePlaylist == null;
     final playlist = isOffline ? _offlinePlaylist : (isYtm ? _ytmPlaylist : firestorePlaylist);
 
+    int newDownloadsCount = 0;
     for (final song in songs) {
-      downloads.downloadSong(song, contextPlaylist: playlist);
+      final isDownloaded = await downloads.isDownloaded(song.videoId);
+      final isDownloading = ref.read(downloadProvider).activeDownloads.containsKey(song.videoId);
+      if (!isDownloaded && !isDownloading) {
+        downloads.downloadSong(song, contextPlaylist: playlist);
+        newDownloadsCount++;
+      }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Starting download for ${songs.length} song${songs.length > 1 ? 's' : ''}'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    
+    if (!mounted) return;
+
+    if (newDownloadsCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Downloading $newDownloadsCount song${newDownloadsCount > 1 ? 's' : ''}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  context.push('/downloading');
+                },
+                child: Text('VIEW', style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'All songs are already downloaded',
+            style: TextStyle(color: Colors.white),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _sharePlaylist(String name, bool isYtm) {

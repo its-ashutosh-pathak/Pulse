@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/theme/app_colors.dart';
@@ -79,23 +80,34 @@ class SongTile extends ConsumerWidget {
                     fit: StackFit.expand,
                     children: [
                       thumbUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: thumbUrl,
-                              width: 48,
-                              height: 48,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => Container(
-                                color: AppColors.surface,
-                              ),
-                              errorWidget: (_, __, ___) => Container(
-                                color: AppColors.surface,
-                                child: const Icon(
-                                  Icons.music_note,
-                                  color: AppColors.textSecondary,
-                                  size: 20,
-                                ),
-                              ),
-                            )
+                          ? (!thumbUrl.startsWith('http')
+                              ? Image.file(
+                                  File(thumbUrl),
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    color: AppColors.surface,
+                                    child: const Icon(Icons.music_note, color: AppColors.textSecondary, size: 20),
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: thumbUrl,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => Container(
+                                    color: AppColors.surface,
+                                  ),
+                                  errorWidget: (_, __, ___) => Container(
+                                    color: AppColors.surface,
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      color: AppColors.textSecondary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ))
                           : Container(
                               color: AppColors.surface,
                               child: const Icon(

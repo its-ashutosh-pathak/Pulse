@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -11,6 +12,7 @@ import '../../data/models/song.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/import_provider.dart';
+import '../../providers/download_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/playing_bars.dart';
 
@@ -81,8 +83,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     final playlistState = ref.watch(playlistProvider);
     final importState = ref.watch(importProvider);
+    final downloadState = ref.watch(downloadProvider);
     final playlists = playlistState.playlists;
     final accent = Theme.of(context).colorScheme.primary;
+
+    final activeCount = downloadState.activeDownloads.length;
+    final totalProgress = activeCount > 0 
+        ? downloadState.activeDownloads.values.map((v) => v.progress).reduce((a, b) => a + b) / activeCount 
+        : 0.0;
 
     // Sort
     final sorted = _sortPlaylists(playlists);
@@ -123,6 +131,29 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                       size: 18, color: AppColors.textSecondary),
                                 ),
                               ),
+                              if (activeCount > 0)
+                                GestureDetector(
+                                  onTap: () => context.push('/downloading'),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            value: totalProgress,
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(accent),
+                                            backgroundColor: AppColors.glassBorder,
+                                          ),
+                                        ),
+                                        Icon(LucideIcons.arrowDown, size: 10, color: accent),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               const SizedBox(width: 4),
                               // View toggle
                               GestureDetector(
@@ -556,10 +587,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                         child: SizedBox(
                                           width: 40, height: 40,
                                           child: thumb.isNotEmpty
-                                              ? CachedNetworkImage(
-                                                  imageUrl: thumb, fit: BoxFit.cover,
-                                                  errorWidget: (_, __, ___) =>
-                                                      Container(color: AppColors.surface))
+                                              ? (!thumb.startsWith('http')
+                                                  ? Image.file(
+                                                      File(thumb),
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (_, __, ___) => Container(color: AppColors.surface),
+                                                    )
+                                                  : CachedNetworkImage(
+                                                      imageUrl: thumb,
+                                                      fit: BoxFit.cover,
+                                                      errorWidget: (_, __, ___) => Container(color: AppColors.surface),
+                                                    ))
                                               : Container(color: AppColors.surface),
                                         ),
                                       ),

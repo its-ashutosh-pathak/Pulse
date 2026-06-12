@@ -7,6 +7,7 @@ import '../../screens/player/player_screen.dart';
 import '../../screens/playlist/playlist_screen.dart';
 import '../../screens/artist/artist_screen.dart';
 import '../../screens/downloads/downloads_screen.dart';
+import '../../screens/library/downloading_screen.dart';
 import '../../screens/settings/settings_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/import/import_screen.dart';
@@ -124,6 +125,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'Downloads',
             path: '/downloads',
             builder: (context, state) => const DownloadsScreen(),
+          ),
+          GoRoute(
+            name: 'Downloading',
+            path: '/downloading',
+            builder: (context, state) => const DownloadingScreen(),
           ),
           GoRoute(
             name: 'Playlist',

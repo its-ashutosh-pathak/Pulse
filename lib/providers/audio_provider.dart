@@ -249,7 +249,7 @@ class AudioNotifier extends Notifier<AudioState> {
   // ── Core play function ─────────────────────────────────────────────────────
   // Port of `playSong()` from AudioContext.jsx (lines 636-770).
 
-  Future<void> playSong(Song song, {String? offlineFilePath, bool clearQueue = false, String? contextPlaylistId}) async {
+  Future<void> playSong(Song song, {String? offlineFilePath, bool clearQueue = false, String? contextPlaylistId, bool isPrev = false}) async {
     // Normalize (mirrors lines 638-643)
     final normalizedSong = song.copyWith(
       id: song.videoId.isNotEmpty ? song.videoId : song.id,
@@ -275,7 +275,7 @@ class AudioNotifier extends Notifier<AudioState> {
     }
 
     // Push current to history (mirrors lines 660-663)
-    if (state.currentSong != null) {
+    if (state.currentSong != null && !isPrev) {
       final newHistory = [state.currentSong!, ...state.history];
       state = state.copyWith(
         history: newHistory.length > 50
@@ -286,6 +286,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
     // Cancel any active crossfade (mirrors lines 667-674)
     _crossfadeEngine.cancelCrossfade();
+    _isCrossfadePending = false;
 
     // Reset state for new song
     _statsThresholdReached = false;
@@ -463,7 +464,7 @@ class AudioNotifier extends Notifier<AudioState> {
         state = state.copyWith(history: restHistory);
       }
 
-      playSong(prevSong);
+      playSong(prevSong, isPrev: true);
     } else {
       // No history: just restart
       _crossfadeEngine.primaryPlayer.seek(Duration.zero);
@@ -837,9 +838,16 @@ class AudioNotifier extends Notifier<AudioState> {
   // ── Media notification helpers ─────────────────────────────────────────────
 
   void _updateMediaItem(Song song) {
-    final artUrl = song.thumbnail.isNotEmpty
-        ? ThumbnailUtils.getHighRes(song.thumbnail, size: 800)
-        : '';
+    Uri? artUri;
+    if (song.thumbnail.isNotEmpty) {
+      if (!song.thumbnail.startsWith('http')) {
+        artUri = Uri.file(song.thumbnail);
+      } else {
+        final artUrl = ThumbnailUtils.getHighRes(song.thumbnail, size: 800);
+        artUri = Uri.parse(artUrl);
+      }
+    }
+
     _handler.updateMediaItem(MediaItem(
       id: song.videoId,
       title: song.title,
@@ -848,23 +856,31 @@ class AudioNotifier extends Notifier<AudioState> {
       duration: song.duration > 0
           ? Duration(seconds: song.duration)
           : null,
-      artUri: artUrl.isNotEmpty ? Uri.parse(artUrl) : null,
+      artUri: artUri,
     ));
   }
 
   void _updateMediaItemDuration(Duration duration) {
     final current = state.currentSong;
     if (current == null) return;
-    final artUrl = current.thumbnail.isNotEmpty
-        ? ThumbnailUtils.getHighRes(current.thumbnail, size: 800)
-        : '';
+    
+    Uri? artUri;
+    if (current.thumbnail.isNotEmpty) {
+      if (!current.thumbnail.startsWith('http')) {
+        artUri = Uri.file(current.thumbnail);
+      } else {
+        final artUrl = ThumbnailUtils.getHighRes(current.thumbnail, size: 800);
+        artUri = Uri.parse(artUrl);
+      }
+    }
+
     _handler.updateMediaItem(MediaItem(
       id: current.videoId,
       title: current.title,
       artist: current.artist,
       album: current.album,
       duration: duration,
-      artUri: artUrl.isNotEmpty ? Uri.parse(artUrl) : null,
+      artUri: artUri,
     ));
   }
 
@@ -874,12 +890,18 @@ class AudioNotifier extends Notifier<AudioState> {
     final song = state.currentSong;
     if (song == null) return;
     final auth = ref.read(authProvider.notifier);
+    
+    // Convert local cover paths back to network paths for Firestore to avoid cross-device breakage
+    final coverUrl = (!song.thumbnail.startsWith('http') && song.thumbnail.isNotEmpty)
+        ? 'https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg'
+        : song.thumbnail;
+
     auth.updatePlaybackStats(
       videoId: song.videoId,
       secondsListened: state.progress.inSeconds,
       title: song.title,
       artist: song.artist,
-      cover: song.thumbnail,
+      cover: coverUrl,
     );
   }
 

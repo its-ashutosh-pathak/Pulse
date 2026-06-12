@@ -28,6 +28,7 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
   Artist? _artist;
   bool _loading = true;
   bool _error = false;
+  bool _navigating = false;
 
   @override
   void initState() {
@@ -357,7 +358,20 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
   Widget _buildAlbumCard(ArtistAlbum album) {
     final thumb = ThumbnailUtils.getHighRes(album.thumbnail, size: 400);
     return GestureDetector(
-      onTap: () => context.push('/playlist/${album.browseId}'),
+      onTap: () {
+        if (_navigating) return;
+        setState(() => _navigating = true);
+        final router = GoRouter.of(context);
+        final browseId = album.browseId;
+        final t = DateTime.now().millisecondsSinceEpoch;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          router.push('/playlist/$browseId?t=$t');
+          // Reset after a short delay to allow back navigation
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) setState(() => _navigating = false);
+          });
+        });
+      },
       child: SizedBox(
         width: 130,
         child: Column(

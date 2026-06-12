@@ -92,6 +92,32 @@ class AuthNotifier extends Notifier<AuthState> {
         });
       } else {
         final data = snap.data()!;
+        
+        // Repair missing fields for affected users & fix race condition
+        bool needsRepair = false;
+        final repairUpdates = <String, dynamic>{};
+
+        if (data['email'] == null && firebaseUser.email != null) {
+          repairUpdates['email'] = firebaseUser.email;
+          needsRepair = true;
+        }
+        if (data['uid'] == null) {
+          repairUpdates['uid'] = firebaseUser.uid;
+          needsRepair = true;
+        }
+        if (data['createdAt'] == null) {
+          repairUpdates['createdAt'] = FieldValue.serverTimestamp();
+          needsRepair = true;
+        }
+        if (data['photoURL'] == null && firebaseUser.photoURL != null) {
+          repairUpdates['photoURL'] = firebaseUser.photoURL;
+          needsRepair = true;
+        }
+
+        if (needsRepair) {
+          await ref.set(repairUpdates, SetOptions(merge: true));
+        }
+
         // Prefer Firestore profile data over Firebase Auth data
         if (data['displayName'] != null) displayName = data['displayName'];
         if (data['photoURL'] != null) photoURL = data['photoURL'];
@@ -213,6 +239,13 @@ class AuthNotifier extends Notifier<AuthState> {
         'date': date,
         'totalSeconds': FieldValue.increment(actualSeconds),
         'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // 1b. Root user document (lifetime totals)
+      final userRef = _db.collection('users').doc(user.uid);
+      batch.set(userRef, {
+        'lifetimeTotalSeconds': FieldValue.increment(actualSeconds),
+        'lastUpdated': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
       // 2. Per-song stats
