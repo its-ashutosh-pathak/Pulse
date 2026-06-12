@@ -34,14 +34,14 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     // Check initial connectivity
     Connectivity().checkConnectivity().then((result) {
       if (mounted) {
-        setState(() => _isOffline = result.every((r) => r == ConnectivityResult.none));
+        setState(() => _isOffline = result.isEmpty || !result.any((r) => r == ConnectivityResult.wifi || r == ConnectivityResult.mobile || r == ConnectivityResult.ethernet));
       }
     });
 
     // Listen for connectivity changes
     _connectivitySub = Connectivity().onConnectivityChanged.listen((result) {
       if (mounted) {
-        setState(() => _isOffline = result.every((r) => r == ConnectivityResult.none));
+        setState(() => _isOffline = result.isEmpty || !result.any((r) => r == ConnectivityResult.wifi || r == ConnectivityResult.mobile || r == ConnectivityResult.ethernet));
       }
     });
 
@@ -54,10 +54,12 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         _showUpdateDialog(updateState.value!);
       } else {
         // Still loading — listen for when it resolves
-        ref.listenManual<AsyncValue<AppUpdateInfo?>>(
+        ProviderSubscription? sub;
+        sub = ref.listenManual<AsyncValue<AppUpdateInfo?>>(
           updateNotifierProvider,
           (previous, next) {
             if (next.value?.isUpdateAvailable == true) {
+              sub?.close();
               _showUpdateDialog(next.value!);
             }
           },

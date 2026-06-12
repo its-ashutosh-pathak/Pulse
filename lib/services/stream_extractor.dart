@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -15,7 +16,16 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 ///   (Backend extraction → URL locked to server IP → phone can't play → ❌)
 class StreamExtractor {
   /// Singleton YoutubeExplode client — reused across calls for performance.
-  static final YoutubeExplode _yt = YoutubeExplode();
+  static YoutubeExplode _yt = YoutubeExplode();
+  static Timer? _refreshTimer;
+
+  static void _ensureTimer() {
+    _refreshTimer ??= Timer.periodic(const Duration(hours: 4), (_) {
+      debugPrint('[StreamExtractor] 🔄 Proactively refreshing YoutubeExplode session');
+      _yt.close();
+      _yt = YoutubeExplode();
+    });
+  }
 
   /// Gets an audio stream URL for a given videoId.
   /// Tries multiple YouTube API clients in order of reliability on mobile.
@@ -26,6 +36,7 @@ class StreamExtractor {
   ///   - 'low'       → ≤ 64 kbps
   ///   - 'automatic' → highest available (same as 'high')
   static Future<String> getAudioStreamUrl(String videoId, {String quality = 'automatic'}) async {
+    _ensureTimer();
     final clients = [
       YoutubeApiClient.androidVr,
       YoutubeApiClient.ios,
@@ -68,6 +79,10 @@ class StreamExtractor {
         return url;
       } catch (e) {
         debugPrint('[StreamExtractor] ⚠️ $videoId client ${client.runtimeType} failed: $e');
+        if (e is VideoUnplayableException || e.toString().toLowerCase().contains('403') || e.toString().toLowerCase().contains('unplayable')) {
+          _yt.close();
+          _yt = YoutubeExplode();
+        }
         lastError = e is Exception ? e : Exception(e.toString());
       }
     }

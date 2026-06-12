@@ -113,6 +113,11 @@ class CrossfadeEngine {
       // 50ms interval matches the setInterval(50) fallback in AudioContext.jsx line 615
       _rampTimer?.cancel();
       _rampTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+        if (!_isCrossfading) {
+          timer.cancel();
+          return;
+        }
+        
         final elapsed = DateTime.now().millisecondsSinceEpoch - startTime;
         final progress = (elapsed / fadeMs).clamp(0.0, 1.0);
 
@@ -122,7 +127,7 @@ class CrossfadeEngine {
 
         if (progress >= 1.0) {
           timer.cancel();
-          _rampTimer = null;
+          if (_rampTimer == timer) _rampTimer = null;
           _isPrepared = false;
           _completeCrossfadeSwap();
         }

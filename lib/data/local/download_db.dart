@@ -151,6 +151,7 @@ class DownloadDb {
               album: (row['album'] as String?) ?? '',
               thumbnail: (row['thumbnail'] as String?) ?? '',
               duration: (row['duration'] as int?) ?? 0,
+              localPath: row['filePath'] as String?,
             ))
         .toList();
   }
@@ -304,6 +305,7 @@ class DownloadDb {
               album: (row['album'] as String?) ?? '',
               thumbnail: (row['thumbnail'] as String?) ?? '',
               duration: (row['duration'] as int?) ?? 0,
+              localPath: row['filePath'] as String?,
             ))
         .toList();
   }
@@ -311,23 +313,30 @@ class DownloadDb {
   /// Get all offline playlists.
   Future<List<Playlist>> getAllOfflinePlaylists() async {
     final db = await database;
-    final rows = await db.query('offline_playlists', orderBy: 'createdAt DESC');
     
-    List<Playlist> playlists = [];
-    for (var row in rows) {
-      final id = row['id'] as String;
-      final name = row['name'] as String;
-      final tracks = await getPlaylistTracks(id);
-      
-      playlists.add(Playlist(
-        id: id,
-        name: name,
+    // Fetch playlists and only the thumbnail of the first track
+    final rows = await db.rawQuery('''
+      SELECT 
+        op.id as playlistId, op.name as playlistName, op.createdAt,
+        (SELECT dt.thumbnail 
+         FROM playlist_tracks pt 
+         JOIN downloaded_tracks dt ON pt.videoId = dt.videoId 
+         WHERE pt.playlistId = op.id 
+         ORDER BY pt.position ASC 
+         LIMIT 1) as thumbnail
+      FROM offline_playlists op
+      ORDER BY op.createdAt DESC
+    ''');
+    
+    return rows.map((row) {
+      return Playlist(
+        id: row['playlistId'] as String,
+        name: row['playlistName'] as String,
         type: 'OFFLINE_PLAYLIST',
-        songs: tracks,
-        thumbnail: tracks.isNotEmpty ? tracks.first.thumbnail : null,
-      ));
-    }
-    return playlists;
+        songs: [], // Lazy loaded
+        thumbnail: row['thumbnail'] as String?,
+      );
+    }).toList();
   }
 
   // ── Lyrics Cache ──

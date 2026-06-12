@@ -157,63 +157,61 @@ class DownloadNotifier extends Notifier<DownloadState> {
         downloadedBytes = await tempFile.length();
       }
 
-      if (directUrl != null) {
-        final dio = Dio(BaseOptions(
-          connectTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 300),
-        ));
-        
-        final response = await dio.get<ResponseBody>(
-          directUrl,
-          cancelToken: cancelToken,
-          options: Options(
-            responseType: ResponseType.stream,
-            headers: {
-              'Range': 'bytes=$downloadedBytes-',
-              'User-Agent':
-                  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
-              'Origin': 'https://www.youtube.com',
-              'Referer': 'https://www.youtube.com/',
-            },
-            validateStatus: (status) => status != null && status < 400,
-          ),
-        );
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 20),
+        receiveTimeout: const Duration(seconds: 300),
+      ));
+      
+      final response = await dio.get<ResponseBody>(
+        directUrl,
+        cancelToken: cancelToken,
+        options: Options(
+          responseType: ResponseType.stream,
+          headers: {
+            'Range': 'bytes=$downloadedBytes-',
+            'User-Agent':
+                'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            'Origin': 'https://www.youtube.com',
+            'Referer': 'https://www.youtube.com/',
+          },
+          validateStatus: (status) => status != null && status < 400,
+        ),
+      );
 
-        final totalHeader = response.headers.value(HttpHeaders.contentRangeHeader);
-        int totalLength = 0;
-        if (totalHeader != null && totalHeader.contains('/')) {
-          totalLength = int.tryParse(totalHeader.split('/').last) ?? 0;
-        } else {
-          totalLength = int.tryParse(response.headers.value(HttpHeaders.contentLengthHeader) ?? '0') ?? 0;
-          totalLength += downloadedBytes;
-        }
-        
-        // Add a realistic 150KB for cover art and lyrics instead of 2MB
-        final estimatedTotalData = totalLength + (150 * 1024); 
+      final totalHeader = response.headers.value(HttpHeaders.contentRangeHeader);
+      int totalLength = 0;
+      if (totalHeader != null && totalHeader.contains('/')) {
+        totalLength = int.tryParse(totalHeader.split('/').last) ?? 0;
+      } else {
+        totalLength = int.tryParse(response.headers.value(HttpHeaders.contentLengthHeader) ?? '0') ?? 0;
+        totalLength += downloadedBytes;
+      }
+      
+      // Add a realistic 150KB for cover art and lyrics instead of 2MB
+      final estimatedTotalData = totalLength + (150 * 1024); 
 
-        final sink = tempFile.openWrite(mode: FileMode.append);
-        int currentBytes = downloadedBytes;
+      final sink = tempFile.openWrite(mode: FileMode.append);
+      int currentBytes = downloadedBytes;
 
-        try {
-          await for (final chunk in response.data!.stream) {
-            if (cancelToken.isCancelled) {
-              await sink.close();
-              return; // Paused/Cancelled
-            }
-            sink.add(chunk);
-            currentBytes += chunk.length;
-            _updateProgress(
-              videoId, 
-              totalLength > 0 ? currentBytes / totalLength : 0.5,
-              song: song,
-              receivedBytes: currentBytes,
-              totalBytes: estimatedTotalData,
-              cancelToken: cancelToken,
-            );
+      try {
+        await for (final chunk in response.data!.stream) {
+          if (cancelToken.isCancelled) {
+            await sink.close();
+            return; // Paused/Cancelled
           }
-        } finally {
-          await sink.close();
+          sink.add(chunk);
+          currentBytes += chunk.length;
+          _updateProgress(
+            videoId, 
+            totalLength > 0 ? currentBytes / totalLength : 0.5,
+            song: song,
+            receivedBytes: currentBytes,
+            totalBytes: estimatedTotalData,
+            cancelToken: cancelToken,
+          );
         }
+      } finally {
+        await sink.close();
       }
 
       final filePath = p.join(downloadDir.path, '$videoId.$ext');
@@ -238,7 +236,9 @@ class DownloadNotifier extends Notifier<DownloadState> {
             finalFileSize += await coverFile.length();
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        debugPrint('[Download] Thumbnail download failed: $e');
+      }
 
       try {
         final musicApi = MusicApi();
@@ -248,7 +248,9 @@ class DownloadNotifier extends Notifier<DownloadState> {
           // Approximate lyrics size
           finalFileSize += lyrics.toJson().toString().length;
         }
-      } catch (e) {}
+      } catch (e) {
+        debugPrint('[Download] Lyrics download failed: $e');
+      }
 
       await _db.saveTrack(
         videoId: videoId,
@@ -272,7 +274,9 @@ class DownloadNotifier extends Notifier<DownloadState> {
             await _db.addTrackToPlaylist('__pl__${pl.id}', pl.name, videoId);
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        debugPrint('[Download] Add to playlist failed: $e');
+      }
 
       _markComplete(videoId);
       await _refreshCounts();
@@ -343,6 +347,7 @@ class DownloadNotifier extends Notifier<DownloadState> {
 
   Future<List<Song>> getAllDownloadedSongs() => _db.getAllTracks();
   Future<List<Playlist>> getAllOfflinePlaylists() => _db.getAllOfflinePlaylists();
+  Future<List<Song>> getPlaylistTracks(String playlistId) => _db.getPlaylistTracks(playlistId);
   Future<void> renameOfflinePlaylist(String playlistId, String newName) => _db.renameOfflinePlaylist(playlistId, newName);
   Future<void> updateOfflinePlaylistSongs(String playlistId, List<String> videoIds) => _db.updateOfflinePlaylistSongs(playlistId, videoIds);
   Future<void> deleteOfflinePlaylist(String playlistId) => _db.deleteOfflinePlaylist(playlistId);

@@ -301,20 +301,32 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
   Future<void> removeSongFromPlaylist(String playlistId, int songIndex) async {
     try {
       final playlist = state.playlists.firstWhere((p) => p.id == playlistId);
-      final newSongs = List<Song>.from(playlist.songs);
-      if (songIndex < 0 || songIndex >= newSongs.length) return;
-      newSongs.removeAt(songIndex);
+      if (songIndex < 0 || songIndex >= playlist.songs.length) return;
+      
+      final targetVideoId = playlist.songs[songIndex].videoId;
 
-      if (newSongs.isEmpty) {
+      // 1. Optimistic UI Update: Immediately remove from local state
+      final updatedSongs = List<Song>.from(playlist.songs);
+      updatedSongs.removeAt(songIndex);
+      
+      if (updatedSongs.isEmpty) {
         await deletePlaylist(playlistId);
         return;
       }
 
-      // 1. Sync removal with offline DB immediately (Natively Offline)
+      final updatedPlaylists = state.playlists.map((p) {
+        if (p.id == playlistId) {
+          return p.copyWith(songs: updatedSongs);
+        }
+        return p;
+      }).toList();
+      state = state.copyWith(playlists: updatedPlaylists);
+
+      // 2. Sync removal with offline DB immediately (Natively Offline)
       try {
         final downloadedSongs = await DownloadDb.instance.getAllTracks();
         final downloadedIds = downloadedSongs.map((s) => s.videoId).toSet();
-        final offlineVideoIds = newSongs
+        final offlineVideoIds = updatedSongs
             .map((s) => s.videoId)
             .where((id) => downloadedIds.contains(id))
             .toList();
@@ -323,8 +335,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         debugPrint('[Playlist] Offline sync error: $e');
       }
 
-      // 2. Sync to Firestore in the background using Transaction (Fixes race condition)
-      final targetVideoId = playlist.songs[songIndex].videoId;
+      // 3. Sync to Firestore in the background using Transaction
       _db.runTransaction((transaction) async {
         final docRef = _db.collection('playlists').doc(playlistId);
         final snapshot = await transaction.get(docRef);
@@ -348,13 +359,25 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
             
         if (serverIndex >= 0) {
           currentSongs.removeAt(serverIndex);
-          transaction.update(docRef, {
-            'songs': currentSongs,
-            'lastUpdated': FieldValue.serverTimestamp(),
-          });
+          if (currentSongs.isEmpty) {
+            transaction.delete(docRef);
+          } else {
+            transaction.update(docRef, {
+              'songs': currentSongs,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            });
+          }
         }
       }).catchError((e) {
         debugPrint('[Playlist] Transaction sync error: $e');
+        // Rollback optimistic update
+        final rollbackPlaylists = state.playlists.map((p) {
+          if (p.id == playlistId) {
+            return p.copyWith(songs: playlist.songs); // revert to original list
+          }
+          return p;
+        }).toList();
+        state = state.copyWith(playlists: rollbackPlaylists);
       });
     } catch (e) {
       // ignore: avoid_print
@@ -473,7 +496,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
     if (liked == null) return;
 
     final index = liked.songs.indexWhere(
-      (s) => s.id == song.id || s.videoId == song.id,
+      (s) => s.id == song.id || s.videoId == song.videoId,
     );
 
     if (index >= 0) {

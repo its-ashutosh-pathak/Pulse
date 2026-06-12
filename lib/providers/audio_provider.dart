@@ -143,9 +143,8 @@ class AudioNotifier extends Notifier<AudioState> {
     _handler.onLikePressed = () {
       final song = state.currentSong;
       if (song != null) {
-        ref.read(playlistProvider.notifier).toggleLike(song);
-        // Toggle the notification heart icon immediately
         final wasLiked = ref.read(playlistProvider.notifier).isLiked(song.videoId);
+        ref.read(playlistProvider.notifier).toggleLike(song);
         _handler.updateLikedState(!wasLiked);
       }
     };
@@ -622,7 +621,6 @@ class AudioNotifier extends Notifier<AudioState> {
   // ── Crossfade trigger ──────────────────────────────────────────────────────
 
   Future<void> _preloadNextSong() async {
-    if (_isPreloadingNext) return;
 
     Song? nextSong;
     if (state.queue.isNotEmpty) {
@@ -634,7 +632,12 @@ class AudioNotifier extends Notifier<AudioState> {
     if (nextSong == null || nextSong.videoId.isEmpty) return;
     if (_preloadedNextSongId == nextSong.videoId) return;
 
+    final targetId = nextSong.videoId;
+    if (_isPreloadingNext && _preloadedNextSongId == targetId) return;
+
     _isPreloadingNext = true;
+    _preloadedNextSongId = targetId;
+    
     try {
       final downloads = ref.read(downloadProvider.notifier);
       final settings = ref.read(settingsProvider);
@@ -655,12 +658,17 @@ class AudioNotifier extends Notifier<AudioState> {
         localFilePath: localPath,
       );
 
-      if (success) {
-        _preloadedNextSongId = nextSong.videoId;
+      if (!success && _preloadedNextSongId == targetId) {
+        _preloadedNextSongId = null;
       }
     } catch (_) {
+      if (_preloadedNextSongId == targetId) {
+        _preloadedNextSongId = null;
+      }
     } finally {
-      _isPreloadingNext = false;
+      if (_preloadedNextSongId == targetId) {
+        _isPreloadingNext = false;
+      }
     }
   }
 
@@ -788,8 +796,11 @@ class AudioNotifier extends Notifier<AudioState> {
   /// Fetch watch-next suggestions and add to queue (non-blocking).
   /// Mirrors lines 752-765 of AudioContext.jsx.
   Future<void> _fetchWatchNext(String videoId) async {
+    final currentGen = _loadGeneration;
     try {
       final tracks = await _musicApi.getWatchNext(videoId);
+      if (_loadGeneration != currentGen) return; // Discard if generation changed
+      
       if (tracks.isNotEmpty) {
         // Filter out current song if it happens to be the first search result seed
         final filtered = state.currentSong != null 

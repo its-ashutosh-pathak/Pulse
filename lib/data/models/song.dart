@@ -14,6 +14,7 @@ class Song {
   final String? year;
   final String? itemCount;
   final String type; // SONG, ALBUM, PLAYLIST, ARTIST, SINGLE
+  final String? localPath;
 
   const Song({
     required this.id,
@@ -30,6 +31,7 @@ class Song {
     this.year,
     this.itemCount,
     this.type = 'SONG',
+    this.localPath,
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class Song {
       year: json['year']?.toString(),
       itemCount: json['itemCount']?.toString(),
       type: json['type']?.toString() ?? 'SONG',
+      localPath: json['localPath']?.toString(),
     );
   }
 
@@ -72,6 +75,7 @@ class Song {
         'year': year,
         'itemCount': itemCount,
         'type': type,
+        'localPath': localPath,
       };
 
   /// Whether this is a playable song (11-char YouTube video ID).
@@ -92,6 +96,7 @@ class Song {
     String? year,
     String? itemCount,
     String? type,
+    String? localPath,
   }) {
     return Song(
       id: id ?? this.id,
@@ -108,6 +113,7 @@ class Song {
       year: year ?? this.year,
       itemCount: itemCount ?? this.itemCount,
       type: type ?? this.type,
+      localPath: localPath ?? this.localPath,
     );
   }
 

@@ -58,6 +58,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
   void _fetchYtmIfNeeded() {
     final id = widget.playlistId;
+    if (_ytmPlaylist != null && _ytmPlaylist!.id == id) return;
 
     if (id == '__downloads__') {
       setState(() { _offlineLoading = true; _ytmError = false; });
@@ -70,8 +71,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
     if (id.startsWith('__pl__')) {
       setState(() { _offlineLoading = true; _ytmError = false; });
-      ref.read(downloadProvider.notifier).getAllOfflinePlaylists().then((lists) {
-        final pl = lists.firstWhere((p) => p.id == id, orElse: () => Playlist(id: id, name: 'Offline Playlist'));
+      ref.read(downloadProvider.notifier).getAllOfflinePlaylists().then((lists) async {
+        var pl = lists.firstWhere((p) => p.id == id, orElse: () => Playlist(id: id, name: 'Offline Playlist'));
+        final tracks = await ref.read(downloadProvider.notifier).getPlaylistTracks(id);
+        pl = pl.copyWith(songs: tracks, thumbnail: tracks.isNotEmpty ? tracks.first.thumbnail : pl.thumbnail);
         if (mounted) setState(() { _offlinePlaylist = pl; _offlineLoading = false; });
       }).catchError((_) {
         if (mounted) setState(() { _ytmError = true; _offlineLoading = false; });

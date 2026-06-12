@@ -243,17 +243,20 @@ class _MarqueeTextState extends State<_MarqueeText>
     WidgetsBinding.instance.addPostFrameCallback((_) => _startScroll());
   }
 
+  void _animationListener() {
+    if (_controller.hasClients) {
+      _controller.jumpTo(
+          _animation.value * _controller.position.maxScrollExtent);
+    }
+  }
+
   void _startScroll() {
     if (!mounted) return;
     if (_controller.hasClients &&
         _controller.position.maxScrollExtent > 0) {
+      _animation.removeListener(_animationListener);
+      _animation.addListener(_animationListener);
       _animation.repeat();
-      _animation.addListener(() {
-        if (_controller.hasClients) {
-          _controller.jumpTo(
-              _animation.value * _controller.position.maxScrollExtent);
-        }
-      });
     }
   }
 
