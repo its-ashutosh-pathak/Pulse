@@ -110,7 +110,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (status != PermissionStatus.granted) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission required for voice search')),
+          SnackBar(
+            content: const Text('Microphone permission required for voice search', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.black,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
       }
       return;
@@ -142,7 +147,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Speech recognition not available')),
+          SnackBar(
+            content: const Text('Speech recognition not available', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.black,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         );
       }
     }

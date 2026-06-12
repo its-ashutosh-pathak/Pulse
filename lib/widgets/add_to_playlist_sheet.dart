@@ -271,11 +271,21 @@ class AddToPlaylistSheet extends ConsumerWidget {
                                 Navigator.pop(context); // Close bottom sheet
                               }
                               scaffoldMessengerKey.currentState?.showSnackBar(
-                                SnackBar(content: Text('Added to $name')),
+                                SnackBar(
+                                  content: Text('Added to $name', style: const TextStyle(color: Colors.white)),
+                                  backgroundColor: Colors.black,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
                               );
                             } else {
                               scaffoldMessengerKey.currentState?.showSnackBar(
-                                const SnackBar(content: Text('Failed to create playlist: Authentication error')),
+                                SnackBar(
+                                  content: const Text('Failed to create playlist: Authentication error', style: TextStyle(color: Colors.white)),
+                                  backgroundColor: Colors.black,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
                               );
                             }
                           } catch (e) {
@@ -283,7 +293,12 @@ class AddToPlaylistSheet extends ConsumerWidget {
                               Navigator.pop(context); // Close bottom sheet
                             }
                             scaffoldMessengerKey.currentState?.showSnackBar(
-                              SnackBar(content: Text('Failed to create playlist: $e')),
+                              SnackBar(
+                                content: Text('Failed to create playlist: $e', style: const TextStyle(color: Colors.white)),
+                                backgroundColor: Colors.black,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
                             );
                           }
                         }

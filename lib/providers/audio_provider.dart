@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart' show SnackBar, Text, Colors, debugPrint;
+import 'package:flutter/material.dart' show SnackBar, Text, Colors, debugPrint, TextStyle, SnackBarBehavior, RoundedRectangleBorder, BorderRadius;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -394,8 +394,10 @@ class AudioNotifier extends Notifier<AudioState> {
           _handler.stopCurrent(); // Clears buffering state and drops wake lock
           scaffoldMessengerKey.currentState?.showSnackBar(
             SnackBar(
-              content: const Text('Playback failed. Check your internet connection.'),
-              backgroundColor: Colors.red.shade800,
+              content: const Text('Playback failed. Check your internet connection.', style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.black,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }

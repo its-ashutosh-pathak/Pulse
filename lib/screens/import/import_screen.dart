@@ -29,14 +29,6 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     if (url.isEmpty) return;
 
     ref.read(importProvider.notifier).startImport(url);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Import started in background. Check your library.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    
     context.pop();
   }
 
@@ -78,14 +70,14 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                     children: [
                       Icon(LucideIcons.music2, size: 18, color: accent),
                       const SizedBox(width: 8),
-                      const Text('Import from YouTube Music',
+                      const Text('Import from YT Music or Spotify',
                           style: TextStyle(fontSize: 15,
                               fontWeight: FontWeight.w600)),
                     ],
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Paste a public YouTube Music playlist URL to import it into your Pulse library in the background.',
+                    'Paste a public YouTube Music or Spotify playlist URL to import it into your Pulse library in the background.',
                     style: TextStyle(fontSize: 12,
                         color: AppColors.textSecondary, height: 1.5),
                   ),
@@ -114,7 +106,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                       controller: _urlC,
                       style: const TextStyle(fontSize: 13),
                       decoration: const InputDecoration(
-                        hintText: 'https://music.youtube.com/playlist?list=...',
+                        hintText: 'Paste a PUBLIC playlist URL here...',
                         hintStyle: TextStyle(fontSize: 12,
                             color: AppColors.textSecondary),
                         border: InputBorder.none,

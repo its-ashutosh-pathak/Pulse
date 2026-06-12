@@ -81,6 +81,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(importProvider, (previous, current) {
+      if (previous == null) return;
+      for (final key in current.keys) {
+        final currentTask = current[key]!;
+        final previousTask = previous[key];
+        if (currentTask.status == 'error' && (previousTask == null || previousTask.status != 'error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(currentTask.name, style: const TextStyle(color: Colors.white)),
+              backgroundColor: Colors.black,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+          Future.microtask(() => ref.read(importProvider.notifier).dismissTask(key));
+        }
+      }
+    });
+
     final playlistState = ref.watch(playlistProvider);
     final importState = ref.watch(importProvider);
     final downloadState = ref.watch(downloadProvider);
@@ -407,7 +426,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     Navigator.pop(context);
                     if (pl.name == 'Liked Songs') {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cannot rename the Liked Songs playlist.')),
+                        SnackBar(
+                          content: const Text('Cannot rename the Liked Songs playlist.', style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.black,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
                       );
                     } else {
                       _renameController.text = pl.name;
@@ -454,7 +478,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     Navigator.pop(context);
                     if (pl.name == 'Liked Songs') {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cannot delete the Liked Songs playlist.')),
+                        SnackBar(
+                          content: const Text('Cannot delete the Liked Songs playlist.', style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.black,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
                       );
                     } else {
                       setState(() { _editingPlaylist = pl; _showDeleteModal = true; });
@@ -681,7 +710,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     errorBuilder: (_, __, ___) => const Icon(LucideIcons.music2, size: 20),
                   ),
                   label: 'Import from YT Music',
-                  subtitle: 'Paste a playlist URL',
+                  subtitle: 'Paste a PUBLIC playlist URL',
                   comingSoon: false,
                   onTap: () {
                     setState(() {
@@ -700,9 +729,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     errorBuilder: (_, __, ___) => const Icon(LucideIcons.disc, size: 20, color: Color(0xFF1DB954)),
                   ),
                   label: 'Import from Spotify',
-                  subtitle: 'Paste a playlist URL',
-                  comingSoon: true,
-                  onTap: null,
+                  subtitle: 'Paste a PUBLIC playlist URL',
+                  comingSoon: false,
+                  onTap: () {
+                    setState(() {
+                      _showAddOptions = false;
+                      _selectedImportSource = 'spotify';
+                      _importUrlController.clear();
+                      _showImportModal = true;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextButton(
@@ -752,8 +788,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     isPulse
                         ? 'Paste a Pulse playlist URL'
                         : (isYtm
-                            ? 'Paste a YouTube Music playlist or album URL'
-                            : 'Paste a Spotify playlist URL'),
+                            ? 'Paste a PUBLIC YouTube Music playlist or album URL'
+                            : 'Paste a PUBLIC Spotify playlist URL'),
                     style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -798,18 +834,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                                   context.push('/playlist/$newId');
                                 } else if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Failed to import Pulse playlist')),
+                                    SnackBar(
+                                      content: const Text('Failed to import Pulse playlist', style: TextStyle(color: Colors.white)),
+                                      backgroundColor: Colors.black,
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    ),
                                   );
                                 }
                               }
                             } else {
                               // Spotify or YT Music bulk import
                               ref.read(importProvider.notifier).startImport(url);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Import started in background.')),
-                                );
-                              }
                             }
                           }
                         },

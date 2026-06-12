@@ -46,9 +46,10 @@ class _OfflineScreenState extends State<OfflineScreen>
     if (!isOnline) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Still offline. Please check your connection.'),
+          content: const Text('Still offline. Please check your connection.', style: TextStyle(color: Colors.white)),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.red.shade800,
+          backgroundColor: Colors.black,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
     }

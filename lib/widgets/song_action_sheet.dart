@@ -234,6 +234,9 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
     Navigator.pop(context);
     messenger.showSnackBar(
       SnackBar(
+        backgroundColor: Colors.black,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         content: Row(
           children: [
             const Expanded(
@@ -248,8 +251,6 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
             ),
           ],
         ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.black,
         duration: const Duration(seconds: 3),
       ),
     );

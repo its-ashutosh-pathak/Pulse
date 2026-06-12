@@ -533,19 +533,21 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.black,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           duration: const Duration(seconds: 3),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
+        SnackBar(
+          content: const Text(
             'All songs are already downloaded',
             style: TextStyle(color: Colors.white),
           ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.black,
-          duration: Duration(seconds: 3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          duration: const Duration(seconds: 3),
         ),
       );
     }

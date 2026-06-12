@@ -520,7 +520,12 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                     Navigator.pop(context);
                     if (pl.id == '__downloads__') {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cannot rename the master downloads playlist.')),
+                        SnackBar(
+                          content: const Text('Cannot rename the master downloads playlist.', style: TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.black,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
                       );
                     } else {
                       _renameController.text = pl.name;
