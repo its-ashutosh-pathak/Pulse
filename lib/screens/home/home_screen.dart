@@ -11,6 +11,7 @@ import '../../providers/audio_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/home_provider.dart';
+import '../../providers/stats_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/song_action_sheet.dart';
@@ -31,11 +32,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeProvider.notifier).loadHome();
+      ref.read(statsProvider.notifier).loadStats('week');
     });
   }
 
   Future<void> _loadHome() async {
     await ref.read(homeProvider.notifier).loadHome(forceRefresh: true);
+    await ref.read(statsProvider.notifier).loadStats('week', force: true);
   }
 
   String _greeting() {
@@ -54,6 +57,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final homeState = ref.watch(homeProvider);
     final accent = Theme.of(context).colorScheme.primary;
     final firstName = (auth.displayName ?? 'Member').split(' ').first;
+    
+    final stats = ref.watch(statsProvider);
+    final speedDialSongs = stats.topSongs.map((s) => Song.fromJson(s)).toList();
+    final recentlyPlayedSongs = stats.recentSongs.map((s) => Song.fromJson(s)).toList();
 
     return Scaffold(
       extendBody: true,
@@ -77,6 +84,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 _buildRecentPlaylistsGrid(playlists, audio),
               ],
               const SizedBox(height: 12),
+
+              // ── Recently Played ──
+              if (recentlyPlayedSongs.isNotEmpty) ...[
+                _buildSection(
+                  HomeSection(title: 'Recently played', items: recentlyPlayedSongs),
+                  audio,
+                ),
+              ],
+
+              // ── Speed dial ──
+              if (speedDialSongs.isNotEmpty) ...[
+                _buildSection(
+                  HomeSection(title: 'Speed dial', items: speedDialSongs.take(15).toList()),
+                  audio,
+                ),
+              ],
 
               // ── Music Sections ──
               if (homeState.loading && homeState.sections.isEmpty) ...[
@@ -254,16 +277,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _artPlaceholder() => Container(color: AppColors.surface);
 
   // ── Horizontal Song Section ──
-  Widget _buildSection(HomeSection section, AudioState audio) {
+  Widget _buildSection(HomeSection section, AudioState audio, {bool hasChevron = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 9),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(section.title,
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary, letterSpacing: -0.3)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(section.title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary, letterSpacing: -0.3)),
+              if (hasChevron)
+                const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.textSecondary),
+            ],
+          ),
           const SizedBox(height: 12),
           SizedBox(
             height: 190,

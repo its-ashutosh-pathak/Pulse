@@ -40,11 +40,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   String _sortKey = 'recent';
   String _sortOrder = 'desc';
   bool _showSortDropdown = false;
+  bool _showList = false;
 
   @override
   void initState() {
     super.initState();
     _fetchYtmIfNeeded();
+    // Defer heavy list rendering until the route transition completes (250ms)
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) setState(() => _showList = true);
+    });
   }
 
   @override
@@ -336,8 +341,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                       onTap: () {
                         if (songsToRender.isEmpty) return;
                         final notifier = ref.read(audioProvider.notifier);
-                        notifier.playSong(songsToRender.first, contextPlaylistId: widget.playlistId);
-                        notifier.replaceQueue(songsToRender.skip(1).toList());
+                        final isShuffled = audio.isShuffled;
+                        if (isShuffled) {
+                          // Pick a random starting song
+                          final shuffled = [...songsToRender]..shuffle();
+                          notifier.playSong(shuffled.first, contextPlaylistId: widget.playlistId);
+                          notifier.replaceQueue(shuffled.skip(1).toList());
+                        } else {
+                          notifier.playSong(songsToRender.first, contextPlaylistId: widget.playlistId);
+                          notifier.replaceQueue(songsToRender.skip(1).toList());
+                        }
                       },
                       child: Container(
                         width: 44, height: 44,
@@ -381,7 +394,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                               ],
                             ),
                           )
-                        : ListView.builder(
+                        : !_showList 
+                              ? const Center(child: CircularProgressIndicator())
+                              : ListView.builder(
                             padding: const EdgeInsets.only(bottom: 180),
                             itemCount: songsToRender.length,
                             itemBuilder: (context, i) {

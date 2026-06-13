@@ -71,13 +71,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 alignment: const Alignment(0.0, 0.85), // Aligns roughly with the mini player position above the nav bar
                 scale: CurvedAnimation(
                   parent: animation,
-                  curve: Curves.easeOutCubic,
+                  curve: Curves.easeInOutCubic,
                   reverseCurve: Curves.easeOutCubic,
                 ),
                 child: FadeTransition(
                   opacity: CurvedAnimation(
                     parent: animation,
-                    curve: Curves.easeOut,
+                    curve: Curves.easeIn,
                     reverseCurve: Curves.easeIn,
                   ),
                   child: child,

@@ -20,6 +20,8 @@ The name "Pulse" reflects its core philosophy: an alive, dynamic, and responsive
 - **Network Dropout Resilience:** Automatically skips unplayable tracks without freezing the app when losing signal.
 - **Crossfade Support:** Smooth transitions between tracks using a custom crossfade engine.
 - **Live Lyrics:** Real-time synced lyrics powered by LRCLIB, featuring a custom fallback mechanism to handle messy metadata.
+- **Playlist Import:** Seamlessly import your custom playlists directly from Spotify or YouTube Music.
+- **Personalized Home Feed:** A dynamic, locally-synced home screen that automatically adapts to your listening history with custom "Speed Dial" and "Recently Played" rows.
 - **Offline Downloads:** Download your favorite tracks and cached lyrics for 100% offline listening using local storage (`sqflite`).
 - **Cloud Synchronization:** Bi-directional syncing of your playlists, favorites, and settings across devices using Firebase Firestore and Authentication.
 - **Modern UI/UX:** A sleek, dark-themed user interface utilizing Material Design, Lucide icons, dynamic accent colors extracted from album art, and immersive system UI overlays.
@@ -39,8 +41,8 @@ Pulse uses the `youtube_explode_dart` library to extract raw stream URLs directl
 **Q: Do I need YouTube Premium to use Pulse?**
 No. Pulse bypasses ads and streams the audio directly from YouTube's public servers, functioning perfectly with or without a Premium account.
 
-**Q: Can I import my Spotify or Apple Music playlists?**
-We are currently working on a native, frictionless playlist importer. Due to API limitations on bulk data fetching, the feature is temporarily paused in v1.2.0 while we build a more robust backend solution.
+**Q: Can I import my Spotify or YouTube Music playlists?**
+Yes! Pulse now features a native playlist importer that lets you seamlessly migrate your existing custom playlists directly from Spotify or YouTube Music.
 
 **Q: Why isn't a song playing?**
 If a song is age-restricted or region-locked by YouTube, it cannot be streamed anonymously. Pulse will attempt to skip up to 3 unplayable tracks automatically to keep the music going. 

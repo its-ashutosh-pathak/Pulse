@@ -303,19 +303,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                   const SizedBox(height: 4),
                   GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () => launchUrl(
                         Uri.parse('https://itsashutoshpathak.vercel.app/'),
                         mode: LaunchMode.externalApplication,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Made with ❤️ by ',
-                            style: TextStyle(fontSize: 11,
-                                color: AppColors.textSecondary)),
-                        Text('Ashutosh Pathak',
-                            style: TextStyle(fontSize: 11, color: accent)),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Made with ❤️ by ',
+                              style: TextStyle(fontSize: 11,
+                                  color: AppColors.textSecondary)),
+                          Text('Ashutosh Pathak',
+                              style: TextStyle(fontSize: 11, color: accent)),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'dart:math' as math;
@@ -32,7 +33,10 @@ class PlayerScreen extends ConsumerStatefulWidget {
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   bool _showLyrics = false;
   double _flipDirection = 1.0;
-  double _sheetExtent = 0.08; // Min extent for the queue handle
+
+  // FIX 1: ValueNotifier instead of setState for sheet extent
+  // Prevents full Scaffold rebuild on every drag pixel
+  final _sheetExtentNotifier = ValueNotifier<double>(0.08);
 
   // Lyrics
   String _lyricsState = 'idle'; // idle | loading | loaded | error | not-found
@@ -42,9 +46,16 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   final Map<int, GlobalKey> _lyricKeys = {};
   int _lastAutoScrolledIndex = -1;
 
+  // FIX 6: Lyric user scroll tracking with idle timer
+  bool _userScrollingLyrics = false;
+  Timer? _scrollIdleTimer;
+  int _lastScheduledIndex = -1; // FIX 3: guard against repeated postFrameCallbacks
+
   @override
   void initState() {
     super.initState();
+    // FIX 6: Listen to scroll events to detect user interaction
+    _lyricsScrollController.addListener(_onLyricsScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final song = ref.read(audioProvider).currentSong;
       if (song != null) {
@@ -53,9 +64,23 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     });
   }
 
+  void _onLyricsScroll() {
+    _scrollIdleTimer?.cancel();
+    _userScrollingLyrics = true;
+    // Resume auto-scroll 2.5 seconds after user stops scrolling
+    _scrollIdleTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        _userScrollingLyrics = false;
+        _lastAutoScrolledIndex = -1; // force re-scroll to active line
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _sheetExtentNotifier.dispose();
     _lyricsScrollController.dispose();
+    _scrollIdleTimer?.cancel();
     super.dispose();
   }
 
@@ -74,7 +99,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
     if (song == null) return _buildNoSong(context, accent);
 
-    // Provide listener for song changes to fetch lyrics rather than in build
     ref.listen(audioProvider, (prev, next) {
       if (next.currentSong != null && next.currentSong?.videoId != prev?.currentSong?.videoId) {
         _fetchLyricsIfNeeded(next.currentSong!);
@@ -82,57 +106,67 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     });
 
     final thumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 800);
+    // Use a tiny image for the blur to reduce GPU math during transition
+    final blurThumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 120);
 
-    // Watch playlist state so Like button updates reactively
-    // ignore: unused_local_variable
-    final playlistState = ref.watch(playlistProvider);
-    final isLiked =
-        ref.read(playlistProvider.notifier).isLiked(song.videoId);
+    // FIX 2: Use .select() so only the Like button rebuilds when liked status changes
+    final isLiked = ref.watch(
+      playlistProvider.select((state) =>
+        state.playlists
+            .where((p) => p.name == 'Liked Songs')
+            .any((p) => p.songs.any((s) => s.videoId == song.videoId)),
+      ),
+    );
 
     return Scaffold(
       body: Stack(
         children: [
-          // ── Background tint ──
-          if (thumb.isNotEmpty)
+          // FIX 4: RepaintBoundary caches the blurred background as its own layer
+          // It won't repaint when controls/seek bar update
+          if (blurThumb.isNotEmpty)
             Positioned.fill(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: (!thumb.startsWith('http'))
-                    ? Image.file(
-                        File(thumb), fit: BoxFit.cover,
-                        color: Colors.black.withValues(alpha: 0.5),
-                        colorBlendMode: BlendMode.darken,
-                        errorBuilder: (_, __, ___) => Container(color: AppColors.background),
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: thumb, fit: BoxFit.cover,
-                        color: Colors.black.withValues(alpha: 0.5),
-                        colorBlendMode: BlendMode.darken,
-                        errorWidget: (_, __, ___) =>
-                            Container(color: AppColors.background),
-                      ),
+              child: RepaintBoundary(
+                child: SizedBox.expand(
+                  child: _BlurredBackground(thumb: blurThumb),
+                ),
               ),
             ),
+
+          // Dark gradient overlay — also wrapped in RepaintBoundary
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, AppColors.background.withValues(alpha: 0.85), AppColors.background],
-                  stops: const [0.0, 0.5, 1.0],
+            child: RepaintBoundary(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, AppColors.background.withValues(alpha: 0.85), AppColors.background],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
                 ),
               ),
             ),
           ),
 
           // ── Content ──
-          SafeArea(
-            child: Opacity(
-              opacity: (1.0 - (_sheetExtent - 0.11) / 0.29).clamp(0.4, 1.0),
-              child: Transform.scale(
-                scale: (1.0 - ((_sheetExtent - 0.11) / 0.29) * 0.1).clamp(0.9, 1.0),
-                child: Column(
-                  children: [
+          // FIX 1: ValueListenableBuilder only rebuilds the Opacity+Scale wrapper,
+          // NOT the controls, seek bar, album art, etc.
+          ValueListenableBuilder<double>(
+            valueListenable: _sheetExtentNotifier,
+            builder: (context, sheetExtent, child) {
+              final fade = (1.0 - (sheetExtent - 0.11) / 0.29).clamp(0.4, 1.0);
+              final scale = (1.0 - ((sheetExtent - 0.11) / 0.29) * 0.1).clamp(0.9, 1.0);
+              return SafeArea(
+                child: Opacity(
+                  opacity: fade,
+                  child: Transform.scale(
+                    scale: scale,
+                    child: child,
+                  ),
+                ),
+              );
+            },
+            child: Column(
+              children: [
                 // ── Header ──
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
@@ -148,27 +182,32 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           Text('PULSE',
                               style: TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w800,
-                                  color: accent, letterSpacing: 2)),
+                                  color: Theme.of(context).colorScheme.primary, letterSpacing: 2)),
                           GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onTap: () => launchUrl(
                               Uri.parse('https://itsashutoshpathak.vercel.app/'),
                               mode: LaunchMode.externalApplication,
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text('Made with \u2764\ufe0f by ',
-                                    style: TextStyle(
-                                        fontSize: 9, color: AppColors.textSecondary)),
-                                Text('Ashutosh Pathak',
-                                    style: TextStyle(
-                                        fontSize: 9, fontWeight: FontWeight.bold, color: accent)),
-                              ],
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('Made with \u2764\ufe0f by ',
+                                      style: TextStyle(
+                                          fontSize: 9, color: AppColors.textSecondary)),
+                                  Text('Ashutosh Pathak',
+                                      style: TextStyle(
+                                          fontSize: 9, fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.primary)),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(width: 48), // balance
+                      const SizedBox(width: 48),
                     ],
                   ),
                 ),
@@ -182,53 +221,53 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     offset: const Offset(0, -16),
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onHorizontalDragUpdate: (details) {}, // Helps win the gesture arena
+                      onHorizontalDragUpdate: (details) {},
                       onHorizontalDragEnd: (details) {
                         if (details.primaryVelocity != null && details.primaryVelocity!.abs() > 100) {
                           _flipDirection = details.primaryVelocity! > 0 ? 1.0 : -1.0;
                           setState(() => _showLyrics = !_showLyrics);
                         }
                       },
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
-                        return Stack(
-                          alignment: Alignment.center,
-                          children: <Widget>[
-                            ...previousChildren,
-                            if (currentChild != null) currentChild,
-                          ],
-                        );
-                      },
-                      transitionBuilder: (Widget child, Animation<double> animation) {
-                        final rotateAnim = Tween(begin: math.pi * _flipDirection, end: 0.0).animate(animation);
-                        return AnimatedBuilder(
-                          animation: rotateAnim,
-                          child: child,
-                          builder: (context, child) {
-                            final isUnder = (ValueKey(_showLyrics ? 'lyrics' : 'art') != child?.key);
-                            final angle = isUnder ? math.min(rotateAnim.value, math.pi / 2) : rotateAnim.value;
-                            return Transform(
-                              transform: Matrix4.rotationY(angle)..setEntry(3, 2, 0.002),
-                              alignment: Alignment.center,
-                              child: child,
-                            );
-                          },
-                        );
-                      },
-                      child: _showLyrics
-                          ? Consumer(
-                              builder: (context, ref, _) {
-                                final audioState = ref.watch(audioProvider);
-                                return _buildLyricsView(audioState, accent);
-                              },
-                            )
-                          : _buildArtView(thumb, song, accent),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: <Widget>[
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          );
+                        },
+                        transitionBuilder: (Widget child, Animation<double> animation) {
+                          final rotateAnim = Tween(begin: math.pi * _flipDirection, end: 0.0).animate(animation);
+                          return AnimatedBuilder(
+                            animation: rotateAnim,
+                            child: child,
+                            builder: (context, child) {
+                              final isUnder = (ValueKey(_showLyrics ? 'lyrics' : 'art') != child?.key);
+                              final angle = isUnder ? math.min(rotateAnim.value, math.pi / 2) : rotateAnim.value;
+                              return Transform(
+                                transform: Matrix4.rotationY(angle)..setEntry(3, 2, 0.002),
+                                alignment: Alignment.center,
+                                child: child,
+                              );
+                            },
+                          );
+                        },
+                        child: _showLyrics
+                            ? Consumer(
+                                builder: (context, ref, _) {
+                                  final audioState = ref.watch(audioProvider);
+                                  return _buildLyricsView(audioState, Theme.of(context).colorScheme.primary);
+                                },
+                              )
+                            : _buildArtView(thumb, song, Theme.of(context).colorScheme.primary),
+                      ),
                     ),
                   ),
-                ),
                 ),
 
                 const SizedBox(height: 8),
@@ -352,77 +391,88 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 ),
 
                 const SizedBox(height: 2),
-
-                // Space for the queue handle
                 const SizedBox(height: 70),
               ],
             ),
           ),
-        ),
-      ),
 
-      // ── Draggable Queue ──
-      NotificationListener<DraggableScrollableNotification>(
-        onNotification: (notification) {
-          setState(() => _sheetExtent = notification.extent);
-          return true;
-        },
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.11,
-          minChildSize: 0.11,
-          maxChildSize: 0.4,
-          snap: true,
-          builder: (context, scrollController) {
-            return _buildUpNext(audioData.queue, accent, scrollController);
-          },
-        ),
+          // ── Draggable Queue ──
+          // FIX 1: Update ValueNotifier instead of calling setState
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              _sheetExtentNotifier.value = notification.extent;
+              return true;
+            },
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.11,
+              minChildSize: 0.11,
+              maxChildSize: 0.4,
+              snap: true,
+              builder: (context, scrollController) {
+                return ValueListenableBuilder<double>(
+                  valueListenable: _sheetExtentNotifier,
+                  builder: (context, extent, _) {
+                    return _buildUpNext(audioData.queue, accent, scrollController, extent);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
     );
   }
 
   // ── Album Art view ──
   Widget _buildArtView(String thumb, Song song, Color accent) {
-    final downloads = ref.watch(downloadProvider);
-    final isDownloading = downloads.activeDownloads.containsKey(song.videoId);
-    final downloadProgress = isDownloading ? downloads.activeDownloads[song.videoId]!.progress : 0.0;
-
     return Padding(
       key: const ValueKey('art'),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  thumb.isNotEmpty
-                      ? (!thumb.startsWith('http')
-                          ? Image.file(File(thumb), fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
-                          : CachedNetworkImage(
-                              imageUrl: thumb, fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
-                                  Container(color: AppColors.surface)))
-                      : Container(color: AppColors.surface),
-                  if (isDownloading)
-                    Container(
-                      alignment: Alignment.bottomCenter,
-                      decoration: const BoxDecoration(color: Colors.black54),
-                      child: FractionallySizedBox(
-                        heightFactor: downloadProgress.clamp(0.0, 1.0),
-                        alignment: Alignment.bottomCenter,
-                        child: Container(
-                          color: accent.withValues(alpha: 0.4),
-                        ),
-                      ),
+          // FIX 4: RepaintBoundary on the art itself so it's cached as its own layer
+          RepaintBoundary(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    thumb.isNotEmpty
+                        ? (!thumb.startsWith('http')
+                            ? Image.file(File(thumb), fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                            : CachedNetworkImage(
+                                imageUrl: thumb, fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) =>
+                                    Container(color: AppColors.surface)))
+                        : Container(color: AppColors.surface),
+
+                    // FIX 5: Only the download overlay uses a Consumer — avoids
+                    // rebuilding the whole art view when other songs are downloading
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final downloads = ref.watch(downloadProvider);
+                        final isDownloading = downloads.activeDownloads.containsKey(song.videoId);
+                        if (!isDownloading) return const SizedBox.shrink();
+                        final downloadProgress = downloads.activeDownloads[song.videoId]!.progress;
+                        return Container(
+                          alignment: Alignment.bottomCenter,
+                          decoration: const BoxDecoration(color: Colors.black54),
+                          child: FractionallySizedBox(
+                            heightFactor: downloadProgress.clamp(0.0, 1.0),
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              color: accent.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -454,21 +504,26 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   Widget _buildLyricsView(AudioState audio, Color accent) {
     final activeIndex = _findActiveLineIndex(audio.progress.inMilliseconds / 1000.0);
 
-    // Auto-scroll only when active index changes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (activeIndex >= 0 && activeIndex != _lastAutoScrolledIndex) {
-        _lastAutoScrolledIndex = activeIndex;
-        final key = _lyricKeys[activeIndex];
-        if (key != null && key.currentContext != null) {
-          Scrollable.ensureVisible(
-            key.currentContext!,
-            alignment: 0.5,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
+    // FIX 3 + FIX 6: Only schedule postFrameCallback when index actually changes
+    // AND only auto-scroll when the user isn't manually scrolling
+    if (activeIndex >= 0 && activeIndex != _lastScheduledIndex) {
+      _lastScheduledIndex = activeIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_userScrollingLyrics) return; // user is reading, don't interrupt
+        if (activeIndex != _lastAutoScrolledIndex) {
+          _lastAutoScrolledIndex = activeIndex;
+          final key = _lyricKeys[activeIndex];
+          if (key != null && key.currentContext != null) {
+            Scrollable.ensureVisible(
+              key.currentContext!,
+              alignment: 0.5,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
         }
-      }
-    });
+      });
+    }
 
     return Padding(
       key: const ValueKey('lyrics'),
@@ -522,7 +577,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   // ── Up Next ──
-  Widget _buildUpNext(List<Song> queue, Color accent, ScrollController scrollController) {
+  // Only renders up to 25 songs at a time (sliding window)
+  static const int _queueWindowSize = 25;
+
+  Widget _buildUpNext(List<Song> queue, Color accent, ScrollController scrollController, double sheetExtent) {
+    // Sliding window: always show first 25 from the live queue.
+    // As songs play they're removed from the front, so this naturally
+    // slides forward — no index tracking needed.
+    final visibleQueue = queue.length > _queueWindowSize
+        ? queue.sublist(0, _queueWindowSize)
+        : queue;
+    final hiddenCount = queue.length - visibleQueue.length;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -560,7 +626,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           ),
           SliverToBoxAdapter(
             child: Opacity(
-              opacity: ((_sheetExtent - 0.11) / 0.12).clamp(0.0, 1.0),
+              opacity: ((sheetExtent - 0.11) / 0.12).clamp(0.0, 1.0),
               child: queue.isEmpty
                 ? const Padding(
                     padding: EdgeInsets.only(top: 32),
@@ -569,16 +635,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                     ),
                   )
-                : ReorderableListView.builder(
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                    ReorderableListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16, bottom: 32),
-                    itemCount: queue.length,
+                    padding: const EdgeInsets.only(top: 16),
+                    itemCount: visibleQueue.length,
                     onReorder: (oldIndex, newIndex) {
                       ref.read(audioProvider.notifier).reorderQueue(oldIndex, newIndex);
                     },
                     itemBuilder: (_, i) {
-                      final s = queue[i];
+                      final s = visibleQueue[i];
                       return Dismissible(
                         key: ValueKey('${s.id}_$i'),
                         direction: DismissDirection.horizontal,
@@ -628,6 +697,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       );
                     },
                   ),
+                    const SizedBox(height: 32),
+                  ]),
             ),
           ),
         ],
@@ -683,6 +754,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     _lastLyricsId = song.videoId;
     _lyricsState = 'loading';
     _parsedLines = null;
+    _lastAutoScrolledIndex = -1;
+    _lastScheduledIndex = -1;
+    _userScrollingLyrics = false;
+    _scrollIdleTimer?.cancel();
 
     _musicApi.getLyricsBySong(song).then((lyrics) {
       if (!mounted || _lastLyricsId != song.videoId) return;
@@ -714,6 +789,34 @@ class _LyricLine {
   final double? time;
   final String text;
   _LyricLine({this.time, required this.text});
+}
+
+// ── Extracted background widget so it never rebuilds with player state ──
+// FIX 4: Stateless widget with its own RepaintBoundary layer
+class _BlurredBackground extends StatelessWidget {
+  final String thumb;
+  const _BlurredBackground({required this.thumb});
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+      child: (!thumb.startsWith('http'))
+          ? Image.file(
+              File(thumb), fit: BoxFit.cover,
+              color: Colors.black.withValues(alpha: 0.5),
+              colorBlendMode: BlendMode.darken,
+              errorBuilder: (_, __, ___) => Container(color: AppColors.background),
+            )
+          : CachedNetworkImage(
+              imageUrl: thumb, fit: BoxFit.cover,
+              color: Colors.black.withValues(alpha: 0.5),
+              colorBlendMode: BlendMode.darken,
+              errorWidget: (_, __, ___) =>
+                  Container(color: AppColors.background),
+            ),
+    );
+  }
 }
 
 class _SeekBar extends ConsumerStatefulWidget {

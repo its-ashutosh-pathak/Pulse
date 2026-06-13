@@ -10,6 +10,7 @@ class StatsState {
   final int dailyAvgMinutes;
   final int lifetimeMs;
   final List<Map<String, dynamic>> topSongs;
+  final List<Map<String, dynamic>> recentSongs;
   final List<Map<String, dynamic>> topArtists;
   final bool loading;
 
@@ -18,6 +19,7 @@ class StatsState {
     this.dailyAvgMinutes = 0,
     this.lifetimeMs = 0,
     this.topSongs = const [],
+    this.recentSongs = const [],
     this.topArtists = const [],
     this.loading = false,
   });
@@ -27,6 +29,7 @@ class StatsState {
     int? dailyAvgMinutes,
     int? lifetimeMs,
     List<Map<String, dynamic>>? topSongs,
+    List<Map<String, dynamic>>? recentSongs,
     List<Map<String, dynamic>>? topArtists,
     bool? loading,
   }) {
@@ -35,6 +38,7 @@ class StatsState {
       dailyAvgMinutes: dailyAvgMinutes ?? this.dailyAvgMinutes,
       lifetimeMs: lifetimeMs ?? this.lifetimeMs,
       topSongs: topSongs ?? this.topSongs,
+      recentSongs: recentSongs ?? this.recentSongs,
       topArtists: topArtists ?? this.topArtists,
       loading: loading ?? this.loading,
     );
@@ -93,6 +97,11 @@ class StatsNotifier extends Notifier<StatsState> {
       _db.collection('users').doc(uid).collection('songStats')
           .orderBy('playCount', descending: true).limit(10).get(),
       'songStats',
+    );
+    final recentSnap = await _safeGet(
+      _db.collection('users').doc(uid).collection('songStats')
+          .orderBy('lastPlayedAt', descending: true).limit(15).get(),
+      'recentStats',
     );
     final artistSnap = await _safeGet(
       _db.collection('users').doc(uid).collection('artistStats')
@@ -174,6 +183,13 @@ class StatsNotifier extends Notifier<StatsState> {
       return data;
     }).toList() ?? [];
 
+    // Map recent songs
+    final recentSongsList = recentSnap?.docs.map((d) {
+      final data = Map<String, dynamic>.from(d.data());
+      data['thumbnail'] ??= data['cover'] ?? '';
+      return data;
+    }).toList() ?? [];
+
     // Map top artists — ensure 'thumbnail' key exists for UI compatibility
     final topArtists = artistSnap?.docs.map((d) {
       final data = Map<String, dynamic>.from(d.data());
@@ -189,6 +205,7 @@ class StatsNotifier extends Notifier<StatsState> {
       dailyAvgMinutes: dailyAvgMinutes,
       lifetimeMs: lifetimeSeconds * 1000,
       topSongs: topSongs,
+      recentSongs: recentSongsList,
       topArtists: topArtists,
       loading: false,
     );

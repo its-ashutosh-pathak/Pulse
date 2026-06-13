@@ -115,21 +115,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Transform.translate(
                   offset: const Offset(0, -5),
                   child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
                     onTap: () => launchUrl(
                       Uri.parse('https://itsashutoshpathak.vercel.app/'),
                       mode: LaunchMode.externalApplication,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Made with ❤️ by ',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary.withValues(alpha: 0.7))),
-                        Text('Ashutosh Pathak',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold, color: accent)),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Made with ❤️ by ',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary.withValues(alpha: 0.7))),
+                          Text('Ashutosh Pathak',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold, color: accent)),
+                        ],
+                      ),
                     ),
                   ),
                 ),

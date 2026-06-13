@@ -421,9 +421,13 @@ class AudioNotifier extends Notifier<AudioState> {
 
     // If repeat ALL and queue empty, restart from baseQueue (mirrors lines 785-801)
     if (state.repeatMode == RepeatMode.all && state.baseQueue.isNotEmpty) {
+      // Only loop over playlist songs, not suggestions
+      final playlistBase = state.baseQueue.where((s) => s.playlistId != '__suggested__').toList();
+      if (playlistBase.isEmpty) return;
+
       var rebuilt = state.isShuffled
-          ? ([...state.baseQueue]..shuffle())
-          : [...state.baseQueue];
+          ? ([...playlistBase]..shuffle())
+          : [...playlistBase];
       final first = rebuilt.first;
       final rest = rebuilt.sublist(1);
       state = state.copyWith(queue: rest);
@@ -549,7 +553,13 @@ class AudioNotifier extends Notifier<AudioState> {
     List<Song> newQueue;
 
     if (newShuffled) {
-      newQueue = [...state.queue]..shuffle();
+      // Separate playlist songs from YouTube suggestions
+      final playlistSongs = state.queue.where((s) => s.playlistId != '__suggested__').toList();
+      final suggestions = state.queue.where((s) => s.playlistId == '__suggested__').toList();
+
+      // Shuffle only the playlist songs, keep suggestions at the end (untouched)
+      playlistSongs.shuffle();
+      newQueue = [...playlistSongs, ...suggestions];
     } else {
       // Restore un-shuffled order but filter out consumed songs
       newQueue = state.baseQueue
