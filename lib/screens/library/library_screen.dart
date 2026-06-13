@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
+import '../../widgets/spotify_playlists_sheet.dart';
+import '../../widgets/spotify_choice_modal.dart';
 import '../../data/models/playlist.dart';
 import '../../data/models/song.dart';
 import '../../providers/playlist_provider.dart';
@@ -33,7 +35,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   bool _showAddOptions = false;
   bool _showCreateModal = false;
   bool _showImportModal = false;
-  String _selectedImportSource = 'ytmusic'; // 'ytmusic' or 'spotify'
+  bool _showSpotifyChoiceModal = false;
+  String _selectedImportSource = 'ytmusic'; // 'ytmusic' or 'pulse'
   final _createController = TextEditingController();
   final _importUrlController = TextEditingController();
 
@@ -186,48 +189,94 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: Column(
                       children: importState.values.map((task) {
+                        final progress = task.totalSongs > 0
+                            ? task.processedSongs / task.totalSongs
+                            : 0.0;
+                        final isActive = task.status == 'fetching' || task.status == 'matching' || task.status == 'saving';
+
                         return GlassContainer(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
-                          borderRadius: 12,
-                          child: Row(
+                          padding: const EdgeInsets.all(14),
+                          borderRadius: 14,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              task.status == 'done' 
-                                  ? const Icon(LucideIcons.checkCircle2, color: Colors.green, size: 20)
-                                  : task.status == 'error'
-                                      ? const Icon(LucideIcons.alertCircle, color: Colors.red, size: 20)
-                                      : const SizedBox(
-                                          width: 16, height: 16,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      task.status == 'done' ? 'Imported ${task.name}' : 'Importing ${task.name}...',
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  // Status icon
+                                  if (task.status == 'done')
+                                    const Icon(LucideIcons.checkCircle2, color: Colors.green, size: 20)
+                                  else if (task.status == 'error')
+                                    const Icon(LucideIcons.alertCircle, color: Colors.redAccent, size: 20)
+                                  else if (task.status == 'queued')
+                                    const Icon(LucideIcons.clock, color: Colors.orange, size: 20)
+                                  else
+                                    SizedBox(
+                                      width: 18, height: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: accent),
                                     ),
-                                    if (task.status == 'fetching')
-                                      const Text('Fetching playlist...', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
-                                    else if (task.status == 'matching')
-                                      Text('Matching songs: ${task.processedSongs} / ${task.totalSongs}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary))
-                                    else if (task.status == 'saving')
-                                      const Text('Saving to library...', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
-                                    else if (task.status == 'done')
-                                      const Text('Tap to dismiss', style: TextStyle(fontSize: 11, color: AppColors.textSecondary))
-                                    else if (task.status == 'error')
-                                      const Text('Failed to import', style: TextStyle(fontSize: 11, color: Colors.redAccent))
-                                  ],
-                                ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Title
+                                        Text(
+                                          task.status == 'done'
+                                              ? 'Imported  ${task.name}'
+                                              : task.status == 'queued'
+                                                  ? task.name
+                                                  : task.name,
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        // Subtitle
+                                        Text(
+                                          task.status == 'queued'
+                                              ? 'Waiting in queue...'
+                                              : task.status == 'fetching'
+                                                  ? 'Fetching playlist...'
+                                                  : task.status == 'matching'
+                                                      ? '${task.processedSongs}/${task.totalSongs} processed · ${task.matchedSongs} matched'
+                                                      : task.status == 'saving'
+                                                          ? 'Saving to library...'
+                                                          : task.status == 'done'
+                                                              ? '${task.matchedSongs > 0 ? "${task.matchedSongs} songs" : "All songs"} added · tap × to dismiss'
+                                                              : task.status == 'error'
+                                                                  ? task.name
+                                                                  : '',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: task.status == 'error' ? Colors.redAccent : AppColors.textSecondary,
+                                          ),
+                                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (task.status == 'done' || task.status == 'error')
+                                    IconButton(
+                                      icon: const Icon(LucideIcons.x, size: 16),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () => ref.read(importProvider.notifier).dismissTask(task.id),
+                                    ),
+                                ],
                               ),
-                              if (task.status == 'done' || task.status == 'error')
-                                IconButton(
-                                  icon: const Icon(LucideIcons.x, size: 16),
-                                  onPressed: () => ref.read(importProvider.notifier).dismissTask(task.id),
-                                )
+                              // Progress bar
+                              if (isActive && task.totalSongs > 0) ...[
+                                const SizedBox(height: 10),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    minHeight: 3,
+                                    backgroundColor: Colors.white12,
+                                    valueColor: AlwaysStoppedAnimation<Color>(accent),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         );
@@ -283,6 +332,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
             // ── Import Modal ──
             if (_showImportModal) Positioned.fill(child: _buildImportModal(accent)),
+
+            // ── Spotify Choice Modal ──
+            if (_showSpotifyChoiceModal) 
+              Positioned.fill(
+                child: SpotifyChoiceModal(
+                  onClose: () => setState(() => _showSpotifyChoiceModal = false),
+                  onSelectEmbed: () {
+                    setState(() {
+                      _showSpotifyChoiceModal = false;
+                      _selectedImportSource = 'spotify';
+                      _importUrlController.clear();
+                      _showImportModal = true;
+                    });
+                  },
+                  onSelectByoa: () {
+                    setState(() => _showSpotifyChoiceModal = false);
+                    context.push('/import');
+                  },
+                ),
+              ),
 
             // ── Create Modal ──
             if (_showCreateModal) Positioned.fill(child: _buildCreateModal(accent)),
@@ -729,14 +798,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     errorBuilder: (_, __, ___) => const Icon(LucideIcons.disc, size: 20, color: Color(0xFF1DB954)),
                   ),
                   label: 'Import from Spotify',
-                  subtitle: 'Paste a PUBLIC playlist URL',
+                  subtitle: 'Connect your Spotify',
                   comingSoon: false,
                   onTap: () {
                     setState(() {
                       _showAddOptions = false;
-                      _selectedImportSource = 'spotify';
-                      _importUrlController.clear();
-                      _showImportModal = true;
+                      _showSpotifyChoiceModal = true;
                     });
                   },
                 ),
@@ -756,6 +823,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget _buildImportModal(Color accent) {
     final isYtm = _selectedImportSource == 'ytmusic';
     final isPulse = _selectedImportSource == 'pulse';
+    final isSpotify = _selectedImportSource == 'spotify';
     return GestureDetector(
       onTap: () => setState(() => _showImportModal = false),
       child: Container(
@@ -780,16 +848,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   Text(
                     isPulse
                         ? 'Import from Pulse'
-                        : (isYtm ? 'Import from YouTube Music' : 'Import from Spotify'),
+                        : isYtm
+                            ? 'Import from YouTube Music'
+                            : 'Import from Spotify (≤100)',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     isPulse
                         ? 'Paste a Pulse playlist URL'
-                        : (isYtm
+                        : isYtm
                             ? 'Paste a PUBLIC YouTube Music playlist or album URL'
-                            : 'Paste a PUBLIC Spotify playlist URL'),
+                            : 'Paste a public Spotify playlist URL below',
                     style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -800,9 +870,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     decoration: InputDecoration(
                       hintText: isPulse
                           ? 'https://pulse.app/playlist/...'
-                          : (isYtm
+                          : isYtm
                               ? 'https://music.youtube.com/playlist?list=...'
-                              : 'https://open.spotify.com/playlist/...'),
+                              : 'https://open.spotify.com/playlist/...',
                       hintStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                       filled: true, fillColor: AppColors.surface,
                       border: OutlineInputBorder(

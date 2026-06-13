@@ -48,6 +48,9 @@ dependencies:
   share_plus: ^10.1.4
   image_picker: ^1.1.2
   permission_handler: ^11.3.1
+  flutter_web_auth_2: ^5.0.3
+  pkce: ^1.1.0
+  flutter_secure_storage: ^9.2.2
 
   # Icons (matching lucide-react from web app)
   lucide_icons: ^0.257.0
