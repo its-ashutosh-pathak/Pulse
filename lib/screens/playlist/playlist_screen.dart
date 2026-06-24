@@ -417,9 +417,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                                   notifier.replaceQueue(
                                       songsToRender.sublist(i + 1));
                                 },
-                                onLongPress: () => _showMenu(song, i, isOwner),
+                                onLongPress: () => _showMenu(song, sourceSongs.indexOf(song), isOwner),
                                 trailing: GestureDetector(
-                                  onTap: () => _showMenu(song, i, isOwner),
+                                  onTap: () => _showMenu(song, sourceSongs.indexOf(song), isOwner),
                                   child: const Padding(
                                     padding: EdgeInsets.all(8),
                                     child: Icon(LucideIcons.moreVertical,

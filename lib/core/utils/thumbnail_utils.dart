@@ -6,6 +6,9 @@ class ThumbnailUtils {
   /// Non-destructive: returns original URL if parsing fails.
   static String getHighRes(String? url, {int size = 500}) {
     if (url == null || url.isEmpty) return '';
+    
+    // Google's content servers recently started rejecting sizes > 544 with 404s
+    if (size > 544) size = 544;
 
     // Force HTTPS
     var result = url.replaceFirst('http://', 'https://');
