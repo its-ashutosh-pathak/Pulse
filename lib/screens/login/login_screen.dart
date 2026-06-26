@@ -181,6 +181,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           fontSize: 12, color: AppColors.danger)),
                 ],
 
+                // ── Forgot Password ──
+                if (!_isSignup)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () async {
+                        final email = _emailC.text.trim();
+                        if (email.isEmpty) {
+                          setState(() => _error = 'Please enter your email to reset password');
+                          return;
+                        }
+                        try {
+                          await ref.read(authProvider.notifier).resetPassword(email);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password reset email sent! Check your inbox.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() => _error = e.toString().replaceAll(RegExp(r'\[.*?\]'), '').trim());
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Forgot Password?',
+                        style: TextStyle(fontSize: 12, color: accent, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+
                 const SizedBox(height: 16),
 
                 // ── Submit ──

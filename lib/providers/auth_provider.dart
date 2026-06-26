@@ -170,6 +170,11 @@ class AuthNotifier extends Notifier<AuthState> {
     await updateUserProfile(displayName: displayName);
   }
 
+  // ── Password Reset ──
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
   // ── Update Profile (mirrors updateUserProfile in AuthContext.jsx) ──
   Future<void> updateUserProfile({
     String? displayName,
