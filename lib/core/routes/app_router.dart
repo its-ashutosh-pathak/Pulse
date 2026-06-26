@@ -12,6 +12,9 @@ import '../../screens/settings/settings_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/import/import_screen.dart';
 import '../../screens/login/login_screen.dart';
+import '../../screens/communication/communication_screen.dart';
+import '../../screens/communication/admin_chat_screen.dart';
+import '../../screens/communication/broadcast_chat_screen.dart';
 import '../../widgets/app_scaffold.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
@@ -86,6 +89,28 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           );
         },
+      ),
+
+      // ── Communication & Support (no bottom nav) ──
+      GoRoute(
+        name: 'Communication',
+        path: '/communication',
+        builder: (context, state) => const CommunicationScreen(),
+      ),
+      GoRoute(
+        name: 'BroadcastChat',
+        path: '/communication/broadcast',
+        builder: (context, state) => const BroadcastChatScreen(),
+      ),
+      GoRoute(
+        name: 'AdminChat',
+        path: '/communication/chat/:userId',
+        builder: (context, state) => AdminChatScreen(
+          userId: state.pathParameters['userId']!,
+          userEmail: state.uri.queryParameters['email'] ?? '',
+          userName: state.uri.queryParameters['name'] ?? '',
+          userPhotoUrl: state.uri.queryParameters['photo'] ?? '',
+        ),
       ),
 
       // ── Main shell (with bottom nav + mini player) ──

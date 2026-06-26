@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../providers/auth_provider.dart';
@@ -126,41 +128,56 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 200),
           children: [
-            // ── Avatar + Name + Email (centered, like PWA header) ──
-            Center(
-              child: Container(
-                width: 96, height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [accent, secondary]),
-                  boxShadow: [
-                    BoxShadow(
-                        color: accent.withValues(alpha: 0.3),
-                        blurRadius: 20),
-                  ],
+            // ── Avatar + Name + Email (left-aligned header) ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 111, height: 111,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(colors: [accent, secondary]),
+                  ),
+                  child: _buildAvatarWidget(auth.photoURL, initials, accent, 111),
                 ),
-                child: auth.photoURL != null && auth.photoURL!.isNotEmpty
-                    ? ClipOval(
-                        child: Image.network(
-                          auth.photoURL!, fit: BoxFit.cover,
-                          width: 96, height: 96,
-                          errorBuilder: (_, __, ___) => _initialsWidget(initials),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: SizedBox(
+                    height: 111,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                        const SizedBox(height: 4),
+                        Text(email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 13, color: AppColors.textSecondary)),
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 160,
+                            child: GlassContainer(
+                              borderRadius: 14,
+                              child: _actionTile(LucideIcons.pencil, 'Edit Profile', () {
+                                _showEditProfileBottomSheet(context, displayName, auth.photoURL, initials);
+                              }),
+                            ),
+                          ),
                         ),
-                      )
-                    : _initialsWidget(initials),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: Text(displayName,
-                  style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w700)),
-            ),
-            const SizedBox(height: 4),
-            Center(
-              child: Text(email,
-                  style: const TextStyle(
-                      fontSize: 13, color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildBellIcon(auth.user?.uid, auth.isAdmin, accent),
+              ],
             ),
 
             const SizedBox(height: 24),
@@ -466,9 +483,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               borderRadius: 14,
               child: Column(
                 children: [
-                  _actionTile(LucideIcons.user, 'Edit Profile', () {
-                    _showEditProfileDialog(context, displayName);
-                  }),
                   _actionTile(LucideIcons.logOut, 'Sign Out', () async {
                     await ref.read(authProvider.notifier).logout();
                     if (context.mounted) context.go('/login');
@@ -542,7 +556,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _actionTile(IconData icon, String label, VoidCallback onTap,
-      {bool danger = false}) {
+      {bool danger = false, Widget? trailing}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -559,6 +573,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     fontSize: 15,
                     color: danger ? AppColors.danger : AppColors.textPrimary)),
               ),
+              if (trailing != null) ...[
+                trailing,
+                const SizedBox(width: 8),
+              ],
               Icon(LucideIcons.chevronRight, size: 16,
                   color: danger
                       ? AppColors.danger : AppColors.textSecondary),
@@ -569,54 +587,295 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, String currentName) {
+  Widget _buildBellIcon(String? userId, bool isAdmin, Color accent) {
+    return Transform.translate(
+      offset: const Offset(12, -12),
+      child: IconButton(
+        icon: Stack(
+          children: [
+            Icon(LucideIcons.bell, size: 24, color: accent),
+            if (userId != null)
+              if (isAdmin)
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance.collection('support_channels').where('unreadByAdmin', isEqualTo: true).snapshots(),
+                  builder: (context, snapshot) {
+                    final count = snapshot.data?.docs.length ?? 0;
+                    if (count == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: 0, top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                        child: Text('$count', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    );
+                  },
+                )
+              else
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('support_messages')
+                      .where(Filter.or(
+                        Filter('userId', isEqualTo: userId),
+                        Filter('isAnnouncement', isEqualTo: true)
+                      ))
+                      .orderBy('timestamp', descending: false)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final docs = snapshot.data?.docs ?? [];
+                    int count = 0;
+                    for (var doc in docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final time = (data['timestamp'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+                      final isMe = data['senderId'] == userId;
+                      if (!isMe && time > ref.watch(unreadBadgeTimeProvider)) {
+                        count++;
+                      }
+                    }
+                    if (count == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: 0, top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                        child: Text(count > 9 ? '9+' : '$count', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    );
+                  },
+                )
+          ],
+        ),
+        onPressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final now = DateTime.now().millisecondsSinceEpoch + 60000; // +1 min buffer
+          await prefs.setInt('lastOpenedSupportTime', now);
+          if (mounted) {
+            ref.read(unreadBadgeTimeProvider.notifier).state = now;
+            context.push('/communication');
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildAvatarWidget(String? photoURL, String initials, Color accent, double size) {
+    if (photoURL != null && photoURL.isNotEmpty) {
+      if (photoURL.startsWith('assets/')) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            photoURL,
+            fit: BoxFit.cover,
+            width: size,
+            height: size,
+            errorBuilder: (_, __, ___) => _initialsWidget(initials),
+          ),
+        );
+      } else if (photoURL.startsWith('http')) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: CachedNetworkImage(
+            imageUrl: photoURL,
+            fit: BoxFit.cover,
+            width: size,
+            height: size,
+            errorWidget: (_, __, ___) => _initialsWidget(initials),
+          ),
+        );
+      }
+    }
+    return _initialsWidget(initials);
+  }
+
+  void _showEditProfileBottomSheet(BuildContext context, String currentName, String? currentPhotoURL, String initials) {
     _nameC.text = currentName;
-    showDialog(
+    String? selectedAvatar = currentPhotoURL;
+    if (selectedAvatar != null && selectedAvatar.isEmpty) selectedAvatar = null;
+    final accent = Theme.of(context).colorScheme.primary;
+
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         bool isSaving = false;
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: AppColors.background,
-              title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w700)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('DISPLAY NAME', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameC,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      filled: true, fillColor: AppColors.surface,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          builder: (context, setStateSheet) {
+            return GlassContainer(
+              borderRadius: 24, blur: 24,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                left: 20, right: 20, top: 24,
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  Center(
+                    child: Container(
+                      width: 36, height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
+                  const Text('EDIT PROFILE', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1)),
+                  const SizedBox(height: 24),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 111, height: 111,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            _showAvatarPicker(context, selectedAvatar, (newAvatar) {
+                              setStateSheet(() => selectedAvatar = newAvatar);
+                            });
+                          },
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              _buildAvatarWidget(selectedAvatar, initials, accent, 111),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Icon(LucideIcons.pencil, color: accent.withValues(alpha: 0.7), size: 32),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('DISPLAY NAME', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _nameC,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              decoration: InputDecoration(
+                                filled: true, fillColor: AppColors.surface,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                TextButton(onPressed: () => ctx.pop(), child: const Text('Cancel')),
+                                const SizedBox(width: 12),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: isSaving ? null : () async {
+                                    final name = _nameC.text.trim();
+                                    if (name.isNotEmpty) {
+                                      setStateSheet(() => isSaving = true);
+                                      await ref.read(authProvider.notifier).updateUserProfile(
+                                            displayName: name,
+                                            photoURL: selectedAvatar ?? '',
+                                          );
+                                      if (ctx.mounted) {
+                                        setStateSheet(() => isSaving = false);
+                                        ctx.pop();
+                                      }
+                                    }
+                                  },
+                                  child: isSaving
+                                      ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: accent))
+                                      : const Text('Save'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
-              actions: [
-                TextButton(onPressed: () => ctx.pop(), child: const Text('Cancel')),
-                ElevatedButton(
-                  onPressed: isSaving ? null : () async {
-                    final name = _nameC.text.trim();
-                    if (name.isNotEmpty) {
-                      setStateDialog(() => isSaving = true);
-                      await ref.read(authProvider.notifier).updateUserProfile(displayName: name);
-                      if (ctx.mounted) {
-                        setStateDialog(() => isSaving = false);
-                        ctx.pop();
-                      }
-                    }
-                  },
-                  child: isSaving
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Save'),
-                ),
-              ],
+             ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showAvatarPicker(BuildContext context, String? currentAvatar, Function(String) onSelect) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return GlassContainer(
+          borderRadius: 24,
+          blur: 24,
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Choose Avatar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: 24,
+                    itemBuilder: (context, index) {
+                      final path = 'assets/avatars/${index + 1}.jpeg';
+                      final isSelected = currentAvatar == path;
+                      return GestureDetector(
+                        onTap: () {
+                          onSelect(path);
+                          ctx.pop();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected ? Border.all(color: Theme.of(context).colorScheme.primary, width: 3) : null,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(9),
+                            child: Image.asset(path, fit: BoxFit.cover),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
         );
       },
     );

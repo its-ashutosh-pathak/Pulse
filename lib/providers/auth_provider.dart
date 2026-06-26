@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../core/constants/app_constants.dart';
 
 // ── Auth State ──────────────────────────────────────────────────────────────
+final unreadBadgeTimeProvider = StateProvider<int>((ref) => 0);
 
 class AuthState {
   final User? user;
@@ -35,6 +37,7 @@ class AuthState {
   }
 
   bool get isLoggedIn => user != null;
+  bool get isAdmin => isLoggedIn && user?.email == kAdminEmail;
   String get initials {
     final name = displayName ?? user?.displayName ?? 'P';
     return name
@@ -131,7 +134,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = AuthState(
       user: firebaseUser,
       displayName: displayName ?? 'Pulse User',
-      photoURL: photoURL,
+      photoURL: (photoURL == null || photoURL.isEmpty) ? 'assets/avatars/4.jpeg' : photoURL,
       loading: false,
     );
   }
@@ -183,6 +186,10 @@ class AuthNotifier extends Notifier<AuthState> {
     final user = _auth.currentUser;
     if (user == null) return;
 
+    if (photoURL != null && photoURL.isEmpty) {
+      photoURL = 'assets/avatars/4.jpeg';
+    }
+
     // Update Firebase Auth profile (skip base64 images — too large)
     if (displayName != null) await user.updateDisplayName(displayName);
     if (photoURL != null && !photoURL.startsWith('data:image')) {
@@ -200,6 +207,22 @@ class AuthNotifier extends Notifier<AuthState> {
           updates,
           SetOptions(merge: true),
         );
+
+    // Live-sync avatar and name changes to support_channels for the Admin dashboard
+    final supportChannelUpdates = <String, dynamic>{};
+    if (displayName != null) supportChannelUpdates['userName'] = displayName;
+    if (photoURL != null) supportChannelUpdates['userPhotoURL'] = photoURL;
+    
+    if (supportChannelUpdates.isNotEmpty) {
+      try {
+        await _db.collection('support_channels').doc(user.uid).set(
+          supportChannelUpdates, 
+          SetOptions(merge: true),
+        );
+      } catch (e) {
+        debugPrint('[LiveSync] Failed to update support_channels: $e');
+      }
+    }
 
     // Update local state
     state = state.copyWith(

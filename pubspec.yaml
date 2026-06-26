@@ -1,7 +1,7 @@
 name: pulse
 description: A premium music streaming app powered by YouTube Music.
 publish_to: 'none'
-version: 2.0.0+4
+version: 2.2.5+5
 
 environment:
   sdk: ^3.11.0
@@ -86,6 +86,7 @@ flutter:
     - assets/logo.png
     - assets/spotify.logo.png
     - assets/ytmusic.logo.png
+    - assets/avatars/
 
 flutter_native_splash:
   color: "#000000"

@@ -12,6 +12,7 @@ class GlassContainer extends StatelessWidget {
   final double blur;
   final Color? backgroundColor;
   final double borderOpacity;
+  final Color? borderColor;
 
   const GlassContainer({
     super.key,
@@ -22,6 +23,7 @@ class GlassContainer extends StatelessWidget {
     this.blur = 16,
     this.backgroundColor,
     this.borderOpacity = 0.12,
+    this.borderColor,
   });
 
   @override
@@ -39,7 +41,7 @@ class GlassContainer extends StatelessWidget {
               color: backgroundColor ?? AppColors.glassBackground,
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: Colors.white.withValues(alpha: borderOpacity),
+                color: borderColor ?? Colors.white.withValues(alpha: borderOpacity),
               ),
             ),
             child: child,

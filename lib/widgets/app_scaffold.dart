@@ -10,6 +10,9 @@ import '../core/theme/app_colors.dart';
 import '../screens/offline/offline_screen.dart';
 import 'mini_player.dart';
 import '../providers/update_provider.dart';
+import '../providers/auth_provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// App scaffold — the persistent shell with bottom nav + mini player.
 /// Equivalent to Layout.jsx in the React app.
@@ -42,6 +45,12 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     _connectivitySub = Connectivity().onConnectivityChanged.listen((result) {
       if (mounted) {
         setState(() => _isOffline = result.isEmpty || !result.any((r) => r == ConnectivityResult.wifi || r == ConnectivityResult.mobile || r == ConnectivityResult.ethernet));
+      }
+    });
+
+    SharedPreferences.getInstance().then((prefs) {
+      if (mounted) {
+        ref.read(unreadBadgeTimeProvider.notifier).state = prefs.getInt('lastOpenedSupportTime') ?? 0;
       }
     });
 
@@ -189,6 +198,36 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
       return const OfflineScreen();
     }
 
+    final auth = ref.watch(authProvider);
+    final photoURL = auth.photoURL;
+    final initials = auth.initials;
+    
+    Widget? profileIcon;
+    if (auth.isLoggedIn) {
+      if (photoURL != null && photoURL.startsWith('assets/')) {
+        profileIcon = Container(
+          width: 26, height: 26,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: currentIndex == 4 ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null,
+            image: DecorationImage(image: AssetImage(photoURL), fit: BoxFit.cover),
+          ),
+        );
+      } else {
+        profileIcon = Container(
+          width: 26, height: 26,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+            border: currentIndex == 4 ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null,
+          ),
+          child: Center(
+            child: Text(initials, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
+          ),
+        );
+      }
+    }
+
     return Scaffold(
       extendBody: true,
       body: widget.child,
@@ -264,6 +303,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                     ),
                     _NavItem(
                       icon: LucideIcons.user,
+                      customIcon: profileIcon != null ? _ProfileBadge(child: profileIcon) : null,
                       label: 'Profile',
                       isActive: currentIndex == 4,
                       onTap: () => context.go('/profile'),
@@ -281,12 +321,14 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
+  final Widget? customIcon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.icon,
+    this.customIcon,
     required this.label,
     required this.isActive,
     required this.onTap,
@@ -304,7 +346,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: color),
+            customIcon ?? Icon(icon, size: 22, color: color),
             const SizedBox(height: 4),
             Text(
               label,
@@ -317,6 +359,75 @@ class _NavItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProfileBadge extends ConsumerWidget {
+  final Widget child;
+  const _ProfileBadge({required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
+    final user = auth.user;
+    if (user == null) return child;
+
+    final badgeTime = ref.watch(unreadBadgeTimeProvider);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        if (auth.isAdmin)
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('support_channels').where('unreadByAdmin', isEqualTo: true).snapshots(),
+            builder: (context, snapshot) {
+              final count = snapshot.data?.docs.length ?? 0;
+              if (count == 0) return const SizedBox.shrink();
+              return Positioned(
+                right: -4, top: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                  child: Text('$count', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              );
+            },
+          )
+        else
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('support_messages')
+                .where(Filter.or(
+                  Filter('userId', isEqualTo: user.uid),
+                  Filter('isAnnouncement', isEqualTo: true)
+                ))
+                .orderBy('timestamp', descending: false)
+                .snapshots(),
+            builder: (context, snapshot) {
+              final docs = snapshot.data?.docs ?? [];
+              int count = 0;
+              for (var doc in docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final time = (data['timestamp'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+                final isMe = data['senderId'] == user.uid;
+                if (!isMe && time > badgeTime) {
+                  count++;
+                }
+              }
+              if (count == 0) return const SizedBox.shrink();
+              return Positioned(
+                right: -4, top: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+                  child: Text(count > 9 ? '9+' : '$count', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              );
+            },
+          )
+      ],
     );
   }
 }
