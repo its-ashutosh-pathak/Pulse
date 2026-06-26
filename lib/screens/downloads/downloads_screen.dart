@@ -719,7 +719,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
             onTap: () {}, // prevent close on card tap
             child: GlassContainer(
               borderRadius: 24, blur: 24,
-              margin: const EdgeInsets.symmetric(horizontal: 20),
+              margin: const EdgeInsets.only(left: 20, right: 20, bottom: 140),
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
               child: ConstrainedBox(
                 constraints: BoxConstraints(

@@ -229,12 +229,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                 ],
                 stops: [0.0, 0.25, 0.5, 0.8, 1.0],
               ),
-              border: Border(
-                top: BorderSide(
-                  color: Color(0x26FFFFFF),
-                  width: 0.5,
-                ),
-              ),
+
             ),
             child: SafeArea(
               top: false,
