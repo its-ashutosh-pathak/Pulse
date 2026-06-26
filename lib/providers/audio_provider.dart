@@ -103,6 +103,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
   String? _preloadedNextSongId;
   bool _isPreloadingNext = false;
+  bool _hasEagerPreloaded = false;
 
   int _consecutiveFailures = 0;
 
@@ -119,6 +120,20 @@ class AudioNotifier extends Notifier<AudioState> {
       if (current != null) {
         final isLiked = ref.read(playlistProvider.notifier).isLiked(current.videoId);
         _handler.updateLikedState(isLiked);
+      }
+    });
+
+    // When the user toggles Data Saver or changes streaming quality, invalidate
+    // any preloaded next-song URL so the correct quality is used on the next skip.
+    ref.listen(settingsProvider, (previous, next) {
+      if (!_isInitialized) return;
+      final prevQuality = previous?.dataSaverMode == true ? 'low' : previous?.streamingQuality;
+      final nextQuality = next.dataSaverMode ? 'low' : next.streamingQuality;
+      if (prevQuality != nextQuality && _preloadedNextSongId != null) {
+        StreamExtractor.invalidateCache(_preloadedNextSongId!);
+        _preloadedNextSongId = null;
+        _hasEagerPreloaded = false;
+        _crossfadeEngine.cancelCrossfade(); // drop the buffered wrong-quality audio
       }
     });
 
@@ -149,8 +164,9 @@ class AudioNotifier extends Notifier<AudioState> {
       }
     };
 
-    // Wire up crossfade swap callback
+    // Wire up crossfade callbacks
     _crossfadeEngine.onSwapComplete = _onCrossfadeSwapComplete;
+    _crossfadeEngine.onMidpointReached = _onCrossfadeMidpoint;
 
     // Listen to the primary player's streams
     _attachPlayerListeners(_handler.primaryPlayer);
@@ -166,17 +182,26 @@ class AudioNotifier extends Notifier<AudioState> {
     _positionSub = player.positionStream.listen((position) {
       state = state.copyWith(progress: position);
 
+      final dur = player.duration;
+      final posSeconds = position.inSeconds;
+
+      // Eagerly preload the next song after 5 seconds of playback to ensure instant skips
+      if (!_hasEagerPreloaded && posSeconds >= 5 && state.repeatMode != RepeatMode.one) {
+        _hasEagerPreloaded = true;
+        _preloadNextSong();
+      }
+
       // ── Crossfade trigger (mirrors timeupdate handler, lines 194-213) ──
       final settings = ref.read(settingsProvider);
       final fadeSeconds = settings.crossfadeDuration;
-      final dur = player.duration;
 
       if (fadeSeconds > 0 && dur != null && dur.inSeconds > 0 && state.repeatMode != RepeatMode.one) {
         final timeLeftMs = dur.inMilliseconds - position.inMilliseconds;
         final timeLeftSeconds = timeLeftMs / 1000.0;
 
-        // 1. Preload next song's URL 15 seconds before the crossfade starts
-        if (timeLeftSeconds <= (fadeSeconds + 15) && timeLeftSeconds > fadeSeconds) {
+        // 1. Preload next song's URL 15 seconds before the crossfade starts (fallback if eager preload missed)
+        if (!_hasEagerPreloaded && timeLeftSeconds <= (fadeSeconds + 15) && timeLeftSeconds > fadeSeconds) {
+          _hasEagerPreloaded = true;
           _preloadNextSong();
         }
 
@@ -191,7 +216,6 @@ class AudioNotifier extends Notifier<AudioState> {
 
       // ── Stats tracking (mirrors lines 216-223) ──
       if (!_statsThresholdReached && dur != null && dur.inSeconds > 0) {
-        final posSeconds = position.inSeconds;
         if (posSeconds > 30 || posSeconds > dur.inSeconds / 2) {
           _reportStats();
           _statsThresholdReached = true;
@@ -289,6 +313,7 @@ class AudioNotifier extends Notifier<AudioState> {
 
     // Reset state for new song
     _statsThresholdReached = false;
+    _hasEagerPreloaded = false;
     final myGen = ++_loadGeneration;
     bool isStale() => _loadGeneration != myGen;
 
@@ -358,6 +383,10 @@ class AudioNotifier extends Notifier<AudioState> {
       }
       if (isStale()) return;
 
+      // ── Debounce rapid skipping ──
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (isStale()) return;
+
       // ── Stream via youtube_explode_dart v2.5.3 (client-side, on-device) ──
       // Extraction runs on the user's phone with their own IP.
       // URL is IP-locked to the phone → phone plays it → always works.
@@ -382,6 +411,7 @@ class AudioNotifier extends Notifier<AudioState> {
       // (Queue fetching was moved to the top of the method for parallel execution)
     } catch (e) {
       debugPrint('[AudioProvider] playSong error: $e');
+      StreamExtractor.invalidateCache(normalizedSong.videoId);
       if (!isStale()) {
         state = state.copyWith(isLoading: false);
         
@@ -530,16 +560,34 @@ class AudioNotifier extends Notifier<AudioState> {
     if (oldIndex < 0 || oldIndex >= state.queue.length) return;
     if (newIndex < 0 || newIndex > state.queue.length) return;
 
+    final prevFirst = state.queue.isNotEmpty ? state.queue.first.videoId : null;
+
     final updatedQueue = List<Song>.from(state.queue);
     final item = updatedQueue.removeAt(oldIndex);
     updatedQueue.insert(newIndex, item);
 
     state = state.copyWith(queue: updatedQueue);
+
+    // If the first item changed, the preloaded audio is now for the wrong song
+    final newFirst = updatedQueue.isNotEmpty ? updatedQueue.first.videoId : null;
+    if (prevFirst != newFirst && _preloadedNextSongId != null) {
+      _crossfadeEngine.cancelCrossfade();
+      _preloadedNextSongId = null;
+      _hasEagerPreloaded = false;
+    }
   }
 
   /// Remove a song from the queue
   void removeFromQueue(int index) {
     if (index < 0 || index >= state.queue.length) return;
+
+    // If removing the first item, the preloaded audio is now for the wrong song
+    if (index == 0 && _preloadedNextSongId != null) {
+      _crossfadeEngine.cancelCrossfade();
+      _preloadedNextSongId = null;
+      _hasEagerPreloaded = false;
+    }
+
     final updatedQueue = List<Song>.from(state.queue);
     updatedQueue.removeAt(index);
     state = state.copyWith(queue: updatedQueue);
@@ -727,6 +775,7 @@ class AudioNotifier extends Notifier<AudioState> {
         }
       } catch (e) {
         debugPrint('[AudioProvider] Crossfade fallback extraction failed: $e');
+        StreamExtractor.invalidateCache(nextSong.videoId);
         if (_loadGeneration == myGen) {
           _isCrossfadePending = false;
           playNext();
@@ -754,6 +803,7 @@ class AudioNotifier extends Notifier<AudioState> {
       if (success) {
         _pendingCrossfadeSong = nextSong;
         _pendingCrossfadeQueue = remainingQueue;
+        // Metadata update is deferred to onMidpointReached (50% of fade)
       } else {
         if (_loadGeneration == myGen) playNext();
       }
@@ -774,30 +824,51 @@ class AudioNotifier extends Notifier<AudioState> {
   /// to prevent _onTrackEnded from firing playNext() during the async gap.
   bool _isCrossfadePending = false;
 
-  /// Called by CrossfadeEngine when the crossfade swap completes.
-  /// Mirrors `_completeCrossfadeSwap()` in AudioContext.jsx (lines 407-453).
-  void _onCrossfadeSwapComplete(AudioPlayer newPrimary) {
-    // Re-attach player listeners to the new primary
-    _attachPlayerListeners(newPrimary);
-    
-    // Sync handler to new primary player so lockscreen works properly
-    _handler.setPrimaryPlayer(newPrimary);
-
+  /// Called at the 50% midpoint of the crossfade volume ramp.
+  /// Both songs are equally audible here — the ideal moment to switch everything to Song B.
+  void _onCrossfadeMidpoint() {
     final nextSong = _pendingCrossfadeSong;
-    final nextQueue = _pendingCrossfadeQueue;
+    final remainingQueue = _pendingCrossfadeQueue;
+    if (nextSong == null) return;
 
-    if (nextSong != null) {
-      _statsThresholdReached = false;
-      state = state.copyWith(
-        currentSong: nextSong,
-        clearContextPlaylistId: nextSong.playlistId == '__suggested__',
-        isPlaying: true,
-        duration: newPrimary.duration ?? Duration.zero,
-        progress: newPrimary.position,
-        queue: nextQueue ?? state.queue,
-      );
-      _updateMediaItem(nextSong);
-    }
+    // Song B player reference (still crossfadePlayer until swap completes at t=end)
+    final songBPlayer = _crossfadeEngine.crossfadePlayer;
+
+    // Reset so Song B triggers its own eager preload for Song C at t=5s.
+    _hasEagerPreloaded = false;
+
+    // 1. Re-attach position/duration/state listeners to Song B
+    //    so the progress bar and isLoading/isPlaying UI reflect Song B.
+    _attachPlayerListeners(songBPlayer);
+
+    // 2. Tell the OS handler to report Song B's position on the lock screen.
+    _handler.setPrimaryPlayer(songBPlayer);
+
+    // 3. Sync duration & progress from Song B right now.
+    _statsThresholdReached = false;
+    state = state.copyWith(
+      currentSong: nextSong,
+      clearContextPlaylistId: nextSong.playlistId == '__suggested__',
+      isPlaying: true,
+      queue: remainingQueue ?? state.queue,
+      duration: songBPlayer.duration ?? Duration.zero,
+      progress: songBPlayer.position,
+    );
+
+    // 4. Update notification artwork/title and liked state.
+    _updateMediaItem(nextSong);
+    final isLiked = ref.read(playlistProvider.notifier).isLiked(nextSong.videoId);
+    _handler.updateLikedState(isLiked);
+  }
+
+  /// Called by CrossfadeEngine when the crossfade volume ramp completes and
+  /// players are swapped. All metadata and listeners were already moved to
+  /// Song B at the midpoint, so this just does final cleanup.
+  void _onCrossfadeSwapComplete(AudioPlayer newPrimary) {
+    // Re-attach to the now-official primary player (same object as crossfadePlayer
+    // at midpoint, but engine has swapped references — safe to re-attach).
+    _attachPlayerListeners(newPrimary);
+    _handler.setPrimaryPlayer(newPrimary);
 
     _pendingCrossfadeSong = null;
     _pendingCrossfadeQueue = null;

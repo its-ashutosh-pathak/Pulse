@@ -18,6 +18,7 @@ class StreamExtractor {
   /// Singleton YoutubeExplode client — reused across calls for performance.
   static YoutubeExplode _yt = YoutubeExplode();
   static Timer? _refreshTimer;
+  static final Map<String, _CachedStream> _cache = {};
 
   static void _ensureTimer() {
     _refreshTimer ??= Timer.periodic(const Duration(hours: 4), (_) {
@@ -37,6 +38,15 @@ class StreamExtractor {
   ///   - 'automatic' → highest available (same as 'high')
   static Future<String> getAudioStreamUrl(String videoId, {String quality = 'automatic'}) async {
     _ensureTimer();
+
+    final cacheKey = '${videoId}_$quality';
+    final cached = _cache[cacheKey];
+    
+    // Use cached URL if less than 2 hours old
+    if (cached != null && DateTime.now().difference(cached.timestamp).inHours < 2) {
+       return cached.url;
+    }
+
     final clients = [
       YoutubeApiClient.androidVr,
       YoutubeApiClient.ios,
@@ -76,6 +86,8 @@ class StreamExtractor {
 
         final url = chosen.url.toString();
         debugPrint('[StreamExtractor] ✅ $videoId via ${client.runtimeType}: ${chosen.audioCodec} ${chosen.bitrate} (q=$quality)');
+        
+        _cache[cacheKey] = _CachedStream(url, DateTime.now());
         return url;
       } catch (e) {
         debugPrint('[StreamExtractor] ⚠️ $videoId client ${client.runtimeType} failed: $e');
@@ -90,8 +102,19 @@ class StreamExtractor {
     throw lastError ?? Exception('All client types failed for $videoId');
   }
 
+  static void invalidateCache(String videoId) {
+    _cache.removeWhere((key, value) => key.startsWith('${videoId}_'));
+  }
+
   /// Close the YoutubeExplode client at app exit.
   static void dispose() {
     _yt.close();
   }
+}
+
+class _CachedStream {
+  final String url;
+  final DateTime timestamp;
+
+  _CachedStream(this.url, this.timestamp);
 }

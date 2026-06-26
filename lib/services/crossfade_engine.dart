@@ -29,6 +29,10 @@ class CrossfadeEngine {
   /// The caller should update state (currentSong, queue, etc.).
   void Function(AudioPlayer newPrimary)? onSwapComplete;
 
+  /// Callback: crossfade is at the 50% volume midpoint.
+  /// The caller should update song metadata here for the best UX.
+  void Function()? onMidpointReached;
+
   CrossfadeEngine({
     required AudioPlayer primaryPlayer,
     required AudioPlayer crossfadePlayer,
@@ -42,6 +46,9 @@ class CrossfadeEngine {
   /// Whether the crossfade player is pre-buffered.
   bool _isPrepared = false;
   bool get isPrepared => _isPrepared;
+
+  /// Tracks whether onMidpointReached has already fired for this crossfade.
+  bool _midpointFired = false;
 
   /// Preload the next track into the crossfade player so that startCrossfade is instant.
   Future<bool> prepareCrossfade({
@@ -125,10 +132,17 @@ class CrossfadeEngine {
         _primaryPlayer.setVolume(1.0 - progress);
         _crossfadePlayer.setVolume(progress);
 
+        // Fire midpoint callback once at the 50% mark
+        if (!_midpointFired && progress >= 0.5) {
+          _midpointFired = true;
+          onMidpointReached?.call();
+        }
+
         if (progress >= 1.0) {
           timer.cancel();
           if (_rampTimer == timer) _rampTimer = null;
           _isPrepared = false;
+          _midpointFired = false;
           _completeCrossfadeSwap();
         }
       });
@@ -188,6 +202,7 @@ class CrossfadeEngine {
     _rampTimer = null;
     _isCrossfading = false;
     _isPrepared = false;
+    _midpointFired = false;
 
     // Stop and reset the crossfade player
     _crossfadePlayer.stop();
