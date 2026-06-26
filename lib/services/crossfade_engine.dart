@@ -190,6 +190,31 @@ class CrossfadeEngine {
     onSwapComplete?.call(_primaryPlayer);
   }
 
+  /// Instantly promotes the pre-buffered crossfade player to primary without
+  /// any volume ramp. Used for manual skips when the next song is already buffered,
+  /// making the transition essentially zero-latency.
+  ///
+  /// Returns the new primary [AudioPlayer] on success, or null if the crossfade
+  /// player was not prepared (caller should fall back to normal setUrl path).
+  Future<AudioPlayer?> instantSwap() async {
+    if (!_isPrepared || _isCrossfading) return null;
+
+    final oldPrimary = _primaryPlayer;
+
+    // Swap player references
+    _primaryPlayer = _crossfadePlayer;
+    _crossfadePlayer = oldPrimary;
+
+    _isPrepared = false;
+    _midpointFired = false;
+
+    // Stop and reset the old primary (now the crossfade slot)
+    oldPrimary.stop();
+    oldPrimary.setVolume(1.0);
+
+    return _primaryPlayer;
+  }
+
   /// Cancel an in-progress crossfade (e.g., user manually plays a different song).
   /// Mirrors the cancel logic in AudioContext.jsx playSong() lines 667-674.
   void cancelCrossfade() {

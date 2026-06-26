@@ -185,8 +185,8 @@ class AudioNotifier extends Notifier<AudioState> {
       final dur = player.duration;
       final posSeconds = position.inSeconds;
 
-      // Eagerly preload the next song after 5 seconds of playback to ensure instant skips
-      if (!_hasEagerPreloaded && posSeconds >= 5 && state.repeatMode != RepeatMode.one) {
+      // Eagerly preload the next song after 1 second of playback to ensure instant skips
+      if (!_hasEagerPreloaded && posSeconds >= 1 && state.repeatMode != RepeatMode.one) {
         _hasEagerPreloaded = true;
         _preloadNextSong();
       }
@@ -307,8 +307,18 @@ class AudioNotifier extends Notifier<AudioState> {
       );
     }
 
-    // Cancel any active crossfade (mirrors lines 667-674)
-    _crossfadeEngine.cancelCrossfade();
+    // ── Fast path: next song already buffered in the crossfade player ──
+    // Skip cancelCrossfade (which would destroy the buffer) and setUrl entirely.
+    // Only possible for online songs — offline/downloads always use the normal path.
+    final canInstantSwap = offlineFilePath == null &&
+        _preloadedNextSongId == normalizedSong.videoId &&
+        _crossfadeEngine.isPrepared;
+
+    // Cancel any active crossfade, but ONLY if we can't fast-swap
+    // (cancelling destroys the pre-buffered audio).
+    if (!canInstantSwap) {
+      _crossfadeEngine.cancelCrossfade();
+    }
     _isCrossfadePending = false;
 
     // Reset state for new song
@@ -317,16 +327,19 @@ class AudioNotifier extends Notifier<AudioState> {
     final myGen = ++_loadGeneration;
     bool isStale() => _loadGeneration != myGen;
 
-    // Force audio_service to buffering state so it holds the background wake lock
-    _handler.setBufferingState();
+    // Force audio_service to buffering state so it holds the background wake lock.
+    // Skip this on the fast path — no network round-trip is happening.
+    if (!canInstantSwap) {
+      _handler.setBufferingState();
+    }
 
     final shouldClearContext = normalizedSong.playlistId == '__suggested__' ||
         (clearQueue && contextPlaylistId == null);
 
     state = state.copyWith(
-      isLoading: true,
+      isLoading: !canInstantSwap, // no loading spinner on instant swap
       currentSong: normalizedSong,
-      contextPlaylistId: contextPlaylistId, // If provided, it will be used (handled in copyWith)
+      contextPlaylistId: contextPlaylistId,
       clearContextPlaylistId: shouldClearContext,
       isPlaying: true,
       progress: Duration.zero,
@@ -348,6 +361,33 @@ class AudioNotifier extends Notifier<AudioState> {
     // Sync liked state on the notification heart icon
     final isLiked = ref.read(playlistProvider.notifier).isLiked(normalizedSong.videoId);
     _handler.updateLikedState(isLiked);
+
+    // ── INSTANT SWAP: use pre-buffered player, skip network entirely ──
+    if (canInstantSwap) {
+      _preloadedNextSongId = null;
+      final newPrimary = await _crossfadeEngine.instantSwap();
+      if (isStale()) return;
+      if (newPrimary != null) {
+        // Wire listeners and OS handler to the new primary
+        _attachPlayerListeners(newPrimary);
+        _handler.setPrimaryPlayer(newPrimary);
+        // Player is already loaded — just play
+        newPrimary.setVolume(1.0);
+        await newPrimary.play();
+        if (isStale()) return;
+        // Sync real duration now that player is active
+        state = state.copyWith(
+          isLoading: false,
+          duration: newPrimary.duration ?? Duration.zero,
+          progress: newPrimary.position,
+        );
+        _consecutiveFailures = 0;
+        return;
+      }
+      // instantSwap returned null — fall through to normal path
+      _handler.setBufferingState();
+      state = state.copyWith(isLoading: true);
+    }
 
     try {
       final player = _crossfadeEngine.primaryPlayer;
