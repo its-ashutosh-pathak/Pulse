@@ -12,8 +12,9 @@ import '../../widgets/skeleton_loader.dart';
 import '../../widgets/song_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import '../../widgets/glass_container.dart';
-import 'package:speech_to_text/speech_to_text.dart';
+
 import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 /// Search screen — port of Search.jsx.
 /// Debounced search with autocomplete, top result card, songs/artists/albums/playlists.
@@ -32,6 +33,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _focusNode = FocusNode();
   final _speechToText = SpeechToText();
   bool _isListening = false;
+  BuildContext? _listeningSheetContext;
 
   @override
   void initState() {
@@ -99,10 +101,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
+  void _dismissListeningSheet() {
+    _speechToText.stop();
+    if (mounted) setState(() => _isListening = false);
+    if (_listeningSheetContext != null) {
+      Navigator.of(_listeningSheetContext!).pop();
+      _listeningSheetContext = null;
+    }
+  }
+
   Future<void> _toggleVoiceSearch() async {
     if (_isListening) {
-      _speechToText.stop();
-      setState(() => _isListening = false);
+      _dismissListeningSheet();
       return;
     }
 
@@ -123,28 +133,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final available = await _speechToText.initialize(
       onStatus: (status) {
-        // Auto-dismiss overlay when speech engine stops naturally
         if (status == 'done' || status == 'notListening') {
-          if (mounted) setState(() => _isListening = false);
+          _dismissListeningSheet();
         }
       },
     );
-    if (available) {
-      setState(() => _isListening = true);
-      _speechToText.listen(
-        onResult: (result) {
-          _controller.text = result.recognizedWords;
-          _controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: _controller.text.length),
-          );
-          ref.read(searchProvider.notifier).onQueryChanged(result.recognizedWords);
-          // Auto-dismiss overlay on final result
-          if (result.finalResult && mounted) {
-            setState(() => _isListening = false);
-          }
-        },
-      );
-    } else {
+    if (!available) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -155,7 +149,40 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         );
       }
+      return;
     }
+
+    setState(() => _isListening = true);
+    _speechToText.listen(
+      pauseFor: const Duration(seconds: 3),
+      onResult: (result) {
+        _controller.text = result.recognizedWords;
+        _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: _controller.text.length),
+        );
+        ref.read(searchProvider.notifier).onQueryChanged(result.recognizedWords);
+        if (result.finalResult) {
+          _dismissListeningSheet();
+        }
+      },
+    );
+
+    // Show bottom sheet
+    if (!mounted) return;
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      builder: (sheetCtx) {
+        _listeningSheetContext = sheetCtx;
+        return _VoiceSearchSheet(onCancel: _dismissListeningSheet);
+      },
+    );
+    // Sheet dismissed by user swipe — stop listening too
+    if (_isListening) _dismissListeningSheet();
+    _listeningSheetContext = null;
   }
 
   @override
@@ -298,34 +325,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ],
         ),
         
-        // ── Listening Overlay ──
-        if (_isListening)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black54,
-              child: Center(
-                child: GlassContainer(
-                  borderRadius: 24, blur: 24,
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(LucideIcons.mic, size: 48, color: accent),
-                      const SizedBox(height: 8),
-                      const Text('Listening...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      const Text('Speak now to search', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _toggleVoiceSearch,
-                        child: const Text('Cancel'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
+
           ],
         ),
       ),
@@ -701,6 +701,141 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => SongActionSheet(song: song),
+    );
+  }
+}
+
+class _VoiceSearchSheet extends StatefulWidget {
+  final VoidCallback onCancel;
+
+  const _VoiceSearchSheet({required this.onCancel});
+
+  @override
+  State<_VoiceSearchSheet> createState() => _VoiceSearchSheetState();
+}
+
+class _VoiceSearchSheetState extends State<_VoiceSearchSheet> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.8).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.4, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = Theme.of(context).colorScheme.primary;
+
+    return GlassContainer(
+      borderRadius: 24,
+      blur: 24,
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 28),
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Mic icon with pulsing animation
+            SizedBox(
+              height: 120,
+              width: 120,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Pulsing ripple
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Opacity(
+                          opacity: _fadeAnimation.value,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: accent,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Static inner mic icon
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(LucideIcons.mic, size: 40, color: accent),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Listening...',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Speak now to search',
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                    ),
+                  ),
+                  onPressed: widget.onCancel,
+                  child: const Text('Cancel', style: TextStyle(fontSize: 15)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
