@@ -31,7 +31,7 @@ The name "Pulse" reflects its core philosophy: an alive, dynamic, and responsive
 ## How it Works
 
 **Authentication & Sync**
-By logging in with Google, your personal library data is synced to a secure Firebase Firestore backend. Pulse employs a local-first caching strategy (via SQLite) so you have instant access to your library even when offline or in airplane mode. Background workers handle uploading changes (like adding a song to a playlist or liking a track) seamlessly when a connection is restored.
+By logging in with Gmail, your personal library data is synced to a secure Firebase Firestore backend. Pulse employs a local-first caching strategy (via SQLite) so you have instant access to your library even when offline or in airplane mode. Background workers handle uploading changes (like adding a song to a playlist or liking a track) seamlessly when a connection is restored.
 
 **Streaming Pipeline**
 Pulse uses the `youtube_explode_dart` library to extract raw stream URLs directly from YouTube Music anonymously. Audio playback is handled by `just_audio` and `audio_service`, ensuring rock-solid background performance, buffering wake-locks to prevent Android from killing the app, and gapless playback.
