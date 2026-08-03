@@ -3,11 +3,11 @@
   "@appTitle": {
     "description": "The title of the application"
   },
-  "artistAbout": "About",
-  "artistPopular": "Popular",
+  "artistAbout": "À propos",
+  "artistPopular": "Populaire",
   "artistAlbums": "Albums",
   "artistSinglesAndEPs": "Singles & EPs",
-  "artistSubscribersCount": "{count} subscribers",
+  "artistSubscribersCount": "{count} abonnés",
   "@artistSubscribersCount": {
     "placeholders": {
       "count": {
@@ -18,7 +18,7 @@
   "artistPlayAll": "Play All",
   "artistLoadError": "Couldn't load artist",
   "artistGoBack": "Go Back",
-  "adminChatFailedToReply": "Failed to reply: {error}",
+  "adminChatFailedToReply": "Échec de la réponse : {error}",
   "@adminChatFailedToReply": {
     "placeholders": {
       "error": {
@@ -27,7 +27,7 @@
     }
   },
   "adminChatSupportChat": "Support Chat",
-  "adminChatError": "Error: {error}",
+  "adminChatError": "Erreur : {error}",
   "@adminChatError": {
     "placeholders": {
       "error": {
@@ -37,7 +37,7 @@
   },
   "adminChatNoHistory": "No conversation history.",
   "adminChatSupportYou": "Support (You)",
-  "adminChatTypeReply": "Type your reply...",
+  "adminChatTypeReply": "Écrivez votre réponse...",
   "broadcastSuccess": "Announcement broadcasted successfully!",
   "broadcastFailed": "Failed to broadcast: {error}",
   "@broadcastFailed": {
@@ -48,9 +48,9 @@
     }
   },
   "broadcastTitle": "Global Announcements",
-  "broadcastSubtitle": "Sent to all users",
-  "broadcastWarning": "Messages sent here will be visible to everyone.",
-  "broadcastError": "Error: {error}",
+  "broadcastSubtitle": "Envoyé à tous les utilisateurs",
+  "broadcastWarning": "Les messages envoyés ici seront visibles par tout le monde.",
+  "broadcastError": "Erreur : {error}",
   "@broadcastError": {
     "placeholders": {
       "error": {
@@ -58,7 +58,7 @@
       }
     }
   },
-  "broadcastNoHistory": "No previous announcements.",
+  "broadcastNoHistory": "Aucune annonce préalable.",
   "broadcastTypeMessage": "Type a global broadcast...",
   "commFailedToSend": "Failed to send: {error}",
   "@commFailedToSend": {
@@ -71,12 +71,12 @@
   "commAdminDashboard": "Admin Dashboard",
   "commAdminSupport": "Admin Support",
   "commAlwaysHere": "Always here to help",
-  "commWelcomeTitle": "Hey! 👋 I'm Ashutosh Pathak",
-  "commWelcomeSubtitle": "Developer of Pulse",
-  "commWelcomeBody1": "I hope you're enjoying listening to your favorite music without annoying ads or subscription barriers. After all, music shouldn't come with a paywall just because someone in a boardroom needed another yacht.\n\nThis section is here so we can connect directly.\n\nFeel free to:",
-  "commBullet1": "Share your feedback",
-  "commBullet2": "Report bugs",
-  "commBullet3": "Suggest new features you'd like to see",
+  "commWelcomeTitle": "Salut ! 👋 Je m'appelle Ashutosh Pathak",
+  "commWelcomeSubtitle": "Développeur de Pulse",
+  "commWelcomeBody1": "J'espère que vous appréciez d'écouter votre musique préférée sans publicités agaçantes ni obstacles liés à un abonnement. Après tout, la musique ne devrait pas être soumise à un accès payant simplement parce qu'un dirigeant avait besoin d'un yacht de plus.\n\nCette rubrique a pour but de nous permettre d'échanger directement.\n\nN'hésitez pas à :",
+  "commBullet1": "Donner votre avis",
+  "commBullet2": "Signaler un bug",
+  "commBullet3": "Proposez de nouvelles fonctionnalités que vous aimeriez voir apparaître",
   "commWelcomeBody2": "I personally read every message and will do my best to improve the app based on your suggestions.\n\nGot an idea for an app that doesn't exist yet, or one that's locked behind expensive subscriptions? Tell me about it! If it's possible, I'll try to build it and make it available for everyone.\n\nThanks for using my app and for being part of this journey. ❤️",
   "commError": "Error: {error}",
   "@commError": {
@@ -98,12 +98,12 @@
   "homeRecentPlaylists": "Recent Playlists",
   "homeRecentlyPlayed": "Recently played",
   "homeSpeedDial": "Speed dial",
-  "homeNoContent": "No content available",
+  "homeNoContent": "Aucun contenu disponible",
   "homeRefresh": "Refresh",
   "homeLoadError": "Couldn't load music feed.",
   "homeRetry": "Retry",
-  "importSuccess": "Successfully Connected to Spotify!",
-  "importFailed": "Failed to connect: {error}",
+  "importSuccess": "Connexion à Spotify réussie !",
+  "importFailed": "Échec de la connexion : {error}",
   "@importFailed": {
     "placeholders": {
       "error": {
@@ -113,9 +113,9 @@
   },
   "importTitle": "Connect Spotify",
   "importSetupTitle": "Setup Spotify Integration",
-  "importSetupDesc": "To bypass Spotify's strict rate limits and import all your playlists instantly, you must use your own free developer key. Follow these simple steps:",
-  "importStep1": "Open the Spotify Developer Dashboard.",
-  "importStep2": "Log in and click \"Create app\".",
+  "importSetupDesc": "Pour contourner les limites de fréquence strictes de Spotify et importer instantanément toutes vos playlists, vous devez utiliser votre propre clé de développeur gratuite. Suivez ces étapes simples :",
+  "importStep1": "Ouvrez le tableau de bord des développeurs Spotify.",
+  "importStep2": "Connectez-vous, puis cliquez sur « Créer une application ».",
   "importStep3": "Fill in any App Name and Description.",
   "importStep4": "Under \"Redirect URIs\", paste the following exact URL:",
   "importRedirectCopied": "Redirect URI Copied!",
@@ -160,7 +160,7 @@
   },
   "downloadsCancel": "Cancel",
   "downloadsClearAll": "Clear All",
-  "downloadsSongsCount": "{count} songs",
+  "downloadsSongsCount": "{count} titres",
   "@downloadsSongsCount": {
     "placeholders": {
       "count": {
@@ -168,7 +168,7 @@
       }
     }
   },
-  "downloadsSongCountSingle": "{count} song",
+  "downloadsSongCountSingle": "{count} titre",
   "@downloadsSongCountSingle": {
     "placeholders": {
       "count": {
@@ -177,13 +177,13 @@
     }
   },
   "downloadsCannotRenameMaster": "Cannot rename the master downloads playlist.",
-  "downloadsRename": "Rename",
+  "downloadsRename": "Renommer",
   "downloadsEditSongs": "Edit Songs",
-  "downloadsDelete": "Delete",
+  "downloadsDelete": "Supprimer",
   "downloadsRenamePlaylistTitle": "Rename Playlist",
-  "downloadsRenamePlaylistDesc": "Enter a new name for your playlist.",
+  "downloadsRenamePlaylistDesc": "Saisissez un nouveau nom pour votre playlist.",
   "downloadsDeletePlaylistTitle": "Delete Playlist?",
-  "downloadsDeleteMasterDesc": "Are you sure you want to delete this? You will lose all downloaded songs and playlists forever.",
+  "downloadsDeleteMasterDesc": "Êtes-vous sûr de vouloir supprimer cela ? Vous perdrez définitivement tous les titres et playlists téléchargés.",
   "downloadsDeletePlaylistDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
   "@downloadsDeletePlaylistDesc": {
     "placeholders": {
@@ -192,10 +192,10 @@
       }
     }
   },
-  "downloadsSave": "Save",
-  "downloadsNoSongs": "No songs in this playlist.",
-  "libraryTitle": "Library",
-  "libraryPauseAll": "Pause all",
+  "downloadsSave": "Enregistrer",
+  "downloadsNoSongs": "Cette playlist ne contient aucun titre.",
+  "libraryTitle": "Bibliothèque",
+  "libraryPauseAll": "Tout mettre en pause",
   "libraryResumeAll": "Resume all",
   "libraryTabPlaylists": "Playlists",
   "libraryTabDownloads": "Downloads",
@@ -224,7 +224,7 @@
       }
     }
   },
-  "libraryImportSaving": "Saving to library...",
+  "libraryImportSaving": "Enregistrement dans la bibliothèque...",
   "libraryImportDoneSongs": "{matched} songs added · tap × to dismiss",
   "@libraryImportDoneSongs": {
     "placeholders": {
@@ -234,16 +234,16 @@
     }
   },
   "libraryImportDoneAll": "All songs added · tap × to dismiss",
-  "libraryAddButton": "Add",
+  "libraryAddButton": "Ajouter",
   "librarySortRecent": "Recently Added",
-  "librarySortAlpha": "Alphabetical",
-  "libraryEmptyTitle": "Your library is empty.",
-  "libraryEmptyDesc": "Tap \"Add\" to start your first Pulse.",
+  "librarySortAlpha": "Par ordre alphabétique",
+  "libraryEmptyTitle": "Votre bibliothèque est vide.",
+  "libraryEmptyDesc": "Appuyez sur « Ajouter » pour créer votre premier Pulse.",
   "libraryRenameLikedError": "Cannot rename the Liked Songs playlist.",
-  "libraryRename": "Rename",
+  "libraryRename": "Renommer",
   "libraryEditSongs": "Edit Songs",
   "libraryDeleteLikedError": "Cannot delete the Liked Songs playlist.",
-  "libraryDelete": "Delete",
+  "libraryDelete": "Supprimer",
   "libraryEditSongsTitle": "Edit Songs",
   "libraryEditSongsCountSingle": "{count} song",
   "@libraryEditSongsCountSingle": {
@@ -261,8 +261,8 @@
       }
     }
   },
-  "libraryCancel": "Cancel",
-  "librarySave": "Save",
+  "libraryCancel": "Annuler",
+  "librarySave": "Enregistrer",
   "libraryNoSongs": "No songs in this playlist.",
   "libraryAddOptionsTitle": "Add to Library",
   "libraryAddOptionsDesc": "Choose how you want to expand your Pulse",
@@ -270,7 +270,7 @@
   "libraryImportPulseDesc": "Paste a Pulse playlist URL",
   "libraryImportYtm": "Import from YT Music",
   "libraryImportYtmDesc": "Paste a PUBLIC playlist URL",
-  "libraryImportSpotify": "Import from Spotify",
+  "libraryImportSpotify": "Importer depuis Spotify",
   "libraryImportSpotifyDesc": "Connect your Spotify",
   "libraryClose": "Close",
   "libraryImportYtmFull": "Import from YouTube Music",
@@ -317,13 +317,13 @@
   "loginErrPassword": "Please enter your password",
   "loginAppName": "PULSE",
   "loginSubtitle": "Feel Every Beat!",
-  "loginMadeWithHeartBy": "Made with ❤️ by ",
+  "loginMadeWithHeartBy": "Réalisé avec ❤️ par ",
   "loginAuthorName": "Ashutosh Pathak",
-  "loginHintName": "Your name",
-  "loginHintEmail": "Email address",
-  "loginHintPassword": "Password",
-  "loginErrEmailReset": "Please enter your email to reset password",
-  "loginResetSent": "Password reset email sent! Check your inbox.",
+  "loginHintName": "Votre nom",
+  "loginHintEmail": "Adresse e-mail",
+  "loginHintPassword": "Mot de passe",
+  "loginErrEmailReset": "Veuillez saisir votre adresse e-mail pour réinitialiser votre mot de passe",
+  "loginResetSent": "Un e-mail de réinitialisation du mot de passe vous a été envoyé ! Vérifiez votre boîte de réception.",
   "loginForgotPwd": "Forgot Password?",
   "loginBtnSignup": "Create Account",
   "loginBtnSignin": "Sign In",
@@ -331,9 +331,9 @@
   "loginToggleNoAccount": "Don't have an Pulse account? ",
   "loginToggleSignin": "Sign In",
   "loginToggleSignup": "Sign Up",
-  "offlineStillOffline": "Still offline. Please check your connection.",
+  "offlineStillOffline": "Toujours hors ligne. Veuillez vérifier votre connexion.",
   "offlineTitle": "You're Offline",
-  "offlineSubtitle": "No internet connection found.\nCheck your network and try again.",
+  "offlineSubtitle": "Aucune connexion Internet détectée.\nVérifiez votre réseau et réessayez.",
   "offlineChecking": "Checking...",
   "offlineRetry": "Retry",
   "offlineGoToDownloads": "Go to Downloads",
@@ -347,7 +347,7 @@
   "playerPickAVibe": "Pick a vibe from your library or home",
   "playerGoHome": "Go Home",
   "playerAppName": "PULSE",
-  "playerEqualizer": "Equalizer",
+  "playerEqualizer": "Égaliseur",
   "playerEqCustom": "Custom",
   "playlistDownloads": "Downloads",
   "playlistOffline": "Offline Playlist",
