@@ -16,7 +16,7 @@
     }
   },
   "artistPlayAll": "Play All",
-  "artistLoadError": "Couldn't load artist",
+  "artistLoadError": "Impossible de charger l'artiste",
   "artistGoBack": "Go Back",
   "adminChatFailedToReply": "Échec de la réponse : {error}",
   "@adminChatFailedToReply": {
@@ -35,7 +35,7 @@
       }
     }
   },
-  "adminChatNoHistory": "No conversation history.",
+  "adminChatNoHistory": "Aucun historique des conversations.",
   "adminChatSupportYou": "Support (You)",
   "adminChatTypeReply": "Écrivez votre réponse...",
   "broadcastSuccess": "Announcement broadcasted successfully!",
@@ -77,8 +77,8 @@
   "commBullet1": "Donner votre avis",
   "commBullet2": "Signaler un bug",
   "commBullet3": "Proposez de nouvelles fonctionnalités que vous aimeriez voir apparaître",
-  "commWelcomeBody2": "I personally read every message and will do my best to improve the app based on your suggestions.\n\nGot an idea for an app that doesn't exist yet, or one that's locked behind expensive subscriptions? Tell me about it! If it's possible, I'll try to build it and make it available for everyone.\n\nThanks for using my app and for being part of this journey. ❤️",
-  "commError": "Error: {error}",
+  "commWelcomeBody2": "Je lis personnellement chaque message et je ferai de mon mieux pour améliorer l'application en tenant compte de vos suggestions.\n\nVous avez une idée d'application qui n'existe pas encore, ou qui est réservée aux abonnés payants ? Parlez-en ! Si c'est possible, j'essaierai de la développer et de la rendre accessible à tous.\n\nMerci d'utiliser mon application et de m'accompagner dans cette aventure. ❤️",
+  "commError": "Erreur : {error}",
   "@commError": {
     "placeholders": {
       "error": {
@@ -86,22 +86,22 @@
       }
     }
   },
-  "commNoMessages": "No messages yet",
-  "commNoMessagesDesc": "Send a message to our support team or check back later for announcements.",
+  "commNoMessages": "Aucun message pour l'instant",
+  "commNoMessagesDesc": "Envoyez un message à notre équipe d'assistance ou revenez plus tard pour prendre connaissance des annonces.",
   "commMessageSupportHint": "Message support...",
   "commGlobalAnnouncements": "Global Announcements",
-  "commSendMessagesToAll": "Send messages to all users",
-  "homeGreetingMorning": "Good morning,",
-  "homeGreetingAfternoon": "Good afternoon,",
-  "homeGreetingEvening": "Good evening,",
-  "homeMember": "Member",
+  "commSendMessagesToAll": "Envoyer des messages à tous les utilisateurs",
+  "homeGreetingMorning": "Bonjour,",
+  "homeGreetingAfternoon": "Bonjour,",
+  "homeGreetingEvening": "Bonsoir,",
+  "homeMember": "Membre",
   "homeRecentPlaylists": "Recent Playlists",
   "homeRecentlyPlayed": "Recently played",
   "homeSpeedDial": "Speed dial",
   "homeNoContent": "Aucun contenu disponible",
-  "homeRefresh": "Refresh",
-  "homeLoadError": "Couldn't load music feed.",
-  "homeRetry": "Retry",
+  "homeRefresh": "Actualiser",
+  "homeLoadError": "Impossible de charger le flux musical.",
+  "homeRetry": "Réessayer",
   "importSuccess": "Connexion à Spotify réussie !",
   "importFailed": "Échec de la connexion : {error}",
   "@importFailed": {
@@ -344,7 +344,7 @@
   "playerUpNext": "Up Next",
   "playerNoTracksInQueue": "No tracks in queue",
   "playerNoMusicPlaying": "No music playing",
-  "playerPickAVibe": "Pick a vibe from your library or home",
+  "playerPickAVibe": "Choisissez une ambiance dans votre bibliothèque ou chez vous",
   "playerGoHome": "Go Home",
   "playerAppName": "PULSE",
   "playerEqualizer": "Égaliseur",
@@ -498,19 +498,19 @@
   "searchIdentifying": "Identifying...",
   "searchListeningForSong": "Listening for a song...",
   "settingsTitle": "Settings",
-  "settingsStreamingQuality": "Streaming Quality",
-  "settingsQualityAutomatic": "Automatic",
-  "settingsQualityLow": "Low",
-  "settingsQualityNormal": "Normal",
-  "settingsQualityHigh": "High",
-  "settingsDownloadQuality": "Download Quality",
-  "settingsPlayback": "Playback",
+  "settingsStreamingQuality": "Qualité de streaming",
+  "settingsQualityAutomatic": "Automatique",
+  "settingsQualityLow": "Faible",
+  "settingsQualityNormal": "Normale",
+  "settingsQualityHigh": "Élevée",
+  "settingsDownloadQuality": "Qualité du téléchargement",
+  "settingsPlayback": "Lecture",
   "settingsCrossfade": "Crossfade",
   "settingsCrossfadeDesc": "Overlap tracks for gapless transitions",
-  "settingsDataUsage": "Data Usage",
-  "settingsDataSaver": "Data Saver",
-  "settingsDataSaverDesc": "Stream at lower quality over cellular",
-  "settingsAppearance": "Appearance",
+  "settingsDataUsage": "Utilisation des données",
+  "settingsDataSaver": "Économiseur de données",
+  "settingsDataSaverDesc": "Diffuser en qualité inférieure via le réseau mobile",
+  "settingsAppearance": "Apparence",
   "settingsCustomAccent": "Custom Accent",
   "settingsSaturation": "Saturation",
   "settingsBrightness": "Brightness",
@@ -556,7 +556,7 @@
     }
   },
   "appUpdateDownload": "Download Update",
-  "navHome": "Home",
+  "navHome": "Accueil",
   "navLibrary": "Library",
   "navSearch": "Search",
   "navSettings": "Settings",
@@ -583,9 +583,9 @@
   "spotifyChoiceSmallDesc": "Paste a public Spotify playlist URL.",
   "spotifyChoiceLargeTitle": "More than 100 songs",
   "spotifyChoiceLargeDesc": "Connect your own Spotify Developer App to import unlimited tracks.",
-  "cancelButton": "Cancel",
+  "cancelButton": "Annuler",
   "spotifyPlaylistsTitle": "Your Spotify Playlists",
-  "spotifyPlaylistsErrorMsg": "Error: {error}\nMake sure your Client ID is valid.",
+  "spotifyPlaylistsErrorMsg": "Erreur : {error}\nVérifiez que votre identifiant client est valide.",
   "@spotifyPlaylistsErrorMsg": {
     "placeholders": {
       "error": {
@@ -593,8 +593,8 @@
       }
     }
   },
-  "spotifyPlaylistsEmpty": "No playlists found in your library",
-  "spotifyPlaylistsTracks": "{count} tracks",
+  "spotifyPlaylistsEmpty": "Aucune playlist n'a été trouvée dans votre bibliothèque",
+  "spotifyPlaylistsTracks": "{count} titres",
   "@spotifyPlaylistsTracks": {
     "placeholders": {
       "count": {
@@ -603,14 +603,14 @@
     }
   },
   "spotifyPlaylistsImport": "Import",
-  "audioPlaybackFailed": "Playback failed. Check your internet connection.",
-  "audioControlPrevious": "Previous",
+  "audioPlaybackFailed": "La lecture a échoué. Vérifiez votre connexion Internet.",
+  "audioControlPrevious": "Précédent",
   "audioControlPause": "Pause",
-  "audioControlPlay": "Play",
-  "audioControlNext": "Next",
+  "audioControlPlay": "Lecture",
+  "audioControlNext": "Suivant",
   "audioControlUnlike": "Unlike",
   "audioControlLike": "Like",
-  "spotifyRawResponseError": "Raw response: {data}\n\nFallback: {error}",
+  "spotifyRawResponseError": "Réponse brute : {data}\n\nSolution de secours : {error}",
   "@spotifyRawResponseError": {
     "placeholders": {
       "data": {
@@ -621,20 +621,20 @@
       }
     }
   },
-  "apiErrorInvalidClient": "Invalid client or client secret.",
-  "apiErrorBadRequest": "Bad Request. Please check your inputs.",
-  "apiErrorUnauthorized": "Unauthorized. Please log in again.",
-  "apiErrorForbidden": "Forbidden. You do not have access.",
-  "apiErrorNotFound": "Resource not found.",
-  "apiErrorEmailInUse": "This email address is already in use.",
-  "apiErrorUserNotFound": "No account found with this email.",
-  "apiErrorWrongPassword": "Incorrect password.",
-  "apiErrorInvalidCredential": "Login failed. Please check your credentials.",
-  "apiErrorNetwork": "Network error. Please check your connection.",
-  "apiErrorSocketTimeout": "Connection timed out. Please try again.",
-  "apiErrorTooManyRequests": "Too many requests. Please wait a moment and try again.",
-  "apiErrorServerError": "Server error. Please try again later.",
-  "apiErrorInvalidEmail": "Please enter a valid email address.",
-  "apiErrorWeakPassword": "Password is too weak. Use at least 6 characters.",
-  "apiErrorTooManyAttempts": "Too many failed attempts. Please try again later."
+  "apiErrorInvalidClient": "Client ou secret client invalide.",
+  "apiErrorBadRequest": "Erreur de requête. Veuillez vérifier les données saisies.",
+  "apiErrorUnauthorized": "Accès non autorisé. Veuillez vous reconnecter.",
+  "apiErrorForbidden": "Interdit. Vous n'y avez pas accès.",
+  "apiErrorNotFound": "Ressource introuvable.",
+  "apiErrorEmailInUse": "Cette adresse e-mail est déjà utilisée.",
+  "apiErrorUserNotFound": "Aucun compte n'a été trouvé pour cette adresse e-mail.",
+  "apiErrorWrongPassword": "Mot de passe incorrect.",
+  "apiErrorInvalidCredential": "Échec de la connexion. Veuillez vérifier vos identifiants.",
+  "apiErrorNetwork": "Erreur réseau. Veuillez vérifier votre connexion.",
+  "apiErrorSocketTimeout": "Délai de connexion dépassé. Veuillez réessayer.",
+  "apiErrorTooManyRequests": "Trop de requêtes. Veuillez patienter un instant et réessayer.",
+  "apiErrorServerError": "Erreur serveur. Veuillez réessayer plus tard.",
+  "apiErrorInvalidEmail": "Veuillez saisir une adresse e-mail valide.",
+  "apiErrorWeakPassword": "Votre mot de passe est trop faible. Veuillez utiliser au moins 6 caractères.",
+  "apiErrorTooManyAttempts": "Trop de tentatives infructueuses. Veuillez réessayer plus tard."
 }
