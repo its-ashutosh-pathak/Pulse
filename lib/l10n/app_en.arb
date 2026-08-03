@@ -136,8 +136,12 @@
   "downloadsStats": "{count} songs • {size}",
   "@downloadsStats": {
     "placeholders": {
-      "count": { "type": "String" },
-      "size": { "type": "String" }
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
     }
   },
   "downloadsNoOffline": "No offline songs yet",
@@ -146,8 +150,12 @@
   "downloadsClearAllDesc": "This will remove {count} songs and free up {size} of storage.",
   "@downloadsClearAllDesc": {
     "placeholders": {
-      "count": { "type": "String" },
-      "size": { "type": "String" }
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
     }
   },
   "downloadsCancel": "Cancel",
@@ -155,13 +163,17 @@
   "downloadsSongsCount": "{count} songs",
   "@downloadsSongsCount": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "downloadsSongCountSingle": "{count} song",
   "@downloadsSongCountSingle": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "downloadsCannotRenameMaster": "Cannot rename the master downloads playlist.",
@@ -175,7 +187,9 @@
   "downloadsDeletePlaylistDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
   "@downloadsDeletePlaylistDesc": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadsSave": "Save",
@@ -189,7 +203,9 @@
   "libraryImportedTask": "Imported {name}",
   "@libraryImportedTask": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "libraryImportWaiting": "Waiting in queue...",
@@ -197,16 +213,24 @@
   "libraryImportProcessed": "{processed}/{total} processed · {matched} matched",
   "@libraryImportProcessed": {
     "placeholders": {
-      "processed": { "type": "String" },
-      "total": { "type": "String" },
-      "matched": { "type": "String" }
+      "processed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "matched": {
+        "type": "String"
+      }
     }
   },
   "libraryImportSaving": "Saving to library...",
   "libraryImportDoneSongs": "{matched} songs added · tap × to dismiss",
   "@libraryImportDoneSongs": {
     "placeholders": {
-      "matched": { "type": "String" }
+      "matched": {
+        "type": "String"
+      }
     }
   },
   "libraryImportDoneAll": "All songs added · tap × to dismiss",
@@ -224,13 +248,17 @@
   "libraryEditSongsCountSingle": "{count} song",
   "@libraryEditSongsCountSingle": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "libraryEditSongsCountPlural": "{count} songs",
   "@libraryEditSongsCountPlural": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "libraryCancel": "Cancel",
@@ -267,7 +295,9 @@
   "libraryDeleteDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
   "@libraryDeleteDesc": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "libraryDeleteBtn": "Delete",
@@ -276,7 +306,9 @@
   "librarySongsCount": "{count} Songs",
   "@librarySongsCount": {
     "placeholders": {
-      "count": { "type": "String" }
+      "count": {
+        "type": "String"
+      }
     }
   },
   "libraryComingSoon": "Coming Soon",
@@ -322,22 +354,32 @@
   "playlistDurationHours": "{hours}h {mins}min",
   "@playlistDurationHours": {
     "placeholders": {
-      "hours": { "type": "String" },
-      "mins": { "type": "String" }
+      "hours": {
+        "type": "String"
+      },
+      "mins": {
+        "type": "String"
+      }
     }
   },
   "playlistDurationMins": "{mins}min",
   "@playlistDurationMins": {
     "placeholders": {
-      "mins": { "type": "String" }
+      "mins": {
+        "type": "String"
+      }
     }
   },
   "playlistFindOnPage": "Find on this page",
   "playlistSongsAndDuration": "{count} songs • {duration}",
   "@playlistSongsAndDuration": {
     "placeholders": {
-      "count": { "type": "String" },
-      "duration": { "type": "String" }
+      "count": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "playlistSortAlpha": "A-Z",
@@ -350,7 +392,9 @@
   "playlistDownloadingSongs": "Downloading {count} {count, plural, =1{song} other{songs}}",
   "@playlistDownloadingSongs": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "playlistView": "VIEW",
@@ -358,8 +402,12 @@
   "playlistShareText": "Check out \"{name}\" on Pulse!\n{url}",
   "@playlistShareText": {
     "placeholders": {
-      "name": { "type": "String" },
-      "url": { "type": "String" }
+      "name": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
     }
   },
   "playlistRemoveFromDownloads": "Remove from Downloads",
@@ -388,7 +436,9 @@
   "profilePlays": "{count} {count, plural, =1{play} other{plays}}",
   "@profilePlays": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "profileYourTopArtists": "Your Top Artists",
@@ -398,7 +448,9 @@
   "profileVersion": "Version {version}",
   "@profileVersion": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "profileMadeWithHeartBy": "Made with ❤️ by ",
@@ -415,7 +467,9 @@
   "searchError": "Error: {message}",
   "@searchError": {
     "placeholders": {
-      "message": { "type": "String" }
+      "message": {
+        "type": "String"
+      }
     }
   },
   "searchSpeechNotAvailable": "Speech recognition not available",
@@ -426,7 +480,9 @@
   "searchNoResultsFor": "No results for \"{query}\"",
   "@searchNoResultsFor": {
     "placeholders": {
-      "query": { "type": "String" }
+      "query": {
+        "type": "String"
+      }
     }
   },
   "searchTryDifferentKeywords": "Try different keywords",
@@ -465,7 +521,9 @@
   "playlistSheetSongsCount": "{count} {count, plural, =1{song} other{songs}}",
   "@playlistSheetSongsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "playlistSheetNameHint": "Playlist Name",
@@ -473,14 +531,18 @@
   "playlistSheetAddedTo": "Added to {name}",
   "@playlistSheetAddedTo": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "playlistSheetCreateFailAuth": "Failed to create playlist: Authentication error",
   "playlistSheetCreateFail": "Failed to create playlist: {error}",
   "@playlistSheetCreateFail": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "playlistSheetCreate": "Create",
@@ -488,7 +550,9 @@
   "appUpdateDesc": "Version {version} is here! Update now to get the latest features.",
   "@appUpdateDesc": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "appUpdateDownload": "Download Update",
@@ -549,8 +613,12 @@
   "spotifyRawResponseError": "Raw response: {data}\n\nFallback: {error}",
   "@spotifyRawResponseError": {
     "placeholders": {
-      "data": { "type": "String" },
-      "error": { "type": "String" }
+      "data": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
     }
   },
   "apiErrorInvalidClient": "Invalid client or client secret.",
