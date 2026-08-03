@@ -38,8 +38,8 @@
   "adminChatNoHistory": "Aucun historique des conversations.",
   "adminChatSupportYou": "Support (You)",
   "adminChatTypeReply": "Écrivez votre réponse...",
-  "broadcastSuccess": "Announcement broadcasted successfully!",
-  "broadcastFailed": "Failed to broadcast: {error}",
+  "broadcastSuccess": "L'annonce a été diffusée avec succès !",
+  "broadcastFailed": "Échec de la diffusion : {error}",
   "@broadcastFailed": {
     "placeholders": {
       "error": {
@@ -60,7 +60,7 @@
   },
   "broadcastNoHistory": "Aucune annonce préalable.",
   "broadcastTypeMessage": "Type a global broadcast...",
-  "commFailedToSend": "Failed to send: {error}",
+  "commFailedToSend": "Échec de l'envoi : {error}",
   "@commFailedToSend": {
     "placeholders": {
       "error": {
@@ -70,7 +70,7 @@
   },
   "commAdminDashboard": "Admin Dashboard",
   "commAdminSupport": "Admin Support",
-  "commAlwaysHere": "Always here to help",
+  "commAlwaysHere": "Toujours là pour vous aider",
   "commWelcomeTitle": "Salut ! 👋 Je m'appelle Ashutosh Pathak",
   "commWelcomeSubtitle": "Développeur de Pulse",
   "commWelcomeBody1": "J'espère que vous appréciez d'écouter votre musique préférée sans publicités agaçantes ni obstacles liés à un abonnement. Après tout, la musique ne devrait pas être soumise à un accès payant simplement parce qu'un dirigeant avait besoin d'un yacht de plus.\n\nCette rubrique a pour but de nous permettre d'échanger directement.\n\nN'hésitez pas à :",
@@ -96,8 +96,8 @@
   "homeGreetingEvening": "Bonsoir,",
   "homeMember": "Membre",
   "homeRecentPlaylists": "Recent Playlists",
-  "homeRecentlyPlayed": "Recently played",
-  "homeSpeedDial": "Speed dial",
+  "homeRecentlyPlayed": "Écoutés Récemment",
+  "homeSpeedDial": "Sélection Rapide",
   "homeNoContent": "Aucun contenu disponible",
   "homeRefresh": "Actualiser",
   "homeLoadError": "Impossible de charger le flux musical.",
@@ -111,20 +111,20 @@
       }
     }
   },
-  "importTitle": "Connect Spotify",
-  "importSetupTitle": "Setup Spotify Integration",
+  "importTitle": "Se connecter à Spotify",
+  "importSetupTitle": "Configurer l'intégration à Spotify",
   "importSetupDesc": "Pour contourner les limites de fréquence strictes de Spotify et importer instantanément toutes vos playlists, vous devez utiliser votre propre clé de développeur gratuite. Suivez ces étapes simples :",
   "importStep1": "Ouvrez le tableau de bord des développeurs Spotify.",
   "importStep2": "Connectez-vous, puis cliquez sur « Créer une application ».",
-  "importStep3": "Fill in any App Name and Description.",
-  "importStep4": "Under \"Redirect URIs\", paste the following exact URL:",
-  "importRedirectCopied": "Redirect URI Copied!",
-  "importStep5": "Save the app, copy your \"Client ID\" from settings, and paste it below.",
-  "importImportant": "Important: The Spotify account used to create this developer app must have an active Premium subscription.",
-  "importClientIdHint": "Paste your Spotify Client ID here...",
-  "importConnectButton": "Connect & Load Library",
-  "downloadingNoActive": "No active downloads",
-  "downloadingMb": "{value} MB",
+  "importStep3": "Saisissez le nom et la description de l'application de votre choix.",
+  "importStep4": "Sous « URI de redirection », collez l’URL exacte suivante :",
+  "importRedirectCopied": "L'URI de redirection a été copiée !",
+  "importStep5": "Enregistrez l'application, copiez votre « ID client » dans les paramètres, puis collez-le ci-dessous.",
+  "importImportant": "Important : le compte Spotify utilisé pour créer cette application développeur doit disposer d'un abonnement Premium actif.",
+  "importClientIdHint": "Collez ici votre identifiant client Spotify...",
+  "importConnectButton": "Se connecter et charger la bibliothèque",
+  "downloadingNoActive": "Aucun téléchargement en cours",
+  "downloadingMb": "{value} Mo",
   "@downloadingMb": {
     "placeholders": {
       "value": {
@@ -132,8 +132,8 @@
       }
     }
   },
-  "downloadsPlaylistName": "Downloads",
-  "downloadsStats": "{count} songs • {size}",
+  "downloadsPlaylistName": "Téléchargements",
+  "downloadsStats": "{count} titres • {size}",
   "@downloadsStats": {
     "placeholders": {
       "count": {
@@ -144,10 +144,10 @@
       }
     }
   },
-  "downloadsNoOffline": "No offline songs yet",
-  "downloadsNoOfflineDesc": "Songs you download will appear here",
-  "downloadsClearAllTitle": "Clear All Downloads?",
-  "downloadsClearAllDesc": "This will remove {count} songs and free up {size} of storage.",
+  "downloadsNoOffline": "Aucun titre hors ligne pour le moment",
+  "downloadsNoOfflineDesc": "Les titres que vous téléchargez s'afficheront ici",
+  "downloadsClearAllTitle": "Effacer tous les téléchargements ?",
+  "downloadsClearAllDesc": "Cela supprimera {count} titres et libérera {size} d'espace de stockage.",
   "@downloadsClearAllDesc": {
     "placeholders": {
       "count": {
@@ -158,8 +158,8 @@
       }
     }
   },
-  "downloadsCancel": "Cancel",
-  "downloadsClearAll": "Clear All",
+  "downloadsCancel": "Annuler",
+  "downloadsClearAll": "Tout effacer",
   "downloadsSongsCount": "{count} titres",
   "@downloadsSongsCount": {
     "placeholders": {
@@ -176,15 +176,15 @@
       }
     }
   },
-  "downloadsCannotRenameMaster": "Cannot rename the master downloads playlist.",
+  "downloadsCannotRenameMaster": "Impossible de renommer la playlist principale « Téléchargements ».",
   "downloadsRename": "Renommer",
-  "downloadsEditSongs": "Edit Songs",
+  "downloadsEditSongs": "Modifier les titres",
   "downloadsDelete": "Supprimer",
-  "downloadsRenamePlaylistTitle": "Rename Playlist",
+  "downloadsRenamePlaylistTitle": "Renommer la playlist",
   "downloadsRenamePlaylistDesc": "Saisissez un nouveau nom pour votre playlist.",
-  "downloadsDeletePlaylistTitle": "Delete Playlist?",
+  "downloadsDeletePlaylistTitle": "Supprimer la playlist ?",
   "downloadsDeleteMasterDesc": "Êtes-vous sûr de vouloir supprimer cela ? Vous perdrez définitivement tous les titres et playlists téléchargés.",
-  "downloadsDeletePlaylistDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
+  "downloadsDeletePlaylistDesc": "Êtes-vous sûr de vouloir supprimer « {name} » ? Cette playlist sera définitivement perdue.",
   "@downloadsDeletePlaylistDesc": {
     "placeholders": {
       "name": {
@@ -196,10 +196,10 @@
   "downloadsNoSongs": "Cette playlist ne contient aucun titre.",
   "libraryTitle": "Bibliothèque",
   "libraryPauseAll": "Tout mettre en pause",
-  "libraryResumeAll": "Resume all",
+  "libraryResumeAll": "Tout reprendre",
   "libraryTabPlaylists": "Playlists",
-  "libraryTabDownloads": "Downloads",
-  "libraryTabDownloading": "Downloading",
+  "libraryTabDownloads": "Téléchargements",
+  "libraryTabDownloading": "Téléchargement",
   "libraryImportedTask": "Imported {name}",
   "@libraryImportedTask": {
     "placeholders": {
@@ -208,8 +208,8 @@
       }
     }
   },
-  "libraryImportWaiting": "Waiting in queue...",
-  "libraryImportFetching": "Fetching playlist...",
+  "libraryImportWaiting": "En attente dans la file d'attente...",
+  "libraryImportFetching": "Chargement de la playlist...",
   "libraryImportProcessed": "{processed}/{total} processed · {matched} matched",
   "@libraryImportProcessed": {
     "placeholders": {
@@ -239,13 +239,13 @@
   "librarySortAlpha": "Par ordre alphabétique",
   "libraryEmptyTitle": "Votre bibliothèque est vide.",
   "libraryEmptyDesc": "Appuyez sur « Ajouter » pour créer votre premier Pulse.",
-  "libraryRenameLikedError": "Cannot rename the Liked Songs playlist.",
+  "libraryRenameLikedError": "Impossible de renommer la playlist « Titres Favoris ».",
   "libraryRename": "Renommer",
   "libraryEditSongs": "Edit Songs",
-  "libraryDeleteLikedError": "Cannot delete the Liked Songs playlist.",
+  "libraryDeleteLikedError": "Impossible de supprimer la playlist « Titres Favoris ».",
   "libraryDelete": "Supprimer",
   "libraryEditSongsTitle": "Edit Songs",
-  "libraryEditSongsCountSingle": "{count} song",
+  "libraryEditSongsCountSingle": "{count} titre",
   "@libraryEditSongsCountSingle": {
     "placeholders": {
       "count": {
@@ -253,7 +253,7 @@
       }
     }
   },
-  "libraryEditSongsCountPlural": "{count} songs",
+  "libraryEditSongsCountPlural": "{count} titres",
   "@libraryEditSongsCountPlural": {
     "placeholders": {
       "count": {
@@ -263,18 +263,18 @@
   },
   "libraryCancel": "Annuler",
   "librarySave": "Enregistrer",
-  "libraryNoSongs": "No songs in this playlist.",
+  "libraryNoSongs": "Aucun titre dans cette playlist.",
   "libraryAddOptionsTitle": "Ajouter à la bibliothèque",
   "libraryAddOptionsDesc": "Choisissez comment vous souhaitez développer votre Pulse",
-  "libraryImportPulse": "Import from Pulse",
-  "libraryImportPulseDesc": "Paste a Pulse playlist URL",
-  "libraryImportYtm": "Import from YT Music",
-  "libraryImportYtmDesc": "Paste a PUBLIC playlist URL",
+  "libraryImportPulse": "Importer depuis Pulse",
+  "libraryImportPulseDesc": "Coller l'URL d'une playlist Pulse",
+  "libraryImportYtm": "Importer depuis YouTube Music",
+  "libraryImportYtmDesc": "Collez l'URL d'une playlist PUBLIQUE",
   "libraryImportSpotify": "Importer depuis Spotify",
-  "libraryImportSpotifyDesc": "Connect your Spotify",
-  "libraryClose": "Close",
-  "libraryImportYtmFull": "Import from YouTube Music",
-  "libraryImportSpotifyFull": "Import from Spotify (≤100)",
+  "libraryImportSpotifyDesc": "Connectez votre compte Spotify",
+  "libraryClose": "Fermer",
+  "libraryImportYtmFull": "Importer depuis YouTube Music",
+  "libraryImportSpotifyFull": "Importer depuis Spotify (≤100)",
   "libraryImportYtmUrlDesc": "Paste a PUBLIC YouTube Music playlist or album URL",
   "libraryImportSpotifyUrlDesc": "Paste a public Spotify playlist URL below",
   "libraryImportPulseHint": "https://pulse.app/playlist/...",
@@ -314,9 +314,9 @@
   "libraryComingSoon": "Coming Soon",
   "loginErrName": "Please enter your name",
   "loginErrEmail": "Veuillez saisir votre adresse e-mail",
-  "loginErrPassword": "Please enter your password",
-  "loginAppName": "PULSE",
-  "loginSubtitle": "Feel Every Beat!",
+  "loginErrPassword": "Veuillez saisir votre mot de passe",
+  "loginAppName": "Pulse",
+  "loginSubtitle": "Ressentez chaque battement !",
   "loginMadeWithHeartBy": "Réalisé avec ❤️ par ",
   "loginAuthorName": "Ashutosh Pathak",
   "loginHintName": "Votre nom",
@@ -324,32 +324,32 @@
   "loginHintPassword": "Mot de passe",
   "loginErrEmailReset": "Veuillez saisir votre adresse e-mail pour réinitialiser votre mot de passe",
   "loginResetSent": "Un e-mail de réinitialisation du mot de passe vous a été envoyé ! Vérifiez votre boîte de réception.",
-  "loginForgotPwd": "Forgot Password?",
+  "loginForgotPwd": "Mot de passe oublié ?",
   "loginBtnSignup": "Create Account",
   "loginBtnSignin": "Sign In",
   "loginToggleHaveAccount": "Already have an Pulse account? ",
-  "loginToggleNoAccount": "Don't have an Pulse account? ",
-  "loginToggleSignin": "Sign In",
-  "loginToggleSignup": "Sign Up",
+  "loginToggleNoAccount": "Vous n'avez pas encore de compte Pulse ? ",
+  "loginToggleSignin": "Se connecter",
+  "loginToggleSignup": "S'inscrire",
   "offlineStillOffline": "Toujours hors ligne. Veuillez vérifier votre connexion.",
-  "offlineTitle": "You're Offline",
+  "offlineTitle": "Vous n'êtes pas connecté(e)",
   "offlineSubtitle": "Aucune connexion Internet détectée.\nVérifiez votre réseau et réessayez.",
-  "offlineChecking": "Checking...",
-  "offlineRetry": "Retry",
-  "offlineGoToDownloads": "Go to Downloads",
-  "playerMadeWithHeartBy": "Made with ❤️ by ",
+  "offlineChecking": "Vérification en cours...",
+  "offlineRetry": "Réessayer",
+  "offlineGoToDownloads": "Accéder aux téléchargements",
+  "playerMadeWithHeartBy": "Réalisé avec ❤️ par ",
   "playerAuthorName": "Ashutosh Pathak",
   "playerSwipeForLyrics": "Swipe for lyrics",
-  "playerNoLyrics": "No lyrics available",
+  "playerNoLyrics": "Paroles indisponibles",
   "playerUpNext": "Up Next",
-  "playerNoTracksInQueue": "No tracks in queue",
-  "playerNoMusicPlaying": "No music playing",
+  "playerNoTracksInQueue": "Aucun titre dans la file d'attente",
+  "playerNoMusicPlaying": "Aucune musique n'est diffusée",
   "playerPickAVibe": "Choisissez une ambiance dans votre bibliothèque ou chez vous",
   "playerGoHome": "Go Home",
   "playerAppName": "PULSE",
   "playerEqualizer": "Égaliseur",
-  "playerEqCustom": "Custom",
-  "playlistDownloads": "Downloads",
+  "playerEqCustom": "Personnalisé",
+  "playlistDownloads": "Téléchargements",
   "playlistOffline": "Offline Playlist",
   "playlistDurationHours": "{hours}h {mins}min",
   "@playlistDurationHours": {
@@ -370,7 +370,7 @@
       }
     }
   },
-  "playlistFindOnPage": "Find on this page",
+  "playlistFindOnPage": "À découvrir sur cette page",
   "playlistSongsAndDuration": "{count} songs • {duration}",
   "@playlistSongsAndDuration": {
     "placeholders": {
@@ -413,7 +413,7 @@
   "playlistRemoveFromDownloads": "Remove from Downloads",
   "playlistRemoveFromPlaylist": "Remove from Playlist",
   "playlistLoadError": "Couldn't load this playlist.",
-  "playlistGoBack": "← Go back",
+  "playlistGoBack": "← Retour",
   "profileNotLoggedIn": "Not logged in",
   "profileSignIn": "Sign In",
   "profileDefaultUser": "Pulse User",
@@ -565,8 +565,8 @@
   "songActionQueue": "Ajouter à la file d'attente",
   "songActionPlaylist": "Ajouter à la playlist",
   "songActionFinding": "Finding...",
-  "songActionAlbum": "Aller à l'album",
-  "songActionArtist": "Go to Artist",
+  "songActionAlbum": "Voir l'album",
+  "songActionArtist": "Voir l'artiste",
   "songActionRemovePlaylist": "Remove from Playlist",
   "songActionRemoveDownload": "Remove from Downloads",
   "songActionDownloadChecking": "Checking...",
