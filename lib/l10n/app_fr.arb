@@ -15,7 +15,7 @@
       }
     }
   },
-  "artistPlayAll": "Play All",
+  "artistPlayAll": "Tout Lire",
   "artistLoadError": "Impossible de charger l'artiste",
   "artistGoBack": "Go Back",
   "adminChatFailedToReply": "Échec de la réponse : {error}",
@@ -225,7 +225,7 @@
     }
   },
   "libraryImportSaving": "Enregistrement dans la bibliothèque...",
-  "libraryImportDoneSongs": "{matched} songs added · tap × to dismiss",
+  "libraryImportDoneSongs": "{matched} titres ajoutés · appuyez sur × pour ignorer",
   "@libraryImportDoneSongs": {
     "placeholders": {
       "matched": {
@@ -233,9 +233,9 @@
       }
     }
   },
-  "libraryImportDoneAll": "All songs added · tap × to dismiss",
+  "libraryImportDoneAll": "Tous les titres ajoutés · appuyez sur × pour fermer",
   "libraryAddButton": "Ajouter",
-  "librarySortRecent": "Recently Added",
+  "librarySortRecent": "Ajoutés récemment",
   "librarySortAlpha": "Par ordre alphabétique",
   "libraryEmptyTitle": "Votre bibliothèque est vide.",
   "libraryEmptyDesc": "Appuyez sur « Ajouter » pour créer votre premier Pulse.",
@@ -264,8 +264,8 @@
   "libraryCancel": "Annuler",
   "librarySave": "Enregistrer",
   "libraryNoSongs": "No songs in this playlist.",
-  "libraryAddOptionsTitle": "Add to Library",
-  "libraryAddOptionsDesc": "Choose how you want to expand your Pulse",
+  "libraryAddOptionsTitle": "Ajouter à la bibliothèque",
+  "libraryAddOptionsDesc": "Choisissez comment vous souhaitez développer votre Pulse",
   "libraryImportPulse": "Import from Pulse",
   "libraryImportPulseDesc": "Paste a Pulse playlist URL",
   "libraryImportYtm": "Import from YT Music",
@@ -313,7 +313,7 @@
   },
   "libraryComingSoon": "Coming Soon",
   "loginErrName": "Please enter your name",
-  "loginErrEmail": "Please enter your email address",
+  "loginErrEmail": "Veuillez saisir votre adresse e-mail",
   "loginErrPassword": "Please enter your password",
   "loginAppName": "PULSE",
   "loginSubtitle": "Feel Every Beat!",
@@ -387,7 +387,7 @@
   "playlistNoMatches": "No matches found.",
   "playlistNoTracks": "No tracks in this playlist.",
   "playlistNoSongsYet": "No songs yet.",
-  "playlistSortRecentlyAdded": "Recently Added",
+  "playlistSortRecentlyAdded": "Ajoutés récemment",
   "playlistSortAlphabetical": "Alphabetical",
   "playlistDownloadingSongs": "Downloading {count} {count, plural, =1{song} other{songs}}",
   "@playlistDownloadingSongs": {
@@ -515,7 +515,7 @@
   "settingsSaturation": "Saturation",
   "settingsBrightness": "Brightness",
   "settingsResetDefault": "Reset Default",
-  "playlistSheetTitle": "Add to Playlist",
+  "playlistSheetTitle": "Ajouter à la playlist",
   "playlistSheetNewPlaylist": "New Playlist",
   "playlistSheetNoPlaylists": "No playlists yet",
   "playlistSheetSongsCount": "{count} {count, plural, =1{song} other{songs}}",
@@ -528,7 +528,7 @@
   },
   "playlistSheetNameHint": "Playlist Name",
   "playlistSheetCancel": "Cancel",
-  "playlistSheetAddedTo": "Added to {name}",
+  "playlistSheetAddedTo": "Ajouté à {name}",
   "@playlistSheetAddedTo": {
     "placeholders": {
       "name": {
@@ -562,10 +562,10 @@
   "navSettings": "Settings",
   "navProfile": "Profile",
   "artistSelect": "Select Artist",
-  "songActionQueue": "Add to Queue",
-  "songActionPlaylist": "Add to Playlist",
+  "songActionQueue": "Ajouter à la file d'attente",
+  "songActionPlaylist": "Ajouter à la playlist",
   "songActionFinding": "Finding...",
-  "songActionAlbum": "Go to Album",
+  "songActionAlbum": "Aller à l'album",
   "songActionArtist": "Go to Artist",
   "songActionRemovePlaylist": "Remove from Playlist",
   "songActionRemoveDownload": "Remove from Downloads",
