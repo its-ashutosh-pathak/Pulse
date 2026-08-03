@@ -1,0 +1,640 @@
+{
+  "appTitle": "Pulse",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "artistAbout": "About",
+  "artistPopular": "Popular",
+  "artistAlbums": "Albums",
+  "artistSinglesAndEPs": "Singles & EPs",
+  "artistSubscribersCount": "{count} subscribers",
+  "@artistSubscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "artistPlayAll": "Play All",
+  "artistLoadError": "Couldn't load artist",
+  "artistGoBack": "Go Back",
+  "adminChatFailedToReply": "Failed to reply: {error}",
+  "@adminChatFailedToReply": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminChatSupportChat": "Support Chat",
+  "adminChatError": "Error: {error}",
+  "@adminChatError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "adminChatNoHistory": "No conversation history.",
+  "adminChatSupportYou": "Support (You)",
+  "adminChatTypeReply": "Type your reply...",
+  "broadcastSuccess": "Announcement broadcasted successfully!",
+  "broadcastFailed": "Failed to broadcast: {error}",
+  "@broadcastFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "broadcastTitle": "Global Announcements",
+  "broadcastSubtitle": "Sent to all users",
+  "broadcastWarning": "Messages sent here will be visible to everyone.",
+  "broadcastError": "Error: {error}",
+  "@broadcastError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "broadcastNoHistory": "No previous announcements.",
+  "broadcastTypeMessage": "Type a global broadcast...",
+  "commFailedToSend": "Failed to send: {error}",
+  "@commFailedToSend": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commAdminDashboard": "Admin Dashboard",
+  "commAdminSupport": "Admin Support",
+  "commAlwaysHere": "Always here to help",
+  "commWelcomeTitle": "Hey! 👋 I'm Ashutosh Pathak",
+  "commWelcomeSubtitle": "Developer of Pulse",
+  "commWelcomeBody1": "I hope you're enjoying listening to your favorite music without annoying ads or subscription barriers. After all, music shouldn't come with a paywall just because someone in a boardroom needed another yacht.\n\nThis section is here so we can connect directly.\n\nFeel free to:",
+  "commBullet1": "Share your feedback",
+  "commBullet2": "Report bugs",
+  "commBullet3": "Suggest new features you'd like to see",
+  "commWelcomeBody2": "I personally read every message and will do my best to improve the app based on your suggestions.\n\nGot an idea for an app that doesn't exist yet, or one that's locked behind expensive subscriptions? Tell me about it! If it's possible, I'll try to build it and make it available for everyone.\n\nThanks for using my app and for being part of this journey. ❤️",
+  "commError": "Error: {error}",
+  "@commError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commNoMessages": "No messages yet",
+  "commNoMessagesDesc": "Send a message to our support team or check back later for announcements.",
+  "commMessageSupportHint": "Message support...",
+  "commGlobalAnnouncements": "Global Announcements",
+  "commSendMessagesToAll": "Send messages to all users",
+  "homeGreetingMorning": "Good morning,",
+  "homeGreetingAfternoon": "Good afternoon,",
+  "homeGreetingEvening": "Good evening,",
+  "homeMember": "Member",
+  "homeRecentPlaylists": "Recent Playlists",
+  "homeRecentlyPlayed": "Recently played",
+  "homeSpeedDial": "Speed dial",
+  "homeNoContent": "No content available",
+  "homeRefresh": "Refresh",
+  "homeLoadError": "Couldn't load music feed.",
+  "homeRetry": "Retry",
+  "importSuccess": "Successfully Connected to Spotify!",
+  "importFailed": "Failed to connect: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "importTitle": "Connect Spotify",
+  "importSetupTitle": "Setup Spotify Integration",
+  "importSetupDesc": "To bypass Spotify's strict rate limits and import all your playlists instantly, you must use your own free developer key. Follow these simple steps:",
+  "importStep1": "Open the Spotify Developer Dashboard.",
+  "importStep2": "Log in and click \"Create app\".",
+  "importStep3": "Fill in any App Name and Description.",
+  "importStep4": "Under \"Redirect URIs\", paste the following exact URL:",
+  "importRedirectCopied": "Redirect URI Copied!",
+  "importStep5": "Save the app, copy your \"Client ID\" from settings, and paste it below.",
+  "importImportant": "Important: The Spotify account used to create this developer app must have an active Premium subscription.",
+  "importClientIdHint": "Paste your Spotify Client ID here...",
+  "importConnectButton": "Connect & Load Library",
+  "downloadingNoActive": "No active downloads",
+  "downloadingMb": "{value} MB",
+  "@downloadingMb": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsPlaylistName": "Downloads",
+  "downloadsStats": "{count} songs • {size}",
+  "@downloadsStats": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsNoOffline": "No offline songs yet",
+  "downloadsNoOfflineDesc": "Songs you download will appear here",
+  "downloadsClearAllTitle": "Clear All Downloads?",
+  "downloadsClearAllDesc": "This will remove {count} songs and free up {size} of storage.",
+  "@downloadsClearAllDesc": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsCancel": "Cancel",
+  "downloadsClearAll": "Clear All",
+  "downloadsSongsCount": "{count} songs",
+  "@downloadsSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsSongCountSingle": "{count} song",
+  "@downloadsSongCountSingle": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsCannotRenameMaster": "Cannot rename the master downloads playlist.",
+  "downloadsRename": "Rename",
+  "downloadsEditSongs": "Edit Songs",
+  "downloadsDelete": "Delete",
+  "downloadsRenamePlaylistTitle": "Rename Playlist",
+  "downloadsRenamePlaylistDesc": "Enter a new name for your playlist.",
+  "downloadsDeletePlaylistTitle": "Delete Playlist?",
+  "downloadsDeleteMasterDesc": "Are you sure you want to delete this? You will lose all downloaded songs and playlists forever.",
+  "downloadsDeletePlaylistDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
+  "@downloadsDeletePlaylistDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadsSave": "Save",
+  "downloadsNoSongs": "No songs in this playlist.",
+  "libraryTitle": "Library",
+  "libraryPauseAll": "Pause all",
+  "libraryResumeAll": "Resume all",
+  "libraryTabPlaylists": "Playlists",
+  "libraryTabDownloads": "Downloads",
+  "libraryTabDownloading": "Downloading",
+  "libraryImportedTask": "Imported {name}",
+  "@libraryImportedTask": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryImportWaiting": "Waiting in queue...",
+  "libraryImportFetching": "Fetching playlist...",
+  "libraryImportProcessed": "{processed}/{total} processed · {matched} matched",
+  "@libraryImportProcessed": {
+    "placeholders": {
+      "processed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "matched": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryImportSaving": "Saving to library...",
+  "libraryImportDoneSongs": "{matched} songs added · tap × to dismiss",
+  "@libraryImportDoneSongs": {
+    "placeholders": {
+      "matched": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryImportDoneAll": "All songs added · tap × to dismiss",
+  "libraryAddButton": "Add",
+  "librarySortRecent": "Recently Added",
+  "librarySortAlpha": "Alphabetical",
+  "libraryEmptyTitle": "Your library is empty.",
+  "libraryEmptyDesc": "Tap \"Add\" to start your first Pulse.",
+  "libraryRenameLikedError": "Cannot rename the Liked Songs playlist.",
+  "libraryRename": "Rename",
+  "libraryEditSongs": "Edit Songs",
+  "libraryDeleteLikedError": "Cannot delete the Liked Songs playlist.",
+  "libraryDelete": "Delete",
+  "libraryEditSongsTitle": "Edit Songs",
+  "libraryEditSongsCountSingle": "{count} song",
+  "@libraryEditSongsCountSingle": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryEditSongsCountPlural": "{count} songs",
+  "@libraryEditSongsCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryCancel": "Cancel",
+  "librarySave": "Save",
+  "libraryNoSongs": "No songs in this playlist.",
+  "libraryAddOptionsTitle": "Add to Library",
+  "libraryAddOptionsDesc": "Choose how you want to expand your Pulse",
+  "libraryImportPulse": "Import from Pulse",
+  "libraryImportPulseDesc": "Paste a Pulse playlist URL",
+  "libraryImportYtm": "Import from YT Music",
+  "libraryImportYtmDesc": "Paste a PUBLIC playlist URL",
+  "libraryImportSpotify": "Import from Spotify",
+  "libraryImportSpotifyDesc": "Connect your Spotify",
+  "libraryClose": "Close",
+  "libraryImportYtmFull": "Import from YouTube Music",
+  "libraryImportSpotifyFull": "Import from Spotify (≤100)",
+  "libraryImportYtmUrlDesc": "Paste a PUBLIC YouTube Music playlist or album URL",
+  "libraryImportSpotifyUrlDesc": "Paste a public Spotify playlist URL below",
+  "libraryImportPulseHint": "https://pulse.app/playlist/...",
+  "libraryImportYtmHint": "https://music.youtube.com/playlist?list=...",
+  "libraryImportSpotifyHint": "https://open.spotify.com/playlist/...",
+  "libraryImportFailed": "Failed to import Pulse playlist",
+  "importErrorPlaylist": "Error importing playlist",
+  "importErrorHighlyPopulated": "Playlist is highly populated, it might take a while to fetch.",
+  "libraryImportBtn": "Import",
+  "libraryCreateTitle": "New Playlist",
+  "libraryCreateDesc": "What should we call your new playlist?",
+  "libraryCreateHint": "e.g. Midnight Rides",
+  "libraryCreateBtn": "Create",
+  "libraryRenameTitle": "Rename Playlist",
+  "libraryRenameDesc": "Enter a new name for your playlist.",
+  "libraryRenameBtn": "Rename",
+  "libraryDeleteTitle": "Delete Playlist?",
+  "libraryDeleteDesc": "Are you sure you want to delete \"{name}\"? This playlist will be lost forever.",
+  "@libraryDeleteDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryDeleteBtn": "Delete",
+  "librarySortLabelAlpha": "A-Z",
+  "librarySortLabelRecent": "Recent",
+  "librarySongsCount": "{count} Songs",
+  "@librarySongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryComingSoon": "Coming Soon",
+  "loginErrName": "Please enter your name",
+  "loginErrEmail": "Please enter your email address",
+  "loginErrPassword": "Please enter your password",
+  "loginAppName": "PULSE",
+  "loginSubtitle": "Feel Every Beat!",
+  "loginMadeWithHeartBy": "Made with ❤️ by ",
+  "loginAuthorName": "Ashutosh Pathak",
+  "loginHintName": "Your name",
+  "loginHintEmail": "Email address",
+  "loginHintPassword": "Password",
+  "loginErrEmailReset": "Please enter your email to reset password",
+  "loginResetSent": "Password reset email sent! Check your inbox.",
+  "loginForgotPwd": "Forgot Password?",
+  "loginBtnSignup": "Create Account",
+  "loginBtnSignin": "Sign In",
+  "loginToggleHaveAccount": "Already have an Pulse account? ",
+  "loginToggleNoAccount": "Don't have an Pulse account? ",
+  "loginToggleSignin": "Sign In",
+  "loginToggleSignup": "Sign Up",
+  "offlineStillOffline": "Still offline. Please check your connection.",
+  "offlineTitle": "You're Offline",
+  "offlineSubtitle": "No internet connection found.\nCheck your network and try again.",
+  "offlineChecking": "Checking...",
+  "offlineRetry": "Retry",
+  "offlineGoToDownloads": "Go to Downloads",
+  "playerMadeWithHeartBy": "Made with ❤️ by ",
+  "playerAuthorName": "Ashutosh Pathak",
+  "playerSwipeForLyrics": "Swipe for lyrics",
+  "playerNoLyrics": "No lyrics available",
+  "playerUpNext": "Up Next",
+  "playerNoTracksInQueue": "No tracks in queue",
+  "playerNoMusicPlaying": "No music playing",
+  "playerPickAVibe": "Pick a vibe from your library or home",
+  "playerGoHome": "Go Home",
+  "playerAppName": "PULSE",
+  "playerEqualizer": "Equalizer",
+  "playerEqCustom": "Custom",
+  "playlistDownloads": "Downloads",
+  "playlistOffline": "Offline Playlist",
+  "playlistDurationHours": "{hours}h {mins}min",
+  "@playlistDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "mins": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistDurationMins": "{mins}min",
+  "@playlistDurationMins": {
+    "placeholders": {
+      "mins": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistFindOnPage": "Find on this page",
+  "playlistSongsAndDuration": "{count} songs • {duration}",
+  "@playlistSongsAndDuration": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistSortAlpha": "A-Z",
+  "playlistSortRecent": "Recent",
+  "playlistNoMatches": "No matches found.",
+  "playlistNoTracks": "No tracks in this playlist.",
+  "playlistNoSongsYet": "No songs yet.",
+  "playlistSortRecentlyAdded": "Recently Added",
+  "playlistSortAlphabetical": "Alphabetical",
+  "playlistDownloadingSongs": "Downloading {count} {count, plural, =1{song} other{songs}}",
+  "@playlistDownloadingSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistView": "VIEW",
+  "playlistAllDownloaded": "All songs are already downloaded",
+  "playlistShareText": "Check out \"{name}\" on Pulse!\n{url}",
+  "@playlistShareText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistRemoveFromDownloads": "Remove from Downloads",
+  "playlistRemoveFromPlaylist": "Remove from Playlist",
+  "playlistLoadError": "Couldn't load this playlist.",
+  "playlistGoBack": "← Go back",
+  "profileNotLoggedIn": "Not logged in",
+  "profileSignIn": "Sign In",
+  "profileDefaultUser": "Pulse User",
+  "profileEditProfile": "Edit Profile",
+  "profileTimeframeDay": "Day",
+  "profileTimeframeWeek": "Week",
+  "profileTimeframeMonth": "Month",
+  "profileTimeframeYear": "Year",
+  "profileListeningTime": "LISTENING TIME",
+  "profileToday": "Today",
+  "profileThisWeek": "This week",
+  "profileThisMonth": "This month",
+  "profileThisYear": "This year",
+  "profileDailyAvg": "DAILY AVG",
+  "profilePerDay": "Per day",
+  "profileLifetimeListening": "LIFETIME LISTENING",
+  "profileTotalTimeListened": "Total time listened to music on Pulse",
+  "profileYourTopSongs": "Your Top Songs",
+  "profileListeningHistoryEmpty": "Listening history will appear here.",
+  "profilePlays": "{count} {count, plural, =1{play} other{plays}}",
+  "@profilePlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileYourTopArtists": "Your Top Artists",
+  "profileTopArtistsEmpty": "Your favorite artists will appear here.",
+  "profileArtistLabel": "Artist",
+  "profileSignOut": "Sign Out",
+  "profileVersion": "Version {version}",
+  "@profileVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "profileMadeWithHeartBy": "Made with ❤️ by ",
+  "profileAuthorName": "Ashutosh Pathak",
+  "profileEditProfileHeader": "EDIT PROFILE",
+  "profileDisplayName": "DISPLAY NAME",
+  "profileCancel": "Cancel",
+  "profileSave": "Save",
+  "profileChooseAvatar": "Choose Avatar",
+  "searchMicPermissionRequired": "Microphone permission required for this feature",
+  "searchUnknownSong": "Unknown Song",
+  "searchUnknownArtist": "Unknown Artist",
+  "searchNoSongDetected": "No song detected.",
+  "searchError": "Error: {message}",
+  "@searchError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "searchSpeechNotAvailable": "Speech recognition not available",
+  "searchHint": "Songs, artists, albums, playlists…",
+  "searchRecentEmpty": "Your recent searches appear here",
+  "searchRecentSearches": "Recent Searches",
+  "searchClearAll": "Clear all",
+  "searchNoResultsFor": "No results for \"{query}\"",
+  "@searchNoResultsFor": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "searchTryDifferentKeywords": "Try different keywords",
+  "searchTopResult": "Top result",
+  "searchSongsLabel": "Songs",
+  "searchArtistsLabel": "Artists",
+  "searchAlbumsLabel": "Albums",
+  "searchPlaylistsLabel": "Playlists",
+  "searchArtistLabel": "Artist",
+  "searchListening": "Listening...",
+  "searchSpeakNow": "Speak now to search",
+  "searchCancel": "Cancel",
+  "searchIdentifying": "Identifying...",
+  "searchListeningForSong": "Listening for a song...",
+  "settingsTitle": "Settings",
+  "settingsStreamingQuality": "Streaming Quality",
+  "settingsQualityAutomatic": "Automatic",
+  "settingsQualityLow": "Low",
+  "settingsQualityNormal": "Normal",
+  "settingsQualityHigh": "High",
+  "settingsDownloadQuality": "Download Quality",
+  "settingsPlayback": "Playback",
+  "settingsCrossfade": "Crossfade",
+  "settingsCrossfadeDesc": "Overlap tracks for gapless transitions",
+  "settingsDataUsage": "Data Usage",
+  "settingsDataSaver": "Data Saver",
+  "settingsDataSaverDesc": "Stream at lower quality over cellular",
+  "settingsAppearance": "Appearance",
+  "settingsCustomAccent": "Custom Accent",
+  "settingsSaturation": "Saturation",
+  "settingsBrightness": "Brightness",
+  "settingsResetDefault": "Reset Default",
+  "playlistSheetTitle": "Add to Playlist",
+  "playlistSheetNewPlaylist": "New Playlist",
+  "playlistSheetNoPlaylists": "No playlists yet",
+  "playlistSheetSongsCount": "{count} {count, plural, =1{song} other{songs}}",
+  "@playlistSheetSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistSheetNameHint": "Playlist Name",
+  "playlistSheetCancel": "Cancel",
+  "playlistSheetAddedTo": "Added to {name}",
+  "@playlistSheetAddedTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistSheetCreateFailAuth": "Failed to create playlist: Authentication error",
+  "playlistSheetCreateFail": "Failed to create playlist: {error}",
+  "@playlistSheetCreateFail": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playlistSheetCreate": "Create",
+  "appUpdateAvailable": "Update Available",
+  "appUpdateDesc": "Version {version} is here! Update now to get the latest features.",
+  "@appUpdateDesc": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateDownload": "Download Update",
+  "navHome": "Home",
+  "navLibrary": "Library",
+  "navSearch": "Search",
+  "navSettings": "Settings",
+  "navProfile": "Profile",
+  "artistSelect": "Select Artist",
+  "songActionQueue": "Add to Queue",
+  "songActionPlaylist": "Add to Playlist",
+  "songActionFinding": "Finding...",
+  "songActionAlbum": "Go to Album",
+  "songActionArtist": "Go to Artist",
+  "songActionRemovePlaylist": "Remove from Playlist",
+  "songActionRemoveDownload": "Remove from Downloads",
+  "songActionDownloadChecking": "Checking...",
+  "songActionDownloading": "Downloading...",
+  "songActionDownloaded": "Downloaded!",
+  "songActionDownloadAlready": "Already downloaded",
+  "songActionDownloadFailed": "Download failed",
+  "songActionDownload": "Download",
+  "songActionDownloadingSnack": "Downloading",
+  "songActionView": "VIEW",
+  "spotifyImportTitle": "Import from Spotify",
+  "spotifyImportSubtitle": "Choose your playlist size",
+  "spotifyChoiceSmallTitle": "100 songs or fewer",
+  "spotifyChoiceSmallDesc": "Paste a public Spotify playlist URL.",
+  "spotifyChoiceLargeTitle": "More than 100 songs",
+  "spotifyChoiceLargeDesc": "Connect your own Spotify Developer App to import unlimited tracks.",
+  "cancelButton": "Cancel",
+  "spotifyPlaylistsTitle": "Your Spotify Playlists",
+  "spotifyPlaylistsErrorMsg": "Error: {error}\nMake sure your Client ID is valid.",
+  "@spotifyPlaylistsErrorMsg": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "spotifyPlaylistsEmpty": "No playlists found in your library",
+  "spotifyPlaylistsTracks": "{count} tracks",
+  "@spotifyPlaylistsTracks": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "spotifyPlaylistsImport": "Import",
+  "audioPlaybackFailed": "Playback failed. Check your internet connection.",
+  "audioControlPrevious": "Previous",
+  "audioControlPause": "Pause",
+  "audioControlPlay": "Play",
+  "audioControlNext": "Next",
+  "audioControlUnlike": "Unlike",
+  "audioControlLike": "Like",
+  "spotifyRawResponseError": "Raw response: {data}\n\nFallback: {error}",
+  "@spotifyRawResponseError": {
+    "placeholders": {
+      "data": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "apiErrorInvalidClient": "Invalid client or client secret.",
+  "apiErrorBadRequest": "Bad Request. Please check your inputs.",
+  "apiErrorUnauthorized": "Unauthorized. Please log in again.",
+  "apiErrorForbidden": "Forbidden. You do not have access.",
+  "apiErrorNotFound": "Resource not found.",
+  "apiErrorEmailInUse": "This email address is already in use.",
+  "apiErrorUserNotFound": "No account found with this email.",
+  "apiErrorWrongPassword": "Incorrect password.",
+  "apiErrorInvalidCredential": "Login failed. Please check your credentials.",
+  "apiErrorNetwork": "Network error. Please check your connection.",
+  "apiErrorSocketTimeout": "Connection timed out. Please try again.",
+  "apiErrorTooManyRequests": "Too many requests. Please wait a moment and try again.",
+  "apiErrorServerError": "Server error. Please try again later.",
+  "apiErrorInvalidEmail": "Please enter a valid email address.",
+  "apiErrorWeakPassword": "Password is too weak. Use at least 6 characters.",
+  "apiErrorTooManyAttempts": "Too many failed attempts. Please try again later."
+}
