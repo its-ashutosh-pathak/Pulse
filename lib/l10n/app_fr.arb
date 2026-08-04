@@ -36,7 +36,7 @@
     }
   },
   "adminChatNoHistory": "Aucun historique des conversations.",
-  "adminChatSupportYou": "Support (You)",
+  "adminChatSupportYou": "Assistance (pour vous)",
   "adminChatTypeReply": "Écrivez votre réponse...",
   "broadcastSuccess": "L'annonce a été diffusée avec succès !",
   "broadcastFailed": "Échec de la diffusion : {error}",
@@ -68,8 +68,8 @@
       }
     }
   },
-  "commAdminDashboard": "Admin Dashboard",
-  "commAdminSupport": "Admin Support",
+  "commAdminDashboard": "Tableau de bord de l'administrateur",
+  "commAdminSupport": "Assistance administrative",
   "commAlwaysHere": "Toujours là pour vous aider",
   "commWelcomeTitle": "Salut ! 👋 Je m'appelle Ashutosh Pathak",
   "commWelcomeSubtitle": "Développeur de Pulse",
@@ -95,7 +95,7 @@
   "homeGreetingAfternoon": "Bonjour,",
   "homeGreetingEvening": "Bonsoir,",
   "homeMember": "Membre",
-  "homeRecentPlaylists": "Recent Playlists",
+  "homeRecentPlaylists": "Playlists Récentes",
   "homeRecentlyPlayed": "Écoutés Récemment",
   "homeSpeedDial": "Sélection Rapide",
   "homeNoContent": "Aucun contenu disponible",
@@ -241,10 +241,10 @@
   "libraryEmptyDesc": "Appuyez sur « Ajouter » pour créer votre premier Pulse.",
   "libraryRenameLikedError": "Impossible de renommer la playlist « Titres Favoris ».",
   "libraryRename": "Renommer",
-  "libraryEditSongs": "Edit Songs",
+  "libraryEditSongs": "Modifier les titres",
   "libraryDeleteLikedError": "Impossible de supprimer la playlist « Titres Favoris ».",
   "libraryDelete": "Supprimer",
-  "libraryEditSongsTitle": "Edit Songs",
+  "libraryEditSongsTitle": "Modifier les titres",
   "libraryEditSongsCountSingle": "{count} titre",
   "@libraryEditSongsCountSingle": {
     "placeholders": {
@@ -281,12 +281,12 @@
   "libraryImportYtmHint": "https://music.youtube.com/playlist?list=...",
   "libraryImportSpotifyHint": "https://open.spotify.com/playlist/...",
   "libraryImportFailed": "Échec de l'importation de la playlist Pulse",
-  "importErrorPlaylist": "Error importing playlist",
-  "importErrorHighlyPopulated": "Playlist is highly populated, it might take a while to fetch.",
+  "importErrorPlaylist": "Erreur lors de l'importation de la playlist",
+  "importErrorHighlyPopulated": "La playlist contient beaucoup d'éléments ; son chargement peut prendre un certain temps.",
   "libraryImportBtn": "Import",
-  "libraryCreateTitle": "New Playlist",
+  "libraryCreateTitle": "Nouvelle playlist",
   "libraryCreateDesc": "Comment devrions-nous appeler votre nouvelle playlist ?",
-  "libraryCreateHint": "e.g. Midnight Rides",
+  "libraryCreateHint": "par exemple : « Midnight Rides »",
   "libraryCreateBtn": "Créer",
   "libraryRenameTitle": "Renommer une playlist",
   "libraryRenameDesc": "Saisissez un nouveau nom pour votre playlist.",
@@ -311,7 +311,7 @@
       }
     }
   },
-  "libraryComingSoon": "Coming Soon",
+  "libraryComingSoon": "À venir",
   "loginErrName": "Veuillez saisir votre nom",
   "loginErrEmail": "Veuillez saisir votre adresse e-mail",
   "loginErrPassword": "Veuillez saisir votre mot de passe",
@@ -326,8 +326,8 @@
   "loginResetSent": "Un e-mail de réinitialisation du mot de passe vous a été envoyé ! Vérifiez votre boîte de réception.",
   "loginForgotPwd": "Mot de passe oublié ?",
   "loginBtnSignup": "Create Account",
-  "loginBtnSignin": "Sign In",
-  "loginToggleHaveAccount": "Already have an Pulse account? ",
+  "loginBtnSignin": "Se connecter",
+  "loginToggleHaveAccount": "Vous avez déjà un compte Pulse ? ",
   "loginToggleNoAccount": "Vous n'avez pas encore de compte Pulse ? ",
   "loginToggleSignin": "Se connecter",
   "loginToggleSignup": "S'inscrire",
@@ -350,7 +350,7 @@
   "playerEqualizer": "Égaliseur",
   "playerEqCustom": "Personnalisé",
   "playlistDownloads": "Téléchargements",
-  "playlistOffline": "Offline Playlist",
+  "playlistOffline": "Playlist hors ligne",
   "playlistDurationHours": "{hours}h {mins}min",
   "@playlistDurationHours": {
     "placeholders": {
@@ -398,8 +398,8 @@
     }
   },
   "playlistView": "VIEW",
-  "playlistAllDownloaded": "All songs are already downloaded",
-  "playlistShareText": "Check out \"{name}\" on Pulse!\n{url}",
+  "playlistAllDownloaded": "Tous les titres sont déjà téléchargés",
+  "playlistShareText": "Découvrez « {name} » sur Pulse !\n{url}",
   "@playlistShareText": {
     "placeholders": {
       "name": {
@@ -410,14 +410,14 @@
       }
     }
   },
-  "playlistRemoveFromDownloads": "Remove from Downloads",
-  "playlistRemoveFromPlaylist": "Remove from Playlist",
-  "playlistLoadError": "Couldn't load this playlist.",
+  "playlistRemoveFromDownloads": "Supprimer du dossier « Téléchargements »",
+  "playlistRemoveFromPlaylist": "Supprimer de la playlist",
+  "playlistLoadError": "Impossible de charger cette playlist.",
   "playlistGoBack": "← Retour",
-  "profileNotLoggedIn": "Not logged in",
-  "profileSignIn": "Sign In",
-  "profileDefaultUser": "Pulse User",
-  "profileEditProfile": "Edit Profile",
+  "profileNotLoggedIn": "Non connecté",
+  "profileSignIn": "Se connecter",
+  "profileDefaultUser": "Utilisateur Pulse",
+  "profileEditProfile": "Modifier le profil",
   "profileTimeframeDay": "Jour",
   "profileTimeframeWeek": "Semaine",
   "profileTimeframeMonth": "Mois",
@@ -431,9 +431,9 @@
   "profilePerDay": "Par jour",
   "profileLifetimeListening": "ÉCOUTE À VIE",
   "profileTotalTimeListened": "Durée totale d'écoute de musique sur Pulse",
-  "profileYourTopSongs": "Your Top Songs",
-  "profileListeningHistoryEmpty": "Listening history will appear here.",
-  "profilePlays": "{count} {count, plural, =1{play} other{plays}}",
+  "profileYourTopSongs": "Vos titres préférés",
+  "profileListeningHistoryEmpty": "L'historique d'écoute s'affichera ici.",
+  "profilePlays": "{count} {count, plural, one {}=1{écoute} other{écoutes}}",
   "@profilePlays": {
     "placeholders": {
       "count": {
@@ -441,8 +441,8 @@
       }
     }
   },
-  "profileYourTopArtists": "Your Top Artists",
-  "profileTopArtistsEmpty": "Your favorite artists will appear here.",
+  "profileYourTopArtists": "Vos artistes préférés",
+  "profileTopArtistsEmpty": "Vos artistes préférés apparaîtront ici.",
   "profileArtistLabel": "Artiste",
   "profileSignOut": "Se déconnecter",
   "profileVersion": "Version {version}",
@@ -459,12 +459,12 @@
   "profileDisplayName": "NOM D'AFFICHAGE",
   "profileCancel": "Annuler",
   "profileSave": "Enregistrer",
-  "profileChooseAvatar": "Choose Avatar",
-  "searchMicPermissionRequired": "Microphone permission required for this feature",
-  "searchUnknownSong": "Unknown Song",
-  "searchUnknownArtist": "Unknown Artist",
-  "searchNoSongDetected": "No song detected.",
-  "searchError": "Error: {message}",
+  "profileChooseAvatar": "Choisissez un avatar",
+  "searchMicPermissionRequired": "Cette fonctionnalité nécessite l'autorisation d'accès au microphone",
+  "searchUnknownSong": "Titre inconnu",
+  "searchUnknownArtist": "Artiste inconnu",
+  "searchNoSongDetected": "Aucun titre détecté.",
+  "searchError": "Erreur : {message}",
   "@searchError": {
     "placeholders": {
       "message": {
@@ -472,12 +472,12 @@
       }
     }
   },
-  "searchSpeechNotAvailable": "Speech recognition not available",
-  "searchHint": "Songs, artists, albums, playlists…",
-  "searchRecentEmpty": "Your recent searches appear here",
-  "searchRecentSearches": "Recent Searches",
-  "searchClearAll": "Clear all",
-  "searchNoResultsFor": "No results for \"{query}\"",
+  "searchSpeechNotAvailable": "Reconnaissance vocale non disponible",
+  "searchHint": "Titres, artistes, albums, playlists…",
+  "searchRecentEmpty": "Vos recherches récentes s'affichent ici",
+  "searchRecentSearches": "Recherches récentes",
+  "searchClearAll": "Tout effacer",
+  "searchNoResultsFor": "Aucun résultat pour « {query} »",
   "@searchNoResultsFor": {
     "placeholders": {
       "query": {
@@ -485,17 +485,17 @@
       }
     }
   },
-  "searchTryDifferentKeywords": "Try different keywords",
+  "searchTryDifferentKeywords": "Essayez différents mots-clés",
   "searchTopResult": "Top result",
-  "searchSongsLabel": "Songs",
-  "searchArtistsLabel": "Artists",
+  "searchSongsLabel": "Titres",
+  "searchArtistsLabel": "Artistes",
   "searchAlbumsLabel": "Albums",
   "searchPlaylistsLabel": "Playlists",
-  "searchArtistLabel": "Artist",
-  "searchListening": "Listening...",
+  "searchArtistLabel": "Artiste",
+  "searchListening": "Écoute...",
   "searchSpeakNow": "Speak now to search",
-  "searchCancel": "Cancel",
-  "searchIdentifying": "Identifying...",
+  "searchCancel": "Annuler",
+  "searchIdentifying": "Identification en cours...",
   "searchListeningForSong": "Listening for a song...",
   "settingsTitle": "Settings",
   "settingsStreamingQuality": "Qualité de streaming",
@@ -511,6 +511,7 @@
   "settingsDataSaver": "Économiseur de données",
   "settingsDataSaverDesc": "Diffuser en qualité inférieure via le réseau mobile",
   "settingsAppearance": "Apparence",
+  "settingsLanguage": "Language",
   "settingsCustomAccent": "Custom Accent",
   "settingsSaturation": "Saturation",
   "settingsBrightness": "Brightness",
