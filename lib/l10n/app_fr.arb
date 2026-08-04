@@ -17,7 +17,7 @@
   },
   "artistPlayAll": "Tout Lire",
   "artistLoadError": "Impossible de charger l'artiste",
-  "artistGoBack": "Go Back",
+  "artistGoBack": "Retour",
   "adminChatFailedToReply": "Échec de la réponse : {error}",
   "@adminChatFailedToReply": {
     "placeholders": {
@@ -26,7 +26,7 @@
       }
     }
   },
-  "adminChatSupportChat": "Support Chat",
+  "adminChatSupportChat": "Tchat d'assistance",
   "adminChatError": "Erreur : {error}",
   "@adminChatError": {
     "placeholders": {
@@ -47,7 +47,7 @@
       }
     }
   },
-  "broadcastTitle": "Global Announcements",
+  "broadcastTitle": "Annonces principales",
   "broadcastSubtitle": "Envoyé à tous les utilisateurs",
   "broadcastWarning": "Les messages envoyés ici seront visibles par tout le monde.",
   "broadcastError": "Erreur : {error}",
@@ -59,7 +59,7 @@
     }
   },
   "broadcastNoHistory": "Aucune annonce préalable.",
-  "broadcastTypeMessage": "Type a global broadcast...",
+  "broadcastTypeMessage": "Saisissez une diffusion globale...",
   "commFailedToSend": "Échec de l'envoi : {error}",
   "@commFailedToSend": {
     "placeholders": {
@@ -88,8 +88,8 @@
   },
   "commNoMessages": "Aucun message pour l'instant",
   "commNoMessagesDesc": "Envoyez un message à notre équipe d'assistance ou revenez plus tard pour prendre connaissance des annonces.",
-  "commMessageSupportHint": "Message support...",
-  "commGlobalAnnouncements": "Global Announcements",
+  "commMessageSupportHint": "Saisissez votre message...",
+  "commGlobalAnnouncements": "Annonces principales",
   "commSendMessagesToAll": "Envoyer des messages à tous les utilisateurs",
   "homeGreetingMorning": "Bonjour,",
   "homeGreetingAfternoon": "Bonjour,",
@@ -200,7 +200,7 @@
   "libraryTabPlaylists": "Playlists",
   "libraryTabDownloads": "Téléchargements",
   "libraryTabDownloading": "Téléchargement",
-  "libraryImportedTask": "Imported {name}",
+  "libraryImportedTask": "{name} importé",
   "@libraryImportedTask": {
     "placeholders": {
       "name": {
@@ -210,7 +210,7 @@
   },
   "libraryImportWaiting": "En attente dans la file d'attente...",
   "libraryImportFetching": "Chargement de la playlist...",
-  "libraryImportProcessed": "{processed}/{total} processed · {matched} matched",
+  "libraryImportProcessed": "{processed}/{total} traitées · {matched} correspondant",
   "@libraryImportProcessed": {
     "placeholders": {
       "processed": {
@@ -283,7 +283,7 @@
   "libraryImportFailed": "Échec de l'importation de la playlist Pulse",
   "importErrorPlaylist": "Erreur lors de l'importation de la playlist",
   "importErrorHighlyPopulated": "La playlist contient beaucoup d'éléments ; son chargement peut prendre un certain temps.",
-  "libraryImportBtn": "Import",
+  "libraryImportBtn": "Importer",
   "libraryCreateTitle": "Nouvelle playlist",
   "libraryCreateDesc": "Comment devrions-nous appeler votre nouvelle playlist ?",
   "libraryCreateHint": "par exemple : « Midnight Rides »",
@@ -303,7 +303,7 @@
   "libraryDeleteBtn": "Supprimer",
   "librarySortLabelAlpha": "A-Z",
   "librarySortLabelRecent": "Récents",
-  "librarySongsCount": "{count} Songs",
+  "librarySongsCount": "{count} titres",
   "@librarySongsCount": {
     "placeholders": {
       "count": {
@@ -325,7 +325,7 @@
   "loginErrEmailReset": "Veuillez saisir votre adresse e-mail pour réinitialiser votre mot de passe",
   "loginResetSent": "Un e-mail de réinitialisation du mot de passe vous a été envoyé ! Vérifiez votre boîte de réception.",
   "loginForgotPwd": "Mot de passe oublié ?",
-  "loginBtnSignup": "Create Account",
+  "loginBtnSignup": "Créer un compte",
   "loginBtnSignin": "Se connecter",
   "loginToggleHaveAccount": "Vous avez déjà un compte Pulse ? ",
   "loginToggleNoAccount": "Vous n'avez pas encore de compte Pulse ? ",
@@ -339,13 +339,13 @@
   "offlineGoToDownloads": "Accéder aux téléchargements",
   "playerMadeWithHeartBy": "Réalisé avec ❤️ par ",
   "playerAuthorName": "Ashutosh Pathak",
-  "playerSwipeForLyrics": "Swipe for lyrics",
+  "playerSwipeForLyrics": "Faites glisser pour voir les paroles",
   "playerNoLyrics": "Paroles indisponibles",
-  "playerUpNext": "Up Next",
+  "playerUpNext": "À suivre",
   "playerNoTracksInQueue": "Aucun titre dans la file d'attente",
   "playerNoMusicPlaying": "Aucune musique n'est diffusée",
   "playerPickAVibe": "Choisissez une ambiance dans votre bibliothèque ou chez vous",
-  "playerGoHome": "Go Home",
+  "playerGoHome": "Aller à l'accueil",
   "playerAppName": "PULSE",
   "playerEqualizer": "Égaliseur",
   "playerEqCustom": "Personnalisé",
@@ -397,7 +397,7 @@
       }
     }
   },
-  "playlistView": "VIEW",
+  "playlistView": "APERÇU",
   "playlistAllDownloaded": "Tous les titres sont déjà téléchargés",
   "playlistShareText": "Découvrez « {name} » sur Pulse !\n{url}",
   "@playlistShareText": {
@@ -486,18 +486,18 @@
     }
   },
   "searchTryDifferentKeywords": "Essayez différents mots-clés",
-  "searchTopResult": "Top result",
+  "searchTopResult": "Meilleur résultat",
   "searchSongsLabel": "Titres",
   "searchArtistsLabel": "Artistes",
   "searchAlbumsLabel": "Albums",
   "searchPlaylistsLabel": "Playlists",
   "searchArtistLabel": "Artiste",
   "searchListening": "Écoute...",
-  "searchSpeakNow": "Speak now to search",
+  "searchSpeakNow": "Parlez maintenant pour lancer la recherche",
   "searchCancel": "Annuler",
   "searchIdentifying": "Identification en cours...",
-  "searchListeningForSong": "Listening for a song...",
-  "settingsTitle": "Settings",
+  "searchListeningForSong": "À l'écoute d'un titre...",
+  "settingsTitle": "Paramètres",
   "settingsStreamingQuality": "Qualité de streaming",
   "settingsQualityAutomatic": "Automatique",
   "settingsQualityLow": "Faible",
@@ -505,21 +505,21 @@
   "settingsQualityHigh": "Élevée",
   "settingsDownloadQuality": "Qualité du téléchargement",
   "settingsPlayback": "Lecture",
-  "settingsCrossfade": "Crossfade",
-  "settingsCrossfadeDesc": "Overlap tracks for gapless transitions",
+  "settingsCrossfade": "Fondu enchaîné",
+  "settingsCrossfadeDesc": "Faire se chevaucher les titres pour obtenir des transitions sans interruption",
   "settingsDataUsage": "Utilisation des données",
   "settingsDataSaver": "Économiseur de données",
   "settingsDataSaverDesc": "Diffuser en qualité inférieure via le réseau mobile",
   "settingsAppearance": "Apparence",
-  "settingsLanguage": "Language",
-  "settingsCustomAccent": "Custom Accent",
+  "settingsLanguage": "Langue",
+  "settingsCustomAccent": "Couleur",
   "settingsSaturation": "Saturation",
-  "settingsBrightness": "Brightness",
-  "settingsResetDefault": "Reset Default",
+  "settingsBrightness": "Luminosité",
+  "settingsResetDefault": "Réinitialiser par défaut",
   "playlistSheetTitle": "Ajouter à la playlist",
-  "playlistSheetNewPlaylist": "New Playlist",
-  "playlistSheetNoPlaylists": "No playlists yet",
-  "playlistSheetSongsCount": "{count} {count, plural, =1{song} other{songs}}",
+  "playlistSheetNewPlaylist": "Nouvelle playlist",
+  "playlistSheetNoPlaylists": "Aucune playlist pour le moment",
+  "playlistSheetSongsCount": "{count} {count, plural, one {}=1{titre} other{titres}}",
   "@playlistSheetSongsCount": {
     "placeholders": {
       "count": {
@@ -527,8 +527,8 @@
       }
     }
   },
-  "playlistSheetNameHint": "Playlist Name",
-  "playlistSheetCancel": "Cancel",
+  "playlistSheetNameHint": "Nom de la playlist",
+  "playlistSheetCancel": "Annuler",
   "playlistSheetAddedTo": "Ajouté à {name}",
   "@playlistSheetAddedTo": {
     "placeholders": {
@@ -537,8 +537,8 @@
       }
     }
   },
-  "playlistSheetCreateFailAuth": "Failed to create playlist: Authentication error",
-  "playlistSheetCreateFail": "Failed to create playlist: {error}",
+  "playlistSheetCreateFailAuth": "Échec de la création de la playlist : erreur d'authentification",
+  "playlistSheetCreateFail": "Échec de la création de la playlist : {error}",
   "@playlistSheetCreateFail": {
     "placeholders": {
       "error": {
@@ -546,9 +546,9 @@
       }
     }
   },
-  "playlistSheetCreate": "Create",
-  "appUpdateAvailable": "Update Available",
-  "appUpdateDesc": "Version {version} is here! Update now to get the latest features.",
+  "playlistSheetCreate": "Créer",
+  "appUpdateAvailable": "Mise à jour disponible",
+  "appUpdateDesc": "La version {version} est disponible ! Mettez-la à jour dès maintenant pour bénéficier des dernières fonctionnalités.",
   "@appUpdateDesc": {
     "placeholders": {
       "version": {
@@ -556,36 +556,36 @@
       }
     }
   },
-  "appUpdateDownload": "Download Update",
+  "appUpdateDownload": "Télécharger la mise à jour",
   "navHome": "Accueil",
-  "navLibrary": "Library",
-  "navSearch": "Search",
-  "navSettings": "Settings",
-  "navProfile": "Profile",
-  "artistSelect": "Select Artist",
+  "navLibrary": "Bibliothèque",
+  "navSearch": "Rechercher",
+  "navSettings": "Paramètres",
+  "navProfile": "Profil",
+  "artistSelect": "Sélectionner un artiste",
   "songActionQueue": "Ajouter à la file d'attente",
   "songActionPlaylist": "Ajouter à la playlist",
-  "songActionFinding": "Finding...",
+  "songActionFinding": "Recherche...",
   "songActionAlbum": "Voir l'album",
   "songActionArtist": "Voir l'artiste",
-  "songActionRemovePlaylist": "Remove from Playlist",
-  "songActionRemoveDownload": "Remove from Downloads",
-  "songActionDownloadChecking": "Checking...",
-  "songActionDownloading": "Downloading...",
-  "songActionDownloaded": "Downloaded!",
-  "songActionDownloadAlready": "Already downloaded",
-  "songActionDownloadFailed": "Download failed",
-  "songActionDownload": "Download",
-  "songActionDownloadingSnack": "Downloading",
-  "songActionView": "VIEW",
-  "spotifyImportTitle": "Import from Spotify",
-  "spotifyImportSubtitle": "Choose your playlist size",
-  "spotifyChoiceSmallTitle": "100 songs or fewer",
+  "songActionRemovePlaylist": "Supprimer de la playlist",
+  "songActionRemoveDownload": "Supprimer des téléchargements",
+  "songActionDownloadChecking": "Vérification en cours...",
+  "songActionDownloading": "Téléchargement en cours...",
+  "songActionDownloaded": "Téléchargé !",
+  "songActionDownloadAlready": "Déjà téléchargé",
+  "songActionDownloadFailed": "Échec du téléchargement",
+  "songActionDownload": "Télécharger",
+  "songActionDownloadingSnack": "Téléchargement",
+  "songActionView": "APERÇU",
+  "spotifyImportTitle": "Importer depuis Spotify",
+  "spotifyImportSubtitle": "Choisissez la taille de votre playlist",
+  "spotifyChoiceSmallTitle": "100 titres ou moins",
   "spotifyChoiceSmallDesc": "Collez l'URL d'une playlist Spotify publique.",
-  "spotifyChoiceLargeTitle": "More than 100 songs",
-  "spotifyChoiceLargeDesc": "Connect your own Spotify Developer App to import unlimited tracks.",
+  "spotifyChoiceLargeTitle": "Plus de 100 titres",
+  "spotifyChoiceLargeDesc": "Connectez votre propre application Spotify Developer pour importer un nombre illimité de titres.",
   "cancelButton": "Annuler",
-  "spotifyPlaylistsTitle": "Your Spotify Playlists",
+  "spotifyPlaylistsTitle": "Vos playlists Spotify",
   "spotifyPlaylistsErrorMsg": "Erreur : {error}\nVérifiez que votre identifiant client est valide.",
   "@spotifyPlaylistsErrorMsg": {
     "placeholders": {
@@ -603,14 +603,14 @@
       }
     }
   },
-  "spotifyPlaylistsImport": "Import",
+  "spotifyPlaylistsImport": "Importer",
   "audioPlaybackFailed": "La lecture a échoué. Vérifiez votre connexion Internet.",
   "audioControlPrevious": "Précédent",
   "audioControlPause": "Pause",
   "audioControlPlay": "Lecture",
   "audioControlNext": "Suivant",
-  "audioControlUnlike": "Unlike",
-  "audioControlLike": "Like",
+  "audioControlUnlike": "Je n'aime pas",
+  "audioControlLike": "J'aime",
   "spotifyRawResponseError": "Réponse brute : {data}\n\nSolution de secours : {error}",
   "@spotifyRawResponseError": {
     "placeholders": {
