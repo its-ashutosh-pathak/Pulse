@@ -15,19 +15,19 @@ import '../../screens/communication/admin_chat_screen.dart';
 import '../../screens/communication/broadcast_chat_screen.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/player_aware_pop_scope.dart';
+import '../../main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 /// Global navigator keys for shell route nesting.
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 /// GoRouter configuration — mirrors React Router config from App.jsx.
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: navigatorKey,
     initialLocation: '/',
     observers: [
       FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
@@ -60,7 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Full-screen player (no bottom nav) ──
       GoRoute(
         name: 'Player',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: navigatorKey,
         path: '/player',
         pageBuilder: (context, state) {
           return CustomTransitionPage(

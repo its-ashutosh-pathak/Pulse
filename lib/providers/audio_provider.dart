@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'package:flutter/material.dart' show SnackBar, Text, Colors, debugPrint, TextStyle, SnackBarBehavior, RoundedRectangleBorder, BorderRadius;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/utils/toast_utils.dart';
 import 'package:media_kit/media_kit.dart';
 
 import '../services/wakelock_manager.dart';
@@ -403,6 +404,8 @@ class AudioNotifier extends Notifier<AudioState> {
         // Player is already loaded — just play
         newPrimary.setVolume(100.0);
         if (!ref.read(sleepTimerProvider).isExpired) {
+          await _handler.requestAudioFocus();
+          if (isStale()) return;
           await newPrimary.play();
         }
         if (isStale()) return;
@@ -434,7 +437,12 @@ class AudioNotifier extends Notifier<AudioState> {
       // ── OFFLINE PATH (mirrors lines 708-713) ──
       if (offlineFilePath != null) {
         await player.setVolume(100.0);
-        await player.open(Media(offlineFilePath), play: !ref.read(sleepTimerProvider).isExpired);
+        final shouldPlay = !ref.read(sleepTimerProvider).isExpired;
+        if (shouldPlay) {
+          await _handler.requestAudioFocus();
+          if (isStale()) return;
+        }
+        await player.open(Media(offlineFilePath), play: shouldPlay);
         if (isStale()) return;
         return;
       }
@@ -450,7 +458,12 @@ class AudioNotifier extends Notifier<AudioState> {
           if (isStale()) return;
           if (localPath != null) {
             await player.setVolume(100.0);
-            await player.open(Media(localPath), play: !ref.read(sleepTimerProvider).isExpired);
+            final shouldPlay = !ref.read(sleepTimerProvider).isExpired;
+            if (shouldPlay) {
+              await _handler.requestAudioFocus();
+              if (isStale()) return;
+            }
+            await player.open(Media(localPath), play: shouldPlay);
             if (isStale()) return;
             return;
           }
@@ -478,12 +491,17 @@ class AudioNotifier extends Notifier<AudioState> {
       if (isStale()) return;
 
       await player.setVolume(100.0);
+      final shouldPlay = !ref.read(sleepTimerProvider).isExpired;
+      if (shouldPlay) {
+        await _handler.requestAudioFocus();
+        if (isStale()) return;
+      }
       await player.open(
         Media(
           streamUrl,
           httpHeaders: const {},
         ),
-        play: !ref.read(sleepTimerProvider).isExpired,
+        play: shouldPlay,
       );
 
       if (isStale()) return;
@@ -505,14 +523,7 @@ class AudioNotifier extends Notifier<AudioState> {
           _handler.stopCurrent(); // Clears buffering state and drops wake lock
           final ctx = scaffoldMessengerKey.currentContext;
           if (ctx != null && ctx.mounted) {
-            scaffoldMessengerKey.currentState?.showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(ctx)!.audioPlaybackFailed, style: const TextStyle(color: Colors.white)),
-                backgroundColor: Colors.black,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            );
+            ToastUtils.show(ctx, AppLocalizations.of(ctx)!.audioPlaybackFailed);
           }
         }
       }
@@ -754,7 +765,12 @@ class AudioNotifier extends Notifier<AudioState> {
     if (player.state.playing) {
       player.pause();
     } else {
-      player.play();
+      _handler.requestAudioFocus().then((_) {
+        // Double check that the player hasn't swapped/been destroyed while waiting
+        if (state.currentSong != null && _crossfadeEngine.primaryPlayer == player) {
+          player.play();
+        }
+      });
     }
   }
 

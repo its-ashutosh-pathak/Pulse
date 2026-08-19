@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/auth_provider.dart';
@@ -150,9 +151,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.commFailedToSend(ErrorMapper.getLocalizedError(context, e))), backgroundColor: AppColors.danger),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.commFailedToSend(ErrorMapper.getLocalizedError(context, e)));
       }
     } finally {
 

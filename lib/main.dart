@@ -21,6 +21,9 @@ import 'l10n/fallback_localizations.dart';
 /// Global key for showing snackbars from anywhere (e.g. Providers)
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
+/// Global navigator key for showing overlay toasts from anywhere
+final navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {

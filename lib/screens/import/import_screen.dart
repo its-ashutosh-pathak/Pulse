@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 
 import '../../services/spotify_auth_service.dart';
@@ -38,14 +39,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
     try {
       await SpotifyAuthService.authenticate(clientId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.importSuccess, style: const TextStyle(color: Colors.white)),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.importSuccess);
         
         // Show the bottom sheet!
         showModalBottomSheet(useRootNavigator: true, 
@@ -57,14 +51,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.importFailed(ErrorMapper.getLocalizedError(context, e)), style: const TextStyle(color: Colors.white)),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.importFailed(ErrorMapper.getLocalizedError(context, e)));
       }
     }
   }
@@ -146,15 +133,7 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
                           InkWell(
                             onTap: () {
                               Clipboard.setData(ClipboardData(text: 'pulse://spotify-callback'));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.importRedirectCopied, style: const TextStyle(color: Colors.white)),
-                                  backgroundColor: accent,
-                                  duration: const Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              );
+                              ToastUtils.show(context, AppLocalizations.of(context)!.importRedirectCopied, duration: const Duration(seconds: 2));
                             },
                             child: const Padding(
                               padding: EdgeInsets.all(4.0),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../core/utils/toast_utils.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/thumbnail_utils.dart';
 import '../data/api/music_api.dart';
@@ -232,28 +233,15 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
     ref.read(downloadProvider.notifier).downloadSong(widget.song, contextPlaylist: widget.contextPlaylist);
     final accent = Theme.of(context).colorScheme.primary;
     final router = GoRouter.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context);
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.black,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        content: Row(
-          children: [
-            Expanded(
-              child: Text(AppLocalizations.of(context)!.songActionDownloadingSnack, style: const TextStyle(color: Colors.white)),
-            ),
-            TextButton(
-              onPressed: () {
-                messenger.hideCurrentSnackBar();
-                router.push('/downloading');
-              },
-              child: Text(AppLocalizations.of(context)!.songActionView, style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-        duration: const Duration(seconds: 3),
+    ToastUtils.show(
+      context,
+      AppLocalizations.of(context)!.songActionDownloadingSnack,
+      action: TextButton(
+        onPressed: () {
+          router.push('/downloading');
+        },
+        child: Text(AppLocalizations.of(context)!.songActionView, style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
       ),
     );
   }

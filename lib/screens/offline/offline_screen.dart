@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/toast_utils.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 
 /// Offline screen — port of OfflineScreen.jsx.
@@ -45,14 +46,7 @@ class _OfflineScreenState extends State<OfflineScreen>
     setState(() => _isChecking = false);
 
     if (!isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.offlineStillOffline, style: const TextStyle(color: Colors.white)),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
+      ToastUtils.show(context, AppLocalizations.of(context)!.offlineStillOffline);
     }
     // If online, ConnectivityWrapper will automatically swap back to the main content
   }

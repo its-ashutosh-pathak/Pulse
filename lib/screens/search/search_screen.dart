@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../data/models/song.dart';
@@ -136,19 +137,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.searchMicPermissionRequired,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.searchMicPermissionRequired);
       }
       return;
     }
@@ -197,37 +186,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ? AppLocalizations.of(context)!.searchError(ErrorMapper.getLocalizedError(context, result['error'])) 
             : AppLocalizations.of(context)!.searchNoSongDetected;
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              errorMsg,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        ToastUtils.show(context, errorMsg);
       }
     } catch (e) {
       _dismissShazamSheet();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.searchError(ErrorMapper.getLocalizedError(context, e)),
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red.shade900,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.searchError(ErrorMapper.getLocalizedError(context, e)), duration: const Duration(seconds: 4));
       }
     }
   }
@@ -241,19 +205,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final status = await Permission.microphone.request();
     if (status != PermissionStatus.granted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.searchMicPermissionRequired,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.searchMicPermissionRequired);
       }
       return;
     }
@@ -267,19 +219,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
     if (!available) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.searchSpeechNotAvailable,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        );
+        ToastUtils.show(context, AppLocalizations.of(context)!.searchSpeechNotAvailable);
       }
       return;
     }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../data/api/music_api.dart';
@@ -528,43 +529,20 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     if (!mounted) return;
 
     if (newDownloadsCount > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  AppLocalizations.of(context)!.playlistDownloadingSongs(newDownloadsCount),
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  context.push('/downloading');
-                },
-                child: Text(AppLocalizations.of(context)!.playlistView, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          duration: const Duration(seconds: 3),
+      ToastUtils.show(
+        context,
+        AppLocalizations.of(context)!.playlistDownloadingSongs(newDownloadsCount),
+        action: TextButton(
+          onPressed: () {
+            context.push('/downloading');
+          },
+          child: Text(AppLocalizations.of(context)!.playlistView, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.playlistAllDownloaded,
-            style: const TextStyle(color: Colors.white),
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          duration: const Duration(seconds: 3),
-        ),
+      ToastUtils.show(
+        context,
+        AppLocalizations.of(context)!.playlistAllDownloaded,
       );
     }
   }

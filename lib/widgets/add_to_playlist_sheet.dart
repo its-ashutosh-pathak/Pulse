@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/theme/app_colors.dart';
+import '../core/utils/toast_utils.dart';
 import '../core/utils/thumbnail_utils.dart';
 import '../data/models/song.dart';
 import '../providers/playlist_provider.dart';
 import 'glass_container.dart';
-import '../main.dart' show scaffoldMessengerKey;
+
 import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
 
@@ -279,38 +280,17 @@ class AddToPlaylistSheet extends ConsumerWidget {
                                   .timeout(const Duration(seconds: 10));
                               if (context.mounted) {
                                 Navigator.pop(context); // Close bottom sheet
-                                scaffoldMessengerKey.currentState?.showSnackBar(
-                                  SnackBar(
-                                    content: Text(AppLocalizations.of(context)!.playlistSheetAddedTo(name), style: const TextStyle(color: Colors.white)),
-                                    backgroundColor: Colors.black,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                );
+                                ToastUtils.show(context, AppLocalizations.of(context)!.playlistSheetAddedTo(name));
                               }
                             } else {
                               if (context.mounted) {
-                                scaffoldMessengerKey.currentState?.showSnackBar(
-                                  SnackBar(
-                                    content: Text(AppLocalizations.of(context)!.playlistSheetCreateFailAuth, style: const TextStyle(color: Colors.white)),
-                                    backgroundColor: Colors.black,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                );
+                                ToastUtils.show(context, AppLocalizations.of(context)!.playlistSheetCreateFailAuth);
                               }
                             }
                           } catch (e) {
                             if (context.mounted) {
                               Navigator.pop(context); // Close bottom sheet
-                              scaffoldMessengerKey.currentState?.showSnackBar(
-                                SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.playlistSheetCreateFail(ErrorMapper.getLocalizedError(context, e)), style: const TextStyle(color: Colors.white)),
-                                  backgroundColor: Colors.black,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              );
+                              ToastUtils.show(context, AppLocalizations.of(context)!.playlistSheetCreateFail(ErrorMapper.getLocalizedError(context, e)));
                             }
                           }
                         }

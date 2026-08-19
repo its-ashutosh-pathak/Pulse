@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 
@@ -149,14 +150,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
         final currentTask = current[key]!;
         final previousTask = previous[key];
         if (currentTask.status == 'error' && (previousTask == null || previousTask.status != 'error')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(currentTask.name, style: const TextStyle(color: Colors.white)),
-              backgroundColor: Colors.black,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          );
+          ToastUtils.show(context, currentTask.name);
           Future.microtask(() => ref.read(importProvider.notifier).dismissTask(key));
         }
       }
@@ -714,14 +708,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                   onTap: () {
                     Navigator.pop(ctx);
                     if (pl.name == 'Liked Songs') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppLocalizations.of(context)!.libraryRenameLikedError, style: const TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.black,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+                      ToastUtils.show(context, AppLocalizations.of(context)!.libraryRenameLikedError);
                     } else {
                       _renameController.text = pl.name;
                       setState(() { _editingPlaylist = pl; _showRenameModal = true; });
@@ -762,14 +749,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                   onTap: () {
                     Navigator.pop(ctx);
                     if (pl.name == 'Liked Songs') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppLocalizations.of(context)!.libraryDeleteLikedError, style: const TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.black,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+                      ToastUtils.show(context, AppLocalizations.of(context)!.libraryDeleteLikedError);
                     } else {
                       setState(() { _editingPlaylist = pl; _showDeleteModal = true; });
                     }
@@ -1127,14 +1107,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                                 if (newId != null && mounted) {
                                   context.push('/playlist/$newId');
                                 } else if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(AppLocalizations.of(context)!.libraryImportFailed, style: const TextStyle(color: Colors.white)),
-                                      backgroundColor: Colors.black,
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
-                                  );
+                                  ToastUtils.show(context, AppLocalizations.of(context)!.libraryImportFailed);
                                 }
                               }
                             } else {

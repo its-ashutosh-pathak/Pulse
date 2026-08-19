@@ -185,21 +185,29 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
     ));
   }
 
+  /// Expose the ability to request audio focus manually.
+  Future<void> requestAudioFocus() async {
+    if (_session != null) {
+      await _session!.setActive(true);
+    }
+  }
+
   // ── BaseAudioHandler overrides (OS media control callbacks) ──
 
   @override
   Future<void> play() async {
     if (isSleepTimerExpired?.call() ?? false) return;
     
-    if (_session != null) {
-      await _session!.setActive(true);
-    }
+    await requestAudioFocus();
     await _activePlayer.play();
   }
 
   @override
   Future<void> pause() async {
     await _activePlayer.pause();
+    if (_crossfadePlayer != null) {
+      await _crossfadePlayer!.pause();
+    }
   }
 
   @override

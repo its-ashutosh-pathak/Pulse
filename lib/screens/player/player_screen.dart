@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../data/api/music_api.dart';
 import '../../data/models/song.dart';
 import '../../providers/audio_provider.dart' hide RepeatMode;
@@ -124,9 +125,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
     ref.listen(sleepTimerProvider, (prev, next) {
       if (next.isExpired && (prev == null || !prev.isExpired)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sleep timer ended'), duration: Duration(seconds: 3)),
-        );
+        ToastUtils.show(context, 'Sleep timer ended');
         ref.read(sleepTimerProvider.notifier).clearExpired();
       }
     });
@@ -641,7 +640,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 120),
                     controller: _lyricsScrollController,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: List.generate(_parsedLines!.length, (i) {
                         _lyricKeys[i] ??= GlobalKey();
                         final line = _parsedLines![i];
@@ -651,6 +650,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Text(
                             line.text.isEmpty ? '\u00a0' : line.text,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: isActive ? 18 : 15,
                               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,

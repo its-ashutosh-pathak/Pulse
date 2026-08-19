@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/sleep_timer_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/toast_utils.dart';
 import '../../../widgets/glass_container.dart';
 
 class SleepTimerSheet extends ConsumerStatefulWidget {
@@ -238,14 +239,7 @@ class _SleepTimerSheetState extends ConsumerState<SleepTimerSheet> {
                             ),
                             onPressed: () {
                               if (_selectedDuration.inMinutes < 1) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.black,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    content: const Text('Please select a valid sleep timer time', style: TextStyle(color: Colors.white)),
-                                  )
-                                );
+                                ToastUtils.show(context, 'Please select a valid sleep timer time');
                                 return;
                               }
                               ref.read(sleepTimerProvider.notifier).startTimer(_selectedDuration);

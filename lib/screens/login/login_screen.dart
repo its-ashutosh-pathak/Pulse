@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/glass_container.dart';
@@ -192,12 +193,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         try {
                           await ref.read(authProvider.notifier).resetPassword(email);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.loginResetSent),
-                                  backgroundColor: Colors.green,
-                                ),
-                            );
+                            ToastUtils.show(context, AppLocalizations.of(context)!.loginResetSent);
                           }
                         } catch (e) {
                           if (mounted) {

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/thumbnail_utils.dart';
 import '../../data/models/song.dart';
@@ -431,14 +432,7 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
                   onTap: () {
                     Navigator.pop(ctx);
                     if (pl.id == '__downloads__') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(AppLocalizations.of(context)!.downloadsCannotRenameMaster, style: const TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.black,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      );
+                      ToastUtils.show(context, AppLocalizations.of(context)!.downloadsCannotRenameMaster);
                     } else {
                       _renameController.text = pl.name;
                       setState(() { _editingPlaylist = pl; _showRenameModal = true; });
