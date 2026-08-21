@@ -21,9 +21,6 @@ import '../../providers/auth_provider.dart';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 
-/// Global navigator keys for shell route nesting.
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
-
 /// GoRouter configuration — mirrors React Router config from App.jsx.
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(

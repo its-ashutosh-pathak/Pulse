@@ -16,20 +16,43 @@ import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 ///   (Backend extraction → URL locked to server IP → phone can't play → ❌)
 class StreamExtractor {
   /// Singleton YoutubeExplode client — reused across calls for performance.
-  static YoutubeExplode _yt = YoutubeExplode();
+  static YoutubeExplode? _yt;
   static Timer? _refreshTimer;
   static final Map<String, _CachedStream> _cache = {};
+
+  // Apple Vision Pro spoof profile bypassing PoToken requirements
+  static const YoutubeApiClient _visionosClient = YoutubeApiClient({
+    'context': {
+      'client': {
+        'clientName': 'VISIONOS',
+        'clientVersion': '1.02',
+        'deviceMake': 'Apple',
+        'deviceModel': 'RealityDevice17,1',
+        'userAgent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+        'osName': 'visionOS',
+        'osVersion': '26.5.23O471',
+        'hl': 'en',
+        'timeZone': 'UTC',
+        'utcOffsetMinutes': 0,
+      },
+    },
+  }, 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false');
+
+  static Future<YoutubeExplode> _getYtClient() async {
+    _yt ??= YoutubeExplode();
+    return _yt!;
+  }
 
   static void _ensureTimer() {
     _refreshTimer ??= Timer.periodic(const Duration(hours: 4), (_) {
       debugPrint('[StreamExtractor] 🔄 Proactively refreshing YoutubeExplode session');
-      _yt.close();
-      _yt = YoutubeExplode();
+      _yt?.close();
+      _yt = null;
     });
   }
 
   /// Gets an audio stream URL for a given videoId.
-  /// Tries multiple YouTube API clients in order of reliability on mobile.
   ///
   /// [quality]: 'automatic' | 'high' | 'normal' | 'low'
   ///   - 'high'      → highest bitrate available (≥ 128 kbps preferred)
@@ -47,59 +70,42 @@ class StreamExtractor {
        return cached.url;
     }
 
-    final clients = [
-      YoutubeApiClient.androidVr,
-      YoutubeApiClient.ios,
-      YoutubeApiClient.safari,
-      YoutubeApiClient.tv,
-    ];
+    try {
+      final yt = await _getYtClient();
+      final manifest = await yt.videos.streamsClient
+          .getManifest(videoId, ytClients: [_visionosClient]);
 
-    Exception? lastError;
-    for (final client in clients) {
-      try {
-        final manifest = await _yt.videos.streamsClient
-            .getManifest(videoId, ytClients: [client]);
+      final audioStreams = manifest.audioOnly.toList();
+      if (audioStreams.isEmpty) throw Exception('No audio streams found for $videoId');
 
-        final audioStreams = manifest.audioOnly.toList();
-        if (audioStreams.isEmpty) continue;
+      // Sort by bitrate descending
+      audioStreams.sort(
+        (a, b) => b.bitrate.bitsPerSecond.compareTo(a.bitrate.bitsPerSecond),
+      );
 
-        // Sort by bitrate descending
-        audioStreams.sort(
-          (a, b) => b.bitrate.bitsPerSecond.compareTo(a.bitrate.bitsPerSecond),
-        );
+      final candidates = audioStreams.toList();
 
-        // Do not restrict to m4a so we can see all available qualities (160, 128, 64, 48)
-        final candidates = audioStreams.toList();
-
-        // Apply quality filter
-        AudioOnlyStreamInfo chosen;
-        if (quality == 'low') {
-          // Lowest quality available
-          chosen = candidates.last;
-        } else if (quality == 'normal') {
-          // Middle tier quality
-          chosen = candidates[(candidates.length / 2).floor()];
-        } else {
-          // 'high' or 'automatic' → highest bitrate
-          chosen = candidates.first;
-        }
-
-        final url = chosen.url.toString();
-        debugPrint('[StreamExtractor] ✅ $videoId via ${client.runtimeType}: ${chosen.audioCodec} ${chosen.bitrate} (q=$quality)');
-        
-        _cache[cacheKey] = _CachedStream(url, DateTime.now());
-        return url;
-      } catch (e) {
-        debugPrint('[StreamExtractor] ⚠️ $videoId client ${client.runtimeType} failed: $e');
-        if (e is VideoUnplayableException || e.toString().toLowerCase().contains('403') || e.toString().toLowerCase().contains('unplayable')) {
-          _yt.close();
-          _yt = YoutubeExplode();
-        }
-        lastError = e is Exception ? e : Exception(e.toString());
+      // Apply quality filter
+      AudioOnlyStreamInfo chosen;
+      if (quality == 'low') {
+        chosen = candidates.last;
+      } else if (quality == 'normal') {
+        chosen = candidates[(candidates.length / 2).floor()];
+      } else {
+        chosen = candidates.first;
       }
-    }
 
-    throw lastError ?? Exception('All client types failed for $videoId');
+      final url = chosen.url.toString();
+      debugPrint('[StreamExtractor] ✅ $videoId via visionos: ${chosen.audioCodec} ${chosen.bitrate} (q=$quality)');
+      
+      _cache[cacheKey] = _CachedStream(url, DateTime.now());
+      return url;
+    } catch (e) {
+      debugPrint('[StreamExtractor] ⚠️ $videoId visionos failed: $e');
+      _yt?.close();
+      _yt = null;
+      rethrow;
+    }
   }
 
   static void invalidateCache(String videoId) {
@@ -108,7 +114,9 @@ class StreamExtractor {
 
   /// Close the YoutubeExplode client at app exit.
   static void dispose() {
-    _yt.close();
+    _yt?.close();
+    _yt = null;
+    _refreshTimer?.cancel();
   }
 }
 

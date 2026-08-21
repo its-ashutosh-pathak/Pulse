@@ -57,7 +57,7 @@ dependencies:
 
   # Icons (matching lucide-react from web app)
   lucide_icons: ^0.257.0
-  youtube_explode_dart: 2.5.3  # PINNED: v3.x requires Deno runtime (not available on Android)
+  youtube_explode_dart: ^3.1.0  # PINNED: v3.x requires Deno runtime (not available on Android)
   speech_to_text: ^7.4.0
   flutter_cache_manager: ^3.4.1
   firebase_analytics: ^11.6.0
