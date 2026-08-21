@@ -53,17 +53,7 @@ class MiniPlayer extends ConsumerWidget {
               ),
             ),
 
-            // ── Thin border overlay ──
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.10),
-                    width: 0.8,
-                  ),
-                ),
-              ),
-            ),
+
 
             // ── Main content ──
             Padding(
