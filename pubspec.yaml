@@ -1,7 +1,7 @@
 name: pulse
 description: A premium music streaming app powered by YouTube Music.
 publish_to: 'none'
-version: 3.1.0+8
+version: 3.2.0+9
 
 environment:
   sdk: ^3.11.0
