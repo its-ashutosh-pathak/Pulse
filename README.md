@@ -9,6 +9,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Flutter-%5E3.11.0-02569B?logo=flutter" alt="Flutter">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?logo=android" alt="Android">
+  <img src="https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/Firebase-Integrated-FFCA28?logo=firebase" alt="Firebase">
   <img src="https://img.shields.io/badge/Rust-Native_FFI-000000?logo=rust" alt="Rust">
   <img src="https://img.shields.io/badge/License-GPLv3-blue" alt="License">
@@ -65,6 +66,24 @@ The name "Pulse" reflects its core philosophy: an alive, dynamic, and responsive
 <p align="center">
   <img src="assets/screenshots/14-Communication.jpeg" alt="Communication" width="24%">
   <img src="assets/screenshots/14-Communication_Announcements.jpeg" alt="Announcements" width="24%">
+</p>
+
+### 💻 Desktop Client
+
+<p align="center">
+  <img src="assets/screenshots/15.png" alt="Desktop Screenshot 15" width="49%">
+  <img src="assets/screenshots/16.png" alt="Desktop Screenshot 16" width="49%">
+</p>
+<p align="center">
+  <img src="assets/screenshots/17.png" alt="Desktop Screenshot 17" width="49%">
+  <img src="assets/screenshots/18.png" alt="Desktop Screenshot 18" width="49%">
+</p>
+<p align="center">
+  <img src="assets/screenshots/19.png" alt="Desktop Screenshot 19" width="49%">
+  <img src="assets/screenshots/20.png" alt="Desktop Screenshot 20" width="49%">
+</p>
+<p align="center">
+  <img src="assets/screenshots/21.png" alt="Desktop Screenshot 21" width="49%">
 </p>
 
 ## 🚀 Key Features
