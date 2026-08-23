@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:media_kit/media_kit.dart';
@@ -88,6 +88,9 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> _initAudioSession() async {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+      return; // audio_session doesn't support desktop
+    }
     _session = await AudioSession.instance;
     await _session!.configure(const AudioSessionConfiguration.music());
     _session!.interruptionEventStream.listen((event) {

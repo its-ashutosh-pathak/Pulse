@@ -22,34 +22,56 @@ class ToastUtils {
         builder: (context) {
           // Fallback padding if MediaQuery isn't available
           final bottomPadding = MediaQuery.maybeOf(context)?.padding.bottom ?? 0;
+          final isDesktop = Theme.of(context).platform == TargetPlatform.windows ||
+                            Theme.of(context).platform == TargetPlatform.macOS ||
+                            Theme.of(context).platform == TargetPlatform.linux;
+                            
+          final toastContent = Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 2))
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                  ),
+                  if (action != null) ...[
+                    const SizedBox(width: 8),
+                    action,
+                  ],
+                ],
+              ),
+            ),
+          );
+
+          if (isDesktop) {
+            return Positioned(
+              // 120px clears the mini-player which sits at the bottom of the center pane
+              bottom: bottomPadding + 120,
+              // Left and right panes share the same flex (3), making the center pane perfectly aligned with the screen center
+              left: 0,
+              right: 0,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: toastContent,
+                ),
+              ),
+            );
+          }
+
           return Positioned(
             bottom: bottomPadding + 20,
             left: 16,
             right: 16,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 2))
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
-                    ),
-                    if (action != null) ...[
-                      const SizedBox(width: 8),
-                      action,
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            child: toastContent,
           );
         }
       );

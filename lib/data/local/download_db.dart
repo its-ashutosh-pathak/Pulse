@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import '../models/song.dart';
 import '../models/playlist.dart';
@@ -28,7 +31,18 @@ class DownloadDb {
   }
 
   Future<Database> _initDb() async {
-    final dbPath = await getDatabasesPath();
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
+    String dbPath;
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      final dir = await getApplicationSupportDirectory();
+      dbPath = dir.path;
+    } else {
+      dbPath = await getDatabasesPath();
+    }
     final path = p.join(dbPath, 'pulse_downloads.db');
 
     return openDatabase(

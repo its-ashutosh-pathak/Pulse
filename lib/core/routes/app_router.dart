@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/home/home_screen.dart';
@@ -27,7 +29,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: navigatorKey,
     initialLocation: '/',
     observers: [
-      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+      if (kIsWeb || (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS))
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
     ],
     redirect: (context, state) {
       final authState = ref.read(authProvider);

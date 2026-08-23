@@ -117,6 +117,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
     if (song == null) return _buildNoSong(context, accent);
 
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Header is roughly 60px. We need at least that much space.
+    final minExtent = (65.0 / screenHeight).clamp(0.11, 0.3);
+    final maxExtent = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 0.515 : 0.415;
+
     ref.listen(audioProvider, (prev, next) {
       if (next.currentSong != null && next.currentSong?.videoId != prev?.currentSong?.videoId) {
         _fetchLyricsIfNeeded(next.currentSong!);
@@ -214,13 +219,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            onPressed: () => ref.read(playerOverlayProvider.notifier).state = false,
-                            icon: const Icon(LucideIcons.chevronDown, size: 28),
+                        if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: () => ref.read(playerOverlayProvider.notifier).state = false,
+                              icon: const Icon(LucideIcons.chevronDown, size: 28),
+                            ),
                           ),
-                        ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -504,15 +510,15 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             },
             child: DraggableScrollableSheet(
               controller: _sheetController,
-              initialChildSize: 0.11,
-              minChildSize: 0.11,
-              maxChildSize: 0.415,
+              initialChildSize: minExtent,
+              minChildSize: minExtent,
+              maxChildSize: maxExtent,
               snap: true,
               builder: (context, scrollController) {
                 return ValueListenableBuilder<double>(
                   valueListenable: _sheetExtentNotifier,
                   builder: (context, extent, _) {
-                    return _buildUpNext(audioData.queue, accent, scrollController, extent);
+                    return _buildUpNext(audioData.queue, accent, scrollController, extent, minExtent, maxExtent);
                   },
                 );
               },
@@ -533,45 +539,50 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         children: [
           // FIX 4: RepaintBoundary on the art itself so it's cached as its own layer
           RepaintBoundary(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    thumb.isNotEmpty
-                        ? (!thumb.startsWith('http')
-                            ? Image.file(File(thumb), fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
-                            : CachedNetworkImage(
-                                imageUrl: thumb, fit: BoxFit.cover,
-                                errorWidget: (_, __, ___) =>
-                                    Container(color: AppColors.surface)))
-                        : Container(color: AppColors.surface),
+            child: Center(
+              child: FractionallySizedBox(
+                widthFactor: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 0.85 : 1.0,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      thumb.isNotEmpty
+                          ? (!thumb.startsWith('http')
+                              ? Image.file(File(thumb), fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
+                              : CachedNetworkImage(
+                                  imageUrl: thumb, fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      Container(color: AppColors.surface)))
+                          : Container(color: AppColors.surface),
 
-                    // FIX 5: Only the download overlay uses a Consumer — avoids
-                    // rebuilding the whole art view when other songs are downloading
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final downloads = ref.watch(downloadProvider);
-                        final isDownloading = downloads.activeDownloads.containsKey(song.videoId);
-                        if (!isDownloading) return const SizedBox.shrink();
-                        final downloadProgress = downloads.activeDownloads[song.videoId]!.progress;
-                        return Container(
-                          alignment: Alignment.bottomCenter,
-                          decoration: const BoxDecoration(color: Colors.black54),
-                          child: FractionallySizedBox(
-                            heightFactor: downloadProgress.clamp(0.0, 1.0),
+                      // FIX 5: Only the download overlay uses a Consumer — avoids
+                      // rebuilding the whole art view when other songs are downloading
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final downloads = ref.watch(downloadProvider);
+                          final isDownloading = downloads.activeDownloads.containsKey(song.videoId);
+                          if (!isDownloading) return const SizedBox.shrink();
+                          final downloadProgress = downloads.activeDownloads[song.videoId]!.progress;
+                          return Container(
                             alignment: Alignment.bottomCenter,
-                            child: Container(
-                              color: accent.withValues(alpha: 0.4),
+                            decoration: const BoxDecoration(color: Colors.black54),
+                            child: FractionallySizedBox(
+                              heightFactor: downloadProgress.clamp(0.0, 1.0),
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                color: accent.withValues(alpha: 0.4),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 ),
               ),
             ),
@@ -628,40 +639,46 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     return Padding(
       key: const ValueKey('lyrics'),
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: GlassContainer(
-        borderRadius: 20, blur: 20,
-        child: _lyricsState == 'loading'
-            ? const Center(child: CircularProgressIndicator(color: Colors.white))
-            : _lyricsState == 'error' || _parsedLines == null || _parsedLines!.isEmpty
-                ? Center(child: Text(AppLocalizations.of(context)!.playerNoLyrics, style: const TextStyle(color: Colors.white70)))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 120),
-                    controller: _lyricsScrollController,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: List.generate(_parsedLines!.length, (i) {
-                        _lyricKeys[i] ??= GlobalKey();
-                        final line = _parsedLines![i];
-                        final isActive = i == activeIndex;
-                        return Padding(
-                          key: _lyricKeys[i],
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Text(
-                            line.text.isEmpty ? '\u00a0' : line.text,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: isActive ? 18 : 15,
-                              fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                              color: isActive ? accent : Colors.white38,
-                              height: 1.5,
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
+      child: Center(
+        child: FractionallySizedBox(
+          widthFactor: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 0.85 : 1.0,
+          child: AspectRatio(
+          aspectRatio: 1,
+          child: GlassContainer(
+            borderRadius: 20,
+            blur: 20,
+            child: _lyricsState == 'loading'
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : _lyricsState == 'error' || _parsedLines == null || _parsedLines!.isEmpty
+                    ? Center(child: Text(AppLocalizations.of(context)!.playerNoLyrics, style: const TextStyle(color: Colors.white70)))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 120),
+                        controller: _lyricsScrollController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: List.generate(_parsedLines!.length, (i) {
+                            _lyricKeys[i] ??= GlobalKey();
+                            final line = _parsedLines![i];
+                            final isActive = i == activeIndex;
+                            return Padding(
+                              key: _lyricKeys[i],
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Text(
+                                line.text.isEmpty ? '\u00a0' : line.text,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: isActive ? 18 : 15,
+                                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                                  color: isActive ? accent : Colors.white38,
+                                  height: 1.5,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+          ),
+        ),
         ),
       ),
     );
@@ -681,7 +698,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   // Only renders up to 25 songs at a time (sliding window)
   static const int _queueWindowSize = 25;
 
-  Widget _buildUpNext(List<Song> queue, Color accent, ScrollController scrollController, double sheetExtent) {
+  Widget _buildUpNext(List<Song> queue, Color accent, ScrollController scrollController, double sheetExtent, double minExtent, double maxExtent) {
     // Sliding window: always show first 25 from the live queue.
     // As songs play they're removed from the front, so this naturally
     // slides forward — no index tracking needed.
@@ -689,7 +706,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         ? queue.sublist(0, _queueWindowSize)
         : queue;
 
-    final openFraction = ((sheetExtent - 0.11) / 0.305).clamp(0.0, 1.0);
+    final openFraction = ((sheetExtent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0);
     final double blurValue = openFraction * 24.0;
 
     return Container(
@@ -719,17 +736,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 // ── Static Header & Drag Handle ──
                 GestureDetector(
                   onTap: () {
-                    _sheetController.animateTo(0.415, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                    _sheetController.animateTo(maxExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
                   },
                   onVerticalDragUpdate: (details) {
                     final newSize = _sheetController.size - details.primaryDelta! / MediaQuery.of(context).size.height;
-                    _sheetController.jumpTo(newSize.clamp(0.11, 0.415));
+                    _sheetController.jumpTo(newSize.clamp(minExtent, maxExtent));
                   },
                   onVerticalDragEnd: (details) {
-                    if (details.primaryVelocity! < -300 || _sheetController.size > 0.2) {
-                      _sheetController.animateTo(0.415, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                    if (details.primaryVelocity! < -300 || _sheetController.size > minExtent + 0.09) {
+                      _sheetController.animateTo(maxExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
                     } else {
-                      _sheetController.animateTo(0.11, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                      _sheetController.animateTo(minExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
                     }
                   },
                   child: Container(
@@ -779,6 +796,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                                 children: [
                                 ReorderableListView.builder(
                                 shrinkWrap: true,
+                                buildDefaultDragHandles: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? false : true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 padding: const EdgeInsets.only(top: 16),
                                 itemCount: visibleQueue.length,
@@ -856,16 +874,17 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => ref.read(playerOverlayProvider.notifier).state = false,
-                  icon: const Icon(LucideIcons.chevronDown, size: 28),
+            if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS)
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => ref.read(playerOverlayProvider.notifier).state = false,
+                    icon: const Icon(LucideIcons.chevronDown, size: 28),
+                  ),
                 ),
               ),
-            ),
             Expanded(
               child: Center(
                 child: Column(
@@ -877,13 +896,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     Text(AppLocalizations.of(context)!.playerPickAVibe,
                         style: TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        ref.read(playerOverlayProvider.notifier).state = false;
-                        context.go('/');
-                      },
-                      child: Text(AppLocalizations.of(context)!.playerGoHome),
-                    ),
+                    if (!(Platform.isWindows || Platform.isLinux || Platform.isMacOS))
+                      ElevatedButton(
+                        onPressed: () {
+                          ref.read(playerOverlayProvider.notifier).state = false;
+                          context.go('/');
+                        },
+                        child: Text(AppLocalizations.of(context)!.playerGoHome),
+                      ),
                   ],
                 ),
               ),

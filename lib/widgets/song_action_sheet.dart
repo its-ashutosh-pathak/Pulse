@@ -13,6 +13,7 @@ import '../data/models/playlist.dart';
 import '../providers/audio_provider.dart';
 import '../providers/download_provider.dart';
 import '../providers/player_overlay_provider.dart';
+import '../providers/desktop_layout_provider.dart';
 import 'glass_container.dart';
 import 'add_to_playlist_sheet.dart';
 import 'multi_artist_sheet.dart';
@@ -239,7 +240,11 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
       AppLocalizations.of(context)!.songActionDownloadingSnack,
       action: TextButton(
         onPressed: () {
-          router.push('/downloading');
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            ref.read(desktopLibraryTabProvider.notifier).state = 2;
+          } else {
+            router.push('/downloading');
+          }
         },
         child: Text(AppLocalizations.of(context)!.songActionView, style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
       ),

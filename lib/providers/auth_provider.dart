@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:desktop_webview_auth/desktop_webview_auth.dart';
+import 'package:desktop_webview_auth/google.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'settings_provider.dart';
 import 'package:flutter/material.dart';
@@ -267,6 +271,25 @@ class AuthNotifier extends Notifier<AuthState> {
 
   // ── Google Sign-In ──
   Future<void> loginWithGoogle() async {
+    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+      final googleSignInArgs = GoogleSignInArgs(
+        clientId: 'TODO_YOUR_DESKTOP_CLIENT_ID', // Create a Desktop OAuth Client ID in Google Cloud Console
+        redirectUri: 'http://localhost', // Standard redirect URI for desktop apps
+        scope: 'email https://www.googleapis.com/auth/userinfo.profile',
+      );
+      try {
+        final result = await DesktopWebviewAuth.signIn(googleSignInArgs);
+        if (result == null) return;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: result.accessToken,
+        );
+        await _auth.signInWithCredential(credential);
+      } catch (e) {
+        debugPrint('[Auth] Desktop Google Sign-in error: $e');
+      }
+      return;
+    }
+
     final googleUser = await _googleSignIn.signIn();
     if (googleUser == null) return; // User cancelled
 
@@ -458,7 +481,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
   // ── Logout ──
   Future<void> logout() async {
-    await _googleSignIn.signOut();
+    if (kIsWeb || (!Platform.isWindows && !Platform.isLinux)) {
+      await _googleSignIn.signOut();
+    }
     await _auth.signOut();
   }
 }

@@ -1,4 +1,4 @@
-name: pulse
+﻿name: pulse
 description: A premium music streaming app powered by YouTube Music.
 publish_to: 'none'
 version: 3.2.0+9
@@ -70,6 +70,8 @@ dependencies:
   rust_lib_pulse:
     path: rust_builder
   uuid: ^4.6.0
+  sqflite_common_ffi: ^2.4.0+3
+  desktop_webview_auth: ^0.0.16
                                  # v2.5.3 is the last version with built-in Dart JSEngine
 
 dev_dependencies:

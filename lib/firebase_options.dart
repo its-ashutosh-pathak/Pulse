@@ -15,6 +15,10 @@ class DefaultFirebaseOptions {
         return android;
       case TargetPlatform.iOS:
         return ios;
+      case TargetPlatform.windows:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+        return windows;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -38,4 +42,18 @@ class DefaultFirebaseOptions {
     storageBucket: 'pulse-by-ap.firebasestorage.app',
     iosBundleId: 'com.ashutosh.pulse',
   );
+
+  /// Windows/Linux/macOS share the same Firebase project.
+  /// The desktop Firebase C++ SDK communicates via REST using the same
+  /// project credentials — no separate Windows app registration is needed
+  /// for development. For production, register a dedicated Windows app
+  /// in the Firebase console and replace the appId below.
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCW3ZLU8bm0-Btk' 'ea3Ek853IkcI397_16U',
+    appId: '1:360258546308:android:e3165370da4c53000af0d1',
+    messagingSenderId: '360258546308',
+    projectId: 'pulse-by-ap',
+    storageBucket: 'pulse-by-ap.firebasestorage.app',
+  );
 }
+

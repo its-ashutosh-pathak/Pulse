@@ -14,6 +14,7 @@ import '../../providers/audio_provider.dart';
 import '../../providers/playlist_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/download_provider.dart';
+import '../../providers/desktop_layout_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/song_tile.dart';
 import '../../widgets/song_action_sheet.dart';
@@ -183,11 +184,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 20, 0),
                 child: Row(
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const Icon(LucideIcons.arrowLeft, size: 22),
-                    ),
-                    const SizedBox(width: 8),
+                    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) ...[
+                      IconButton(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(LucideIcons.arrowLeft, size: 22),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     Expanded(
                       child: Container(
                         height: 38,
@@ -534,7 +537,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         AppLocalizations.of(context)!.playlistDownloadingSongs(newDownloadsCount),
         action: TextButton(
           onPressed: () {
-            context.push('/downloading');
+            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+              ref.read(desktopLibraryTabProvider.notifier).state = 2;
+            } else {
+              context.push('/downloading');
+            }
           },
           child: Text(AppLocalizations.of(context)!.playlistView, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
         ),
@@ -599,16 +606,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       body: SafeArea(bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(LucideIcons.arrowLeft, size: 22),
+            if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS)
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(LucideIcons.arrowLeft, size: 22),
+                  ),
                 ),
               ),
-            ),
             const Expanded(
               child: Center(child: CircularProgressIndicator()),
             ),

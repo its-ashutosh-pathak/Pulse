@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -71,14 +73,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       }
     });
 
-    _speechToText.initialize(
-      onError: (error) => debugPrint('[Speech] Error: $error'),
-      onStatus: (status) {
-        if (status == 'done' || status == 'notListening') {
-          if (mounted) setState(() => _isListening = false);
-        }
-      },
-    );
+    // Only initialize speech_to_text on supported platforms.
+    // The mic button is already hidden on Windows/Linux, but calling
+    // initialize() on an unsupported platform can throw MissingPluginException.
+    if (kIsWeb || (!Platform.isWindows && !Platform.isLinux)) {
+      _speechToText.initialize(
+        onError: (error) => debugPrint('[Speech] Error: $error'),
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+      );
+    }
   }
 
   @override
@@ -263,6 +270,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final search = ref.watch(searchProvider);
     final audio = ref.watch(audioProvider);
     final accent = Theme.of(context).colorScheme.primary;
+    final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux;
 
     return Scaffold(
       extendBody: true,
@@ -272,193 +282,196 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           children: [
             Column(
               children: [
-                // ── Search bar ──
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: AppColors.glassBackground,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: AppColors.glassBorder,
+                if (!isDesktop)
+                  // ── Search bar ──
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: AppColors.glassBackground,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: AppColors.glassBorder,
+                                  ),
                                 ),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 14),
-                                    child: Icon(
-                                      LucideIcons.search,
-                                      size: 18,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _controller,
-                                      focusNode: _focusNode,
-                                      autofocus: false,
-                                      style: const TextStyle(fontSize: 15),
-                                      decoration: InputDecoration(
-                                        hintText: AppLocalizations.of(context)!.searchHint,
-                                        hintStyle: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                        ),
-                                      ),
-                                      onChanged: (q) {
-                                        ref
-                                            .read(searchProvider.notifier)
-                                            .onQueryChanged(q);
-                                      },
-                                      onSubmitted: (_) {
-                                        ref
-                                            .read(searchProvider.notifier)
-                                            .hideSuggestions();
-                                      },
-                                    ),
-                                  ),
-                                  if (search.query.isNotEmpty)
-                                    GestureDetector(
-                                      onTap: () {
-                                        _controller.clear();
-                                        ref
-                                            .read(searchProvider.notifier)
-                                            .clearQuery();
-                                      },
-                                      child: const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
-                                        child: Icon(
-                                          LucideIcons.x,
-                                          size: 18,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ),
-                                  GestureDetector(
-                                    onTap: _toggleVoiceSearch,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: 14,
-                                        left: 4,
-                                      ),
+                                child: Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 14),
                                       child: Icon(
-                                        _isListening
-                                            ? LucideIcons.mic
-                                            : LucideIcons.mic,
+                                        LucideIcons.search,
                                         size: 18,
-                                        color: _isListening
-                                            ? accent
-                                            : AppColors.textSecondary,
+                                        color: AppColors.textSecondary,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: _toggleShazamSearch,
-                            child: Container(
-                              width: 46,
-                              height: 46,
-                              decoration: BoxDecoration(
-                                color: AppColors.glassBackground,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: AppColors.glassBorder,
-                                ),
-                              ),
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/logo.png',
-                                  width: 30,
-                                  height: 30,
-                                  color: _isShazamListening
-                                      ? accent
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Suggestions dropdown
-                      if (search.showSuggestions &&
-                          search.suggestions.isNotEmpty &&
-                          search.query.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.glassBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.glassBorder),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ...search.suggestions.map((s) {
-                                return InkWell(
-                                  onTap: () {
-                                    _controller.text = s;
-                                    _controller.selection =
-                                        TextSelection.fromPosition(
-                                          TextPosition(offset: s.length),
-                                        );
-                                    ref
-                                        .read(searchProvider.notifier)
-                                        .selectSuggestion(s);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(
-                                          LucideIcons.search,
-                                          size: 14,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            s,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _controller,
+                                        focusNode: _focusNode,
+                                        autofocus: false,
+                                        style: const TextStyle(fontSize: 15),
+                                        decoration: InputDecoration(
+                                          hintText: AppLocalizations.of(context)!.searchHint,
+                                          hintStyle: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 14,
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 12,
                                           ),
                                         ),
-                                      ],
+                                        onChanged: (q) {
+                                          ref
+                                              .read(searchProvider.notifier)
+                                              .onQueryChanged(q);
+                                        },
+                                        onSubmitted: (_) {
+                                          ref
+                                              .read(searchProvider.notifier)
+                                              .hideSuggestions();
+                                        },
+                                      ),
                                     ),
+                                    if (search.query.isNotEmpty)
+                                      GestureDetector(
+                                        onTap: () {
+                                          _controller.clear();
+                                          ref
+                                              .read(searchProvider.notifier)
+                                              .clearQuery();
+                                        },
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                          child: Icon(
+                                            LucideIcons.x,
+                                            size: 18,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    if (kIsWeb || (!Platform.isWindows && !Platform.isLinux))
+                                      GestureDetector(
+                                        onTap: _toggleVoiceSearch,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 14,
+                                            left: 4,
+                                          ),
+                                          child: Icon(
+                                            _isListening
+                                                ? LucideIcons.mic
+                                                : LucideIcons.mic,
+                                            size: 18,
+                                            color: _isListening
+                                                ? accent
+                                                : AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: _toggleShazamSearch,
+                              child: Container(
+                                width: 46,
+                                height: 46,
+                                decoration: BoxDecoration(
+                                  color: AppColors.glassBackground,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: AppColors.glassBorder,
                                   ),
-                                );
-                              }),
-                            ],
-                          ),
+                                ),
+                                child: Center(
+                                  child: Image.asset(
+                                    'assets/logo.png',
+                                    width: 30,
+                                    height: 30,
+                                    color: _isShazamListening
+                                        ? accent
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                    ],
-                  ),
-                ),
 
-                const SizedBox(height: 8),
+                        // Suggestions dropdown
+                        if (search.showSuggestions &&
+                            search.suggestions.isNotEmpty &&
+                            search.query.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.glassBackground,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.glassBorder),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ...search.suggestions.map((s) {
+                                  return InkWell(
+                                    onTap: () {
+                                      _controller.text = s;
+                                      _controller.selection =
+                                          TextSelection.fromPosition(
+                                            TextPosition(offset: s.length),
+                                          );
+                                      ref
+                                          .read(searchProvider.notifier)
+                                          .selectSuggestion(s);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            LucideIcons.search,
+                                            size: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              s,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                if (!isDesktop)
+                  const SizedBox(height: 8),
 
                 // ── Content ──
                 Expanded(

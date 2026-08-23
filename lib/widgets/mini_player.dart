@@ -9,6 +9,7 @@ import '../core/utils/thumbnail_utils.dart';
 import '../providers/audio_provider.dart';
 import '../providers/playlist_provider.dart';
 import '../providers/player_overlay_provider.dart';
+import '../providers/desktop_layout_provider.dart';
 
 /// Mini player bar — port of Player.jsx.
 /// Fixed at the bottom, shows cover art, marquee title, controls, and progress line.
@@ -25,18 +26,24 @@ class MiniPlayer extends ConsumerWidget {
     final accent = Theme.of(context).colorScheme.primary;
     final thumb = ThumbnailUtils.getHighRes(song.thumbnail, size: 200);
     final progressPercent = audio.duration.inMilliseconds > 0
-        ? (audio.progress.inMilliseconds / audio.duration.inMilliseconds)
-            .clamp(0.0, 1.0)
+        ? (audio.progress.inMilliseconds / audio.duration.inMilliseconds).clamp(
+            0.0,
+            1.0,
+          )
         : 0.0;
 
     // Check liked status
     final _ = ref.watch(playlistProvider);
-    final isLiked =
-        ref.read(playlistProvider.notifier).isLiked(song.videoId);
+    final isLiked = ref.read(playlistProvider.notifier).isLiked(song.videoId);
 
     return GestureDetector(
       onTap: () {
-        ref.read(playerOverlayProvider.notifier).state = true;
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+          ref.read(desktopRightPaneProvider.notifier).state =
+              DesktopRightPane.player;
+        } else {
+          ref.read(playerOverlayProvider.notifier).state = true;
+        }
       },
       child: SizedBox(
         height: 68,
@@ -48,12 +55,12 @@ class MiniPlayer extends ConsumerWidget {
               child: ClipRect(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                  child: Container(color: const Color(0x66000000)), // 40% Black tint
+                  child: Container(
+                    color: const Color(0x66000000),
+                  ), // 40% Black tint
                 ),
               ),
             ),
-
-
 
             // ── Main content ──
             Padding(
@@ -64,15 +71,22 @@ class MiniPlayer extends ConsumerWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: SizedBox(
-                      width: 40, height: 40,
+                      width: 40,
+                      height: 40,
                       child: thumb.isNotEmpty
                           ? (!thumb.startsWith('http')
-                              ? Image.file(File(thumb), fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(color: AppColors.surface))
-                              : CachedNetworkImage(
-                                  imageUrl: thumb, fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) =>
-                                      Container(color: AppColors.surface)))
+                                ? Image.file(
+                                    File(thumb),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        Container(color: AppColors.surface),
+                                  )
+                                : CachedNetworkImage(
+                                    imageUrl: thumb,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (_, __, ___) =>
+                                        Container(color: AppColors.surface),
+                                  ))
                           : Container(color: AppColors.surface),
                     ),
                   ),
@@ -90,16 +104,22 @@ class MiniPlayer extends ConsumerWidget {
                           child: _MarqueeText(
                             text: song.title,
                             style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                               color: accent,
                             ),
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(song.artist,
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 11, color: Colors.white70)),
+                        Text(
+                          song.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white70,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -107,9 +127,8 @@ class MiniPlayer extends ConsumerWidget {
 
                   // ── Controls ──
                   GestureDetector(
-                    onTap: () => ref
-                        .read(playlistProvider.notifier)
-                        .toggleLike(song),
+                    onTap: () =>
+                        ref.read(playlistProvider.notifier).toggleLike(song),
                     child: Icon(
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       size: 22,
@@ -120,16 +139,19 @@ class MiniPlayer extends ConsumerWidget {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => ref.read(audioProvider.notifier).playPrev(),
-                    child: const Icon(Icons.skip_previous,
-                        size: 28, color: Colors.white),
+                    child: const Icon(
+                      Icons.skip_previous,
+                      size: 28,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        ref.read(audioProvider.notifier).togglePlay(),
+                    onTap: () => ref.read(audioProvider.notifier).togglePlay(),
                     child: Container(
-                      width: 40, height: 40,
+                      width: 40,
+                      height: 40,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white,
@@ -137,12 +159,13 @@ class MiniPlayer extends ConsumerWidget {
                       child: Center(
                         child: audio.isLoading
                             ? SizedBox(
-                                width: 18, height: 18,
+                                width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation(accent),
-                                ))
+                                  valueColor: AlwaysStoppedAnimation(accent),
+                                ),
+                              )
                             : Icon(
                                 audio.isPlaying
                                     ? Icons.pause
@@ -156,10 +179,12 @@ class MiniPlayer extends ConsumerWidget {
                   const SizedBox(width: 8),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        ref.read(audioProvider.notifier).playNext(),
-                    child: const Icon(Icons.skip_next,
-                        size: 28, color: Colors.white),
+                    onTap: () => ref.read(audioProvider.notifier).playNext(),
+                    child: const Icon(
+                      Icons.skip_next,
+                      size: 28,
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -167,7 +192,9 @@ class MiniPlayer extends ConsumerWidget {
 
             // ── Progress line (bottom) ──
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: SizedBox(
                 height: 2,
                 child: Stack(
@@ -180,8 +207,9 @@ class MiniPlayer extends ConsumerWidget {
                           color: accent,
                           boxShadow: [
                             BoxShadow(
-                                color: accent.withValues(alpha: 0.5),
-                                blurRadius: 10),
+                              color: accent.withValues(alpha: 0.5),
+                              blurRadius: 10,
+                            ),
                           ],
                         ),
                       ),
@@ -227,14 +255,14 @@ class _MarqueeTextState extends State<_MarqueeText>
   void _animationListener() {
     if (_controller.hasClients) {
       _controller.jumpTo(
-          _animation.value * _controller.position.maxScrollExtent);
+        _animation.value * _controller.position.maxScrollExtent,
+      );
     }
   }
 
   void _startScroll() {
     if (!mounted) return;
-    if (_controller.hasClients &&
-        _controller.position.maxScrollExtent > 0) {
+    if (_controller.hasClients && _controller.position.maxScrollExtent > 0) {
       _animation.removeListener(_animationListener);
       _animation.addListener(_animationListener);
       _animation.repeat();
@@ -263,9 +291,9 @@ class _MarqueeTextState extends State<_MarqueeText>
     if (widget.text.length <= 15) {
       // Text has 15 characters or fewer, no need for marquee
       return Text(
-        widget.text, 
-        style: widget.style, 
-        maxLines: 1, 
+        widget.text,
+        style: widget.style,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
     }
@@ -275,8 +303,10 @@ class _MarqueeTextState extends State<_MarqueeText>
       child: ShaderMask(
         shaderCallback: (rect) => const LinearGradient(
           colors: [
-            Colors.transparent, Colors.white,
-            Colors.white, Colors.transparent,
+            Colors.transparent,
+            Colors.white,
+            Colors.white,
+            Colors.transparent,
           ],
           stops: [0.0, 0.05, 0.95, 1.0],
         ).createShader(rect),

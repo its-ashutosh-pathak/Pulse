@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/desktop_layout_provider.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
 
@@ -76,7 +78,6 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
   Future<void> _sendReply(String text) async {
     if (text.trim().isEmpty) return;
 
-
     final auth = ref.read(authProvider);
     final adminUser = auth.user;
     if (adminUser == null) return;
@@ -88,7 +89,9 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
       final batch = FirebaseFirestore.instance.batch();
 
       // 1. Add message
-      final msgRef = FirebaseFirestore.instance.collection('support_messages').doc();
+      final msgRef = FirebaseFirestore.instance
+          .collection('support_messages')
+          .doc();
       batch.set(msgRef, {
         'id': msgRef.id,
         'senderId': adminUser.uid,
@@ -101,7 +104,9 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
       });
 
       // 2. Update channel
-      final channelRef = FirebaseFirestore.instance.collection('support_channels').doc(widget.userId);
+      final channelRef = FirebaseFirestore.instance
+          .collection('support_channels')
+          .doc(widget.userId);
       batch.set(channelRef, {
         'lastMessage': replyText,
         'lastMessageTime': FieldValue.serverTimestamp(),
@@ -113,11 +118,14 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        ToastUtils.show(context, AppLocalizations.of(context)!.adminChatFailedToReply(ErrorMapper.getLocalizedError(context, e)));
+        ToastUtils.show(
+          context,
+          AppLocalizations.of(
+            context,
+          )!.adminChatFailedToReply(ErrorMapper.getLocalizedError(context, e)),
+        );
       }
-    } finally {
-
-    }
+    } finally {}
   }
 
   @override
@@ -134,25 +142,45 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      if (Platform.isWindows ||
+                          Platform.isLinux ||
+                          Platform.isMacOS) {
+                        ref.read(desktopRightPaneProvider.notifier).state =
+                            DesktopRightPane.communication;
+                      } else {
+                        context.pop();
+                      }
+                    },
                     icon: const Icon(LucideIcons.arrowLeft, size: 22),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                  if (widget.userPhotoUrl.isNotEmpty && widget.userPhotoUrl.startsWith('assets/'))
+                  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
+                    const SizedBox(width: 12),
+                  if (widget.userPhotoUrl.isNotEmpty &&
+                      widget.userPhotoUrl.startsWith('assets/'))
                     Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        image: DecorationImage(image: AssetImage(widget.userPhotoUrl), fit: BoxFit.cover),
+                        image: DecorationImage(
+                          image: AssetImage(widget.userPhotoUrl),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     )
                   else
                     Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        image: const DecorationImage(image: AssetImage('assets/avatars/4.jpeg'), fit: BoxFit.cover),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/avatars/4.jpeg'),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   const SizedBox(width: 12),
@@ -160,198 +188,282 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.userName.isEmpty ? AppLocalizations.of(context)!.adminChatSupportChat : widget.userName,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                        widget.userName.isEmpty
+                            ? AppLocalizations.of(context)!.adminChatSupportChat
+                            : widget.userName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       Text(
                         widget.userEmail,
-                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-          // Message stream
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _chatStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text(AppLocalizations.of(context)!.adminChatError(ErrorMapper.getLocalizedError(context, snapshot.error)), style: const TextStyle(color: Colors.red)));
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final messages = snapshot.data?.docs ?? [];
-
-                if (messages.isEmpty) {
-                  return Center(
-                    child: Text(AppLocalizations.of(context)!.adminChatNoHistory, style: const TextStyle(color: AppColors.textSecondary)),
-                  );
-                }
-
-                // Scroll to bottom after frame
-                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final data = messages[index].data() as Map<String, dynamic>;
-                    final isMe = data['senderId'] != widget.userId; // Sent by admin/support
-                    final text = data['text'] ?? '';
-                    final time = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-
-                    Widget bubble = Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isMe ? accent : AppColors.surface,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(14),
-                            topRight: const Radius.circular(14),
-                            bottomLeft: Radius.circular(isMe ? 14 : 0),
-                            bottomRight: Radius.circular(isMe ? 0 : 14),
+            // Message stream
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _chatStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        AppLocalizations.of(context)!.adminChatError(
+                          ErrorMapper.getLocalizedError(
+                            context,
+                            snapshot.error,
                           ),
-                          border: isMe
-                              ? null
-                              : Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isMe ? AppLocalizations.of(context)!.adminChatSupportYou : widget.userName,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isMe ? Colors.white70 : accent,
-                                letterSpacing: 0.5,
-                              ),
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final messages = snapshot.data?.docs ?? [];
+
+                  if (messages.isEmpty) {
+                    return Center(
+                      child: Text(
+                        AppLocalizations.of(context)!.adminChatNoHistory,
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    );
+                  }
+
+                  // Scroll to bottom after frame
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => _scrollToBottom(),
+                  );
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final data =
+                          messages[index].data() as Map<String, dynamic>;
+                      final isMe =
+                          data['senderId'] !=
+                          widget.userId; // Sent by admin/support
+                      final text = data['text'] ?? '';
+                      final time =
+                          (data['timestamp'] as Timestamp?)?.toDate() ??
+                          DateTime.now();
+
+                      Widget bubble = Align(
+                        alignment: isMe
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.75,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isMe ? accent : AppColors.surface,
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(14),
+                              topRight: const Radius.circular(14),
+                              bottomLeft: Radius.circular(isMe ? 14 : 0),
+                              bottomRight: Radius.circular(isMe ? 0 : 14),
                             ),
-                            const SizedBox(height: 3),
-                            Wrap(
-                              alignment: WrapAlignment.end,
-                              crossAxisAlignment: WrapCrossAlignment.end,
-                              spacing: 8,
-                              runSpacing: 4,
-                              children: [
-                                Text(
-                                  text,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                            border: isMe
+                                ? null
+                                : Border.all(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    width: 1,
+                                  ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isMe
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.adminChatSupportYou
+                                    : widget.userName,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: isMe ? Colors.white70 : accent,
+                                  letterSpacing: 0.5,
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 1),
+                              ),
+                              const SizedBox(height: 3),
+                              Wrap(
+                                alignment: WrapAlignment.end,
+                                crossAxisAlignment: WrapCrossAlignment.end,
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  Text(
+                                    text,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 1),
+                                    child: Text(
+                                      DateFormatter.formatTime(time),
+                                      style: TextStyle(
+                                        color: isMe
+                                            ? Colors.white70
+                                            : AppColors.textSecondary,
+                                        fontSize: 9,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+
+                      bool showDivider = false;
+                      if (index == 0) {
+                        showDivider = true;
+                      } else {
+                        final prevData =
+                            messages[index - 1].data() as Map<String, dynamic>;
+                        final prevTime =
+                            (prevData['timestamp'] as Timestamp?)?.toDate() ??
+                            DateTime.now();
+                        if (prevTime.year != time.year ||
+                            prevTime.month != time.month ||
+                            prevTime.day != time.day) {
+                          showDivider = true;
+                        }
+                      }
+
+                      if (showDivider) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   child: Text(
-                                    DateFormatter.formatTime(time),
-                                    style: TextStyle(
-                                      color: isMe ? Colors.white70 : AppColors.textSecondary,
-                                      fontSize: 9,
+                                    DateFormatter.formatChatListDate(time),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-
-                    bool showDivider = false;
-                    if (index == 0) {
-                      showDivider = true;
-                    } else {
-                      final prevData = messages[index - 1].data() as Map<String, dynamic>;
-                      final prevTime = (prevData['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-                      if (prevTime.year != time.year || prevTime.month != time.month || prevTime.day != time.day) {
-                        showDivider = true;
-                      }
-                    }
-
-                    if (showDivider) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface.withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  DateFormatter.formatChatListDate(time),
-                                  style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
                               ),
                             ),
+                            bubble,
+                          ],
+                        );
+                      }
+
+                      return bubble;
+                    },
+                  );
+                },
+              ),
+            ),
+
+            // Message Input bar
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(
+                          context,
+                        )!.adminChatTypeReply,
+                        hintStyle: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide(
+                            color: accent.withValues(alpha: 0.5),
+                            width: 1.5,
                           ),
-                          bubble,
-                        ],
-                      );
-                    }
-
-                    return bubble;
-                  },
-                );
-              },
-            ),
-          ),
-
-          // Message Input bar
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.adminChatTypeReply,
-                      hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+                        ),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide(color: accent.withValues(alpha: 0.5), width: 1.5),
-                      ),
+                      onSubmitted: (val) => _sendReply(val),
                     ),
-                    onSubmitted: (val) => _sendReply(val),
                   ),
-                ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: accent,
-                  radius: 20,
-                  child: IconButton(
-                    icon: const Icon(LucideIcons.send, size: 16, color: Colors.white),
-                    onPressed: () => _sendReply(_messageController.text),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    backgroundColor: accent,
+                    radius: 20,
+                    child: IconButton(
+                      icon: const Icon(
+                        LucideIcons.send,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                      onPressed: () => _sendReply(_messageController.text),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

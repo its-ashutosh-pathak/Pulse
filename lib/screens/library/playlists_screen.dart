@@ -19,6 +19,7 @@ import '../../providers/playlist_provider.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/import_provider.dart';
 import '../../providers/download_provider.dart';
+import '../../providers/desktop_layout_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/playing_bars.dart';
 import 'downloads_screen.dart';
@@ -153,6 +154,12 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
           ToastUtils.show(context, currentTask.name);
           Future.microtask(() => ref.read(importProvider.notifier).dismissTask(key));
         }
+      }
+    });
+
+    ref.listen<int>(desktopLibraryTabProvider, (previous, next) {
+      if (next != _currentIndex && _pageController.hasClients) {
+        _pageController.animateToPage(next, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       }
     });
 
@@ -460,7 +467,8 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                   child: PageView(
                     controller: _pageController,
                     onPageChanged: (index) {
-                      if (_isOffline && index != 1) {
+                      final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+                      if (!isDesktop && _isOffline && index != 1) {
                         if (index == 0) context.go('/library');
                         if (index == 2) context.go('/downloading');
                         return;
@@ -469,6 +477,9 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                         _currentIndex = index;
                         _showSortDropdown = false;
                       });
+                      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+                        Future.microtask(() => ref.read(desktopLibraryTabProvider.notifier).state = index);
+                      }
                       if (_chipsScrollController.hasClients) {
                         double offset = 0;
                         if (index == 1) {
@@ -503,7 +514,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
             // ── FAB ──
             if (_currentIndex == 0)
               Positioned(
-                bottom: 160, right: 20,
+                bottom: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 24 : 160, right: 20,
                 child: GestureDetector(
                 onTap: () => setState(() => _showAddOptions = !_showAddOptions),
                 child: AnimatedContainer(

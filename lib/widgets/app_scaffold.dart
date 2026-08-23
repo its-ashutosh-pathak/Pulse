@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,8 @@ import '../core/theme/app_colors.dart';
 import '../screens/offline/offline_screen.dart';
 import '../screens/player/player_screen.dart';
 import 'mini_player.dart';
+import 'desktop_scaffold.dart';
+import 'package:flutter/foundation.dart';
 import '../providers/update_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_overlay_provider.dart';
@@ -194,7 +197,8 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         location.startsWith('/playlist/__downloads__');
     final isDownloadsRoute = location.startsWith('/downloads');
         
-    if (_isOffline && !isDownloadsRoute && !isOfflinePlaylist) {
+    final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+    if (!isDesktop && _isOffline && !isDownloadsRoute && !isOfflinePlaylist) {
       return const OfflineScreen();
     }
 
@@ -245,6 +249,12 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     final miniPlayerHeight = 68.0;
 
     final audio = ref.watch(audioProvider);
+
+    if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      return DesktopScaffold(navigationShell: widget.navigationShell);
+    }
 
     final scaffold = Scaffold(
       extendBody: true,

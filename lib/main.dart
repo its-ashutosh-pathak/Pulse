@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -41,14 +44,22 @@ void main() async {
   // Initialize audio_service for background playback + lock screen controls.
   // This creates the Android foreground service / iOS audio session.
   PulseAudioHandler? audioHandler;
-  try {
-    audioHandler = await initAudioService();
-  } catch (e) {
-    // If AudioService fails (e.g. missing AudioServiceActivity),
-    // create a standalone handler so the app still launches.
-    debugPrint('[Pulse] AudioService.init failed: $e');
+  
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    // Skip audio_service entirely on desktop platforms as it doesn't support them.
+    // media_kit handles MPRIS/media keys natively on desktop.
     final fallbackPlayer = Player(configuration: const PlayerConfiguration(bufferSize: 4194304));
     audioHandler = PulseAudioHandler(fallbackPlayer);
+  } else {
+    try {
+      audioHandler = await initAudioService();
+    } catch (e) {
+      // If AudioService fails (e.g. missing AudioServiceActivity),
+      // create a standalone handler so the app still launches.
+      debugPrint('[Pulse] AudioService.init failed: $e');
+      final fallbackPlayer = Player(configuration: const PlayerConfiguration(bufferSize: 4194304));
+      audioHandler = PulseAudioHandler(fallbackPlayer);
+    }
   }
 
   // Immersive dark status bar
@@ -129,6 +140,7 @@ class _PulseAppState extends ConsumerState<PulseApp> {
         supportedLocales: AppLocalizations.supportedLocales,
         locale: settings.appLocale == null ? null : Locale(settings.appLocale!),
         theme: AppTheme.dark(accentColor: accentColor),
+        scrollBehavior: AppScrollBehavior(),
         home: const Scaffold(
           body: Center(
             child: CircularProgressIndicator(),
@@ -141,6 +153,7 @@ class _PulseAppState extends ConsumerState<PulseApp> {
       scaffoldMessengerKey: scaffoldMessengerKey,
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: AppScrollBehavior(),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -164,4 +177,13 @@ class _PulseAppState extends ConsumerState<PulseApp> {
       routerConfig: ref.watch(routerProvider),
     );
   }
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
 }

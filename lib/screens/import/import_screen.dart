@@ -68,13 +68,15 @@ class _ImportScreenState extends ConsumerState<ImportScreen> {
             // ── Header ──
             Row(
               children: [
-                IconButton(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(LucideIcons.arrowLeft, size: 22),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 12),
+                if (Theme.of(context).platform != TargetPlatform.windows && Theme.of(context).platform != TargetPlatform.linux && Theme.of(context).platform != TargetPlatform.macOS) ...[
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(LucideIcons.arrowLeft, size: 22),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 12),
+                ],
                 Text(AppLocalizations.of(context)!.importTitle,
                     style: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.w700)),

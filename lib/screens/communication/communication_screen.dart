@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import '../../core/utils/toast_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/desktop_layout_provider.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
 
@@ -15,14 +17,14 @@ class CommunicationScreen extends ConsumerStatefulWidget {
   const CommunicationScreen({super.key});
 
   @override
-  ConsumerState<CommunicationScreen> createState() => _CommunicationScreenState();
+  ConsumerState<CommunicationScreen> createState() =>
+      _CommunicationScreenState();
 }
 
 class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
 
-  
   late final Stream<QuerySnapshot> _adminStream;
   late final Stream<QuerySnapshot> _userStream;
 
@@ -33,17 +35,19 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
         .collection('support_channels')
         .orderBy('lastMessageTime', descending: true)
         .snapshots();
-    
+
     final userId = ref.read(authProvider).user?.uid ?? '';
     _userStream = FirebaseFirestore.instance
         .collection('support_messages')
-        .where(Filter.or(
-          Filter('userId', isEqualTo: userId),
-          Filter('isAnnouncement', isEqualTo: true)
-        ))
+        .where(
+          Filter.or(
+            Filter('userId', isEqualTo: userId),
+            Filter('isAnnouncement', isEqualTo: true),
+          ),
+        )
         .orderBy('timestamp', descending: false)
         .snapshots();
-        
+
     Future.microtask(_cleanUpOldMessages);
   }
 
@@ -53,17 +57,17 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
 
     try {
       final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-      
+
       final oldMessages = await FirebaseFirestore.instance
           .collection('support_messages')
           .where('timestamp', isLessThan: Timestamp.fromDate(thirtyDaysAgo))
           .get();
-          
+
       if (oldMessages.docs.isEmpty) return;
 
       final batch = FirebaseFirestore.instance.batch();
       int count = 0;
-      
+
       for (var msg in oldMessages.docs) {
         batch.delete(msg.reference);
         count++;
@@ -72,7 +76,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
           count = 0;
         }
       }
-      
+
       if (count > 0) {
         await batch.commit();
       }
@@ -86,13 +90,18 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+
+    final now =
+        DateTime.now().millisecondsSinceEpoch +
+        60000; // +1 min buffer for clock skew
+    try {
+      ref.read(unreadBadgeTimeProvider.notifier).state = now;
+    } catch (_) {}
     
-    final now = DateTime.now().millisecondsSinceEpoch + 60000; // +1 min buffer for clock skew
-    ref.read(unreadBadgeTimeProvider.notifier).state = now;
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt('lastOpenedSupportTime', now);
     });
-    
+
     super.dispose();
   }
 
@@ -110,7 +119,6 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   Future<void> _sendFeedback(String text) async {
     if (text.trim().isEmpty) return;
 
-
     final auth = ref.read(authProvider);
     final user = auth.user;
     if (user == null) return;
@@ -122,7 +130,9 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       final batch = FirebaseFirestore.instance.batch();
 
       // 1. Add message
-      final msgRef = FirebaseFirestore.instance.collection('support_messages').doc();
+      final msgRef = FirebaseFirestore.instance
+          .collection('support_messages')
+          .doc();
       batch.set(msgRef, {
         'id': msgRef.id,
         'senderId': user.uid,
@@ -135,7 +145,9 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       });
 
       // 2. Update channel metadata
-      final channelRef = FirebaseFirestore.instance.collection('support_channels').doc(user.uid);
+      final channelRef = FirebaseFirestore.instance
+          .collection('support_channels')
+          .doc(user.uid);
       batch.set(channelRef, {
         'userId': user.uid,
         'userEmail': user.email ?? '',
@@ -151,11 +163,14 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        ToastUtils.show(context, AppLocalizations.of(context)!.commFailedToSend(ErrorMapper.getLocalizedError(context, e)));
+        ToastUtils.show(
+          context,
+          AppLocalizations.of(
+            context,
+          )!.commFailedToSend(ErrorMapper.getLocalizedError(context, e)),
+        );
       }
-    } finally {
-
-    }
+    } finally {}
   }
 
   @override
@@ -172,34 +187,66 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(LucideIcons.arrowLeft, size: 22),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 12),
+                  if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) ...[
+                    IconButton(
+                      onPressed: () {
+                        if (Platform.isWindows ||
+                            Platform.isLinux ||
+                            Platform.isMacOS) {
+                          ref.read(desktopRightPaneProvider.notifier).state =
+                              DesktopRightPane.shell;
+                        } else {
+                          context.pop();
+                        }
+                      },
+                      icon: const Icon(LucideIcons.arrowLeft, size: 22),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   if (auth.isAdmin)
                     Text(
                       AppLocalizations.of(context)!.commAdminDashboard,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     )
                   else
                     Row(
                       children: [
                         Container(
-                          width: 36, height: 36,
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(image: AssetImage('assets/avatars/Admin.Avatar.jpeg'), fit: BoxFit.cover),
+                            image: const DecorationImage(
+                              image: AssetImage(
+                                'assets/avatars/Admin.Avatar.jpeg',
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppLocalizations.of(context)!.commAdminSupport, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            Text(AppLocalizations.of(context)!.commAlwaysHere, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                            Text(
+                              AppLocalizations.of(context)!.commAdminSupport,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              AppLocalizations.of(context)!.commAlwaysHere,
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -208,7 +255,9 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
               ),
             ),
             Expanded(
-              child: auth.isAdmin ? _buildAdminBody(accent) : _buildUserBody(auth.user?.uid ?? '', accent),
+              child: auth.isAdmin
+                  ? _buildAdminBody(accent)
+                  : _buildUserBody(auth.user?.uid ?? '', accent),
             ),
           ],
         ),
@@ -231,10 +280,14 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
           Row(
             children: [
               Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(image: AssetImage('assets/avatars/Admin.Avatar.jpeg'), fit: BoxFit.cover),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/avatars/Admin.Avatar.jpeg'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -242,9 +295,22 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)!.commWelcomeTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                    Text(
+                      AppLocalizations.of(context)!.commWelcomeTitle,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(AppLocalizations.of(context)!.commWelcomeSubtitle, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    Text(
+                      AppLocalizations.of(context)!.commWelcomeSubtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -253,7 +319,11 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
           const SizedBox(height: 20),
           Text(
             AppLocalizations.of(context)!.commWelcomeBody1,
-            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 12),
           Padding(
@@ -261,16 +331,29 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBulletPoint('🎵', AppLocalizations.of(context)!.commBullet1),
-                _buildBulletPoint('🐞', AppLocalizations.of(context)!.commBullet2),
-                _buildBulletPoint('💡', AppLocalizations.of(context)!.commBullet3),
+                _buildBulletPoint(
+                  '🎵',
+                  AppLocalizations.of(context)!.commBullet1,
+                ),
+                _buildBulletPoint(
+                  '🐞',
+                  AppLocalizations.of(context)!.commBullet2,
+                ),
+                _buildBulletPoint(
+                  '💡',
+                  AppLocalizations.of(context)!.commBullet3,
+                ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           Text(
             AppLocalizations.of(context)!.commWelcomeBody2,
-            style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -285,7 +368,16 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.3))),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.3,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -300,7 +392,14 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
             stream: _userStream,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(child: Text(AppLocalizations.of(context)!.commError(ErrorMapper.getLocalizedError(context, snapshot.error)), style: const TextStyle(color: Colors.red)));
+                return Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.commError(
+                      ErrorMapper.getLocalizedError(context, snapshot.error),
+                    ),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                );
               }
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -315,17 +414,29 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(LucideIcons.messageCircle, size: 48, color: accent.withValues(alpha: 0.4)),
+                        Icon(
+                          LucideIcons.messageCircle,
+                          size: 48,
+                          color: accent.withValues(alpha: 0.4),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           AppLocalizations.of(context)!.commNoMessages,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           AppLocalizations.of(context)!.commNoMessagesDesc,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
@@ -333,32 +444,49 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 );
               }
 
-              WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+              WidgetsBinding.instance.addPostFrameCallback(
+                (_) => _scrollToBottom(),
+              );
 
               return ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: messages.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return _buildPinnedWelcomeMessage(accent);
                   }
-                  
+
                   final msgIndex = index - 1;
-                  final data = messages[msgIndex].data() as Map<String, dynamic>;
+                  final data =
+                      messages[msgIndex].data() as Map<String, dynamic>;
                   final isMe = data['senderId'] == userId;
                   final text = data['text'] ?? '';
-                  final time = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+                  final time =
+                      (data['timestamp'] as Timestamp?)?.toDate() ??
+                      DateTime.now();
                   final isAnnouncement = data['isAnnouncement'] == true;
 
-                  final senderName = isAnnouncement ? 'Ashutosh pathak' : (isMe ? 'You' : 'Ashutosh pathak');
+                  final senderName = isAnnouncement
+                      ? 'Ashutosh pathak'
+                      : (isMe ? 'You' : 'Ashutosh pathak');
 
                   Widget bubble = Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMe
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),
-                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: isMe ? accent : AppColors.surface,
                         borderRadius: BorderRadius.only(
@@ -370,57 +498,70 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                         border: isMe
                             ? null
                             : Border.all(
-                                color: isAnnouncement ? accent.withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.08), 
-                                width: 1
+                                color: isAnnouncement
+                                    ? accent.withValues(alpha: 0.4)
+                                    : Colors.white.withValues(alpha: 0.08),
+                                width: 1,
                               ),
                       ),
                       child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (!isMe)
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (isAnnouncement) ...[
-                                        Icon(LucideIcons.megaphone, size: 10, color: accent),
-                                        const SizedBox(width: 4),
-                                      ],
-                                      Text(
-                                        senderName,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isAnnouncement ? accent : AppColors.textSecondary,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
+                                if (isAnnouncement) ...[
+                                  Icon(
+                                    LucideIcons.megaphone,
+                                    size: 10,
+                                    color: accent,
                                   ),
-                                if (!isMe) const SizedBox(height: 3),
-                                Wrap(
-                                  alignment: WrapAlignment.end,
-                                  crossAxisAlignment: WrapCrossAlignment.end,
-                                  spacing: 8,
-                                  runSpacing: 4,
-                                  children: [
-                                    Text(
-                                      text,
-                                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 1),
-                                      child: Text(
-                                        DateFormatter.formatTime(time),
-                                        style: TextStyle(
-                                          color: isMe ? Colors.white70 : AppColors.textSecondary,
-                                          fontSize: 9,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  const SizedBox(width: 4),
+                                ],
+                                Text(
+                                  senderName,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isAnnouncement
+                                        ? accent
+                                        : AppColors.textSecondary,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ],
                             ),
+                          if (!isMe) const SizedBox(height: 3),
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            crossAxisAlignment: WrapCrossAlignment.end,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              Text(
+                                text,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 1),
+                                child: Text(
+                                  DateFormatter.formatTime(time),
+                                  style: TextStyle(
+                                    color: isMe
+                                        ? Colors.white70
+                                        : AppColors.textSecondary,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
 
@@ -428,9 +569,14 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                   if (msgIndex == 0) {
                     showDivider = true;
                   } else {
-                    final prevData = messages[msgIndex - 1].data() as Map<String, dynamic>;
-                    final prevTime = (prevData['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-                    if (prevTime.year != time.year || prevTime.month != time.month || prevTime.day != time.day) {
+                    final prevData =
+                        messages[msgIndex - 1].data() as Map<String, dynamic>;
+                    final prevTime =
+                        (prevData['timestamp'] as Timestamp?)?.toDate() ??
+                        DateTime.now();
+                    if (prevTime.year != time.year ||
+                        prevTime.month != time.month ||
+                        prevTime.day != time.day) {
                       showDivider = true;
                     }
                   }
@@ -443,14 +589,21 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           child: Center(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.surface.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 DateFormatter.formatChatListDate(time),
-                                style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -478,10 +631,17 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   // ── ADMIN INTERFACE (WhatsApp Style) ──
   Widget _buildAdminBody(Color accent) {
     return StreamBuilder<QuerySnapshot>(
-            stream: _adminStream,
+      stream: _adminStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text(AppLocalizations.of(context)!.commError(ErrorMapper.getLocalizedError(context, snapshot.error)), style: const TextStyle(color: Colors.red)));
+          return Center(
+            child: Text(
+              AppLocalizations.of(context)!.commError(
+                ErrorMapper.getLocalizedError(context, snapshot.error),
+              ),
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -497,9 +657,19 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
             if (index == 0) {
               return ListTile(
                 onTap: () {
-                  context.push('/communication/broadcast');
+                  if (Platform.isWindows ||
+                      Platform.isLinux ||
+                      Platform.isMacOS) {
+                    ref.read(desktopRightPaneProvider.notifier).state =
+                        DesktopRightPane.broadcastChat;
+                  } else {
+                    context.push('/communication/broadcast');
+                  }
                 },
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: CircleAvatar(
                   radius: 24,
                   backgroundColor: accent.withValues(alpha: 0.2),
@@ -508,11 +678,18 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 ),
                 title: Text(
                   AppLocalizations.of(context)!.commGlobalAnnouncements,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
                 subtitle: Text(
                   AppLocalizations.of(context)!.commSendMessagesToAll,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               );
             }
@@ -522,26 +699,39 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
             final email = (data['userEmail'] as String?) ?? 'No Email';
             final name = (data['userName'] as String?) ?? 'Unknown User';
             final lastMsg = (data['lastMessage'] as String?) ?? '';
-            final time = (data['lastMessageTime'] as Timestamp?)?.toDate() ?? DateTime.now();
+            final time =
+                (data['lastMessageTime'] as Timestamp?)?.toDate() ??
+                DateTime.now();
             final unread = data['unreadByAdmin'] == true;
 
             String photoUrl = (data['userPhotoURL'] as String?) ?? '';
             if (photoUrl.isEmpty) photoUrl = 'assets/avatars/4.jpeg';
-            
-            final initials = name.split(' ').where((String w) => w.isNotEmpty).map((String w) => w[0]).take(2).join().toUpperCase();
+
+            final initials = name
+                .split(' ')
+                .where((String w) => w.isNotEmpty)
+                .map((String w) => w[0])
+                .take(2)
+                .join()
+                .toUpperCase();
 
             Widget leadingAvatar;
             if (photoUrl.isNotEmpty && photoUrl.startsWith('assets/')) {
               leadingAvatar = Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(image: AssetImage(photoUrl), fit: BoxFit.cover),
+                  image: DecorationImage(
+                    image: AssetImage(photoUrl),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               );
             } else {
               leadingAvatar = Container(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -549,7 +739,11 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 child: Center(
                   child: Text(
                     initials,
-                    style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               );
@@ -557,9 +751,26 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
 
             return ListTile(
               onTap: () {
-                context.push('/communication/chat/$uid?name=${Uri.encodeComponent(name)}&email=${Uri.encodeComponent(email)}&photo=${Uri.encodeComponent(photoUrl)}');
+                if (Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS) {
+                  ref.read(desktopChatUserIdProvider.notifier).state = uid;
+                  ref.read(desktopChatUserNameProvider.notifier).state = name;
+                  ref.read(desktopChatUserEmailProvider.notifier).state = email;
+                  ref.read(desktopChatUserPhotoProvider.notifier).state =
+                      photoUrl;
+                  ref.read(desktopRightPaneProvider.notifier).state =
+                      DesktopRightPane.adminChat;
+                } else {
+                  context.push(
+                    '/communication/chat/$uid?name=${Uri.encodeComponent(name)}&email=${Uri.encodeComponent(email)}&photo=${Uri.encodeComponent(photoUrl)}',
+                  );
+                }
               },
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
               leading: leadingAvatar,
               title: Row(
                 children: [
@@ -568,16 +779,20 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     DateFormatter.formatChatListDate(time),
                     style: TextStyle(
-                      color: unread ? accent : AppColors.textSecondary, 
+                      color: unread ? accent : AppColors.textSecondary,
                       fontSize: 12,
-                      fontWeight: unread ? FontWeight.bold : FontWeight.normal
+                      fontWeight: unread ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -592,9 +807,13 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: unread ? Colors.white : AppColors.textSecondary,
+                          color: unread
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 14,
-                          fontWeight: unread ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: unread
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -603,7 +822,10 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                         width: 10,
                         height: 10,
                         margin: const EdgeInsets.only(left: 8),
-                        decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: accent,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                   ],
                 ),
@@ -627,7 +849,12 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       decoration: BoxDecoration(
         color: Colors.black,
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1)),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 1,
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -638,17 +865,26 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                hintStyle: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
                 filled: true,
                 fillColor: AppColors.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: accent.withValues(alpha: 0.5), width: 1.5),
+                  borderSide: BorderSide(
+                    color: accent.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
                 ),
               ),
               onSubmitted: (val) => onSend(val),
