@@ -43,3 +43,30 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Windows
+windows/**/ephemeral/
+windows/**/*.pdb
+windows/**/*.ilk
+windows/**/*.exp
+windows/**/*.lib
+
+# Android
+/android/.gradle/
+/android/local.properties
+/android/key.properties
+*.jks
+*.keystore
+
+# iOS
+/ios/.symlinks/
+/ios/Pods/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/app.flx
+/ios/Flutter/app.zip
+/ios/Flutter/flutter_assets/
+/ios/Flutter/flutter_export_environment.sh
+
+# Secrets and Environment Variables
+.env
+.env.*
