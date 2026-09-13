@@ -481,30 +481,53 @@ class AudioNotifier extends Notifier<AudioState> {
       // If extraction fails, throw immediately with a clear message.
       final settings = ref.read(settingsProvider);
       final streamQuality = settings.dataSaverMode ? 'low' : settings.streamingQuality;
-      final streamUrl = await StreamExtractor.getAudioStreamUrl(
-        normalizedSong.videoId, quality: streamQuality,
-      ).timeout(
-        const Duration(seconds: 20),
-        onTimeout: () => throw TimeoutException('Stream extraction timed out. Check internet connection.'),
-      );
       
-      if (isStale()) return;
+      int retryCount = 0;
+      const maxRetries = 1;
+      bool success = false;
+      
+      while (retryCount <= maxRetries && !success) {
+        try {
+          final streamUrl = await StreamExtractor.getAudioStreamUrl(
+            normalizedSong.videoId, quality: streamQuality,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException('Stream extraction timed out. Check internet connection.'),
+          );
+          
+          if (isStale()) return;
 
-      await player.setVolume(100.0);
-      final shouldPlay = !ref.read(sleepTimerProvider).isExpired;
-      if (shouldPlay) {
-        await _handler.requestAudioFocus();
-        if (isStale()) return;
+          await player.setVolume(100.0);
+          final shouldPlay = !ref.read(sleepTimerProvider).isExpired;
+          if (shouldPlay) {
+            await _handler.requestAudioFocus();
+            if (isStale()) return;
+          }
+          await player.open(
+            Media(
+              streamUrl,
+              httpHeaders: const {},
+            ),
+            play: shouldPlay,
+          );
+          
+          if (isStale()) return;
+          success = true; // Loop will exit
+        } catch (e) {
+          final isNetworkError = e is TimeoutException || e.toString().contains('SocketException') || e.toString().contains('HandshakeException');
+          
+          if (isNetworkError && retryCount < maxRetries) {
+            retryCount++;
+            const delaySeconds = 3; // flat 3s delay before retry
+            debugPrint('[AudioProvider] Network error fetching stream. Retrying $retryCount/$maxRetries in ${delaySeconds}s...');
+            await Future.delayed(Duration(seconds: delaySeconds));
+            if (isStale()) return;
+          } else {
+            rethrow; // If not a network error or out of retries, throw it to the outer catch
+          }
+        }
       }
-      await player.open(
-        Media(
-          streamUrl,
-          httpHeaders: const {},
-        ),
-        play: shouldPlay,
-      );
-
-      if (isStale()) return;
+      
       _consecutiveFailures = 0; // Reset on success
 
       // (Queue fetching was moved to the top of the method for parallel execution)
@@ -513,13 +536,13 @@ class AudioNotifier extends Notifier<AudioState> {
       StreamExtractor.invalidateCache(normalizedSong.videoId);
       if (!isStale()) {
         state = state.copyWith(isLoading: false);
-        
+
         _consecutiveFailures++;
-        if (_consecutiveFailures <= 3) {
+        if (_consecutiveFailures <= 2) {
           debugPrint('[AudioProvider] Auto-skipping to next song due to failure...');
           playNext();
         } else {
-          // Hard stop after 3 consecutive failures to prevent infinite looping
+          // Hard stop after 2 consecutive failures — show toast and release resources.
           _handler.stopCurrent(); // Clears buffering state and drops wake lock
           final ctx = scaffoldMessengerKey.currentContext;
           if (ctx != null && ctx.mounted) {

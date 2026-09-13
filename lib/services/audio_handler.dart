@@ -78,7 +78,7 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
     if (platform is NativePlayer) {
       platform.setProperty('cache-pause', 'no');
       platform.setProperty('demuxer-readahead-secs', '60');
-      platform.setProperty('network-timeout', '3');
+      platform.setProperty('network-timeout', '10');
       // NOTE: We do NOT pre-load any af filter here.
       // Applying a lavfi filter at player creation (before media opens) can
       // break the audio pipeline if the required FFmpeg filter is not available
