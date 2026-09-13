@@ -90,12 +90,13 @@ class PulseApp extends ConsumerStatefulWidget {
   ConsumerState<PulseApp> createState() => _PulseAppState();
 }
 
-class _PulseAppState extends ConsumerState<PulseApp> {
+class _PulseAppState extends ConsumerState<PulseApp> with WidgetsBindingObserver {
   bool _audioInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Initialize the audio engine with the audio handler singleton.
     // Using addPostFrameCallback to ensure ProviderScope is ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,6 +110,20 @@ class _PulseAppState extends ConsumerState<PulseApp> {
         Permission.notification.request();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Only track when user actively opens the app, not when they minimize it
+    if (state == AppLifecycleState.resumed) {
+      ref.read(authProvider.notifier).updateLastActive();
+    }
   }
 
   @override

@@ -267,6 +267,10 @@ class AuthNotifier extends Notifier<AuthState> {
       photoURL: (photoURL == null || photoURL.isEmpty) ? 'assets/avatars/4.jpeg' : photoURL,
       loading: false,
     );
+
+    // Track cold launch — the lifecycle observer only fires on state *changes*,
+    // so it misses the very first app open. This covers that gap.
+    updateLastActive();
   }
 
   // ── Google Sign-In ──
@@ -379,6 +383,30 @@ class AuthNotifier extends Notifier<AuthState> {
       displayName: displayName ?? state.displayName,
       photoURL: photoURL ?? state.photoURL,
     );
+  }
+
+  // ── Update Last Active Time ──
+  DateTime? _lastActiveUpdate;
+  Future<void> updateLastActive() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final now = DateTime.now();
+    // Throttle updates to once every 5 minutes to save Firestore writes
+    if (_lastActiveUpdate != null && now.difference(_lastActiveUpdate!).inMinutes < 5) {
+      return;
+    }
+    
+    _lastActiveUpdate = now;
+
+    try {
+      await _db.collection('users').doc(user.uid).set(
+        {'lastActiveAt': FieldValue.serverTimestamp()},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('[Auth] Failed to update lastActiveAt: $e');
+    }
   }
 
   // ── Update Playback Stats (Direct to Firestore) ──
