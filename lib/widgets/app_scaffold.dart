@@ -500,6 +500,18 @@ class _ProfileBadge extends ConsumerWidget {
                   Filter('userId', isEqualTo: user.uid),
                   Filter('isAnnouncement', isEqualTo: true)
                 ))
+                // Only fetch messages newer than the last time user opened chat.
+                // Defaults to 7 days ago for new users.
+                .where(
+                  'timestamp',
+                  isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(
+                    badgeTime > 0
+                        ? badgeTime
+                        : DateTime.now()
+                            .subtract(const Duration(days: 7))
+                            .millisecondsSinceEpoch,
+                  ),
+                )
                 .orderBy('timestamp', descending: false)
                 .snapshots(),
             builder: (context, snapshot) {
@@ -507,11 +519,8 @@ class _ProfileBadge extends ConsumerWidget {
               int count = 0;
               for (var doc in docs) {
                 final data = doc.data() as Map<String, dynamic>;
-                final time = (data['timestamp'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
                 final isMe = data['senderId'] == user.uid;
-                if (!isMe && time > badgeTime) {
-                  count++;
-                }
+                if (!isMe) count++;
               }
               if (count == 0) return const SizedBox.shrink();
               return Positioned(

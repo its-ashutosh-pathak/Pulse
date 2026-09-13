@@ -250,6 +250,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Filter('isAnnouncement', isEqualTo: true),
                         ),
                       )
+                      // Only fetch messages newer than the last time user opened chat.
+                      // Defaults to 7 days ago for new users. This replaces streaming
+                      // ALL messages ever — now only a handful of docs are watched.
+                      .where(
+                        'timestamp',
+                        isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(
+                          ref.watch(unreadBadgeTimeProvider) > 0
+                              ? ref.watch(unreadBadgeTimeProvider)
+                              : DateTime.now()
+                                  .subtract(const Duration(days: 7))
+                                  .millisecondsSinceEpoch,
+                        ),
+                      )
                       .orderBy('timestamp', descending: false)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -257,14 +270,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     int count = 0;
                     for (var doc in docs) {
                       final data = doc.data() as Map<String, dynamic>;
-                      final time =
-                          (data['timestamp'] as Timestamp?)
-                              ?.millisecondsSinceEpoch ??
-                          0;
                       final isMe = data['senderId'] == userId;
-                      if (!isMe && time > ref.watch(unreadBadgeTimeProvider)) {
-                        count++;
-                      }
+                      if (!isMe) count++;
                     }
                     if (count == 0) return const SizedBox.shrink();
                     return Positioned(
