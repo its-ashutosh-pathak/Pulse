@@ -6,7 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../core/theme/app_colors.dart';
 import '../core/utils/thumbnail_utils.dart';
 import '../providers/search_provider.dart';
-import '../providers/desktop_layout_provider.dart';
+
 import '../providers/audio_provider.dart';
 import '../data/models/song.dart';
 import 'song_action_sheet.dart';

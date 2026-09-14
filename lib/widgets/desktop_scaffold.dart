@@ -85,7 +85,6 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         );
         break;
       case DesktopRightPane.shell:
-      default:
         // If the shell is currently exactly on the Home screen ('/'),
         // show the Player on the right since Home is fixed to the center.
         // Otherwise (e.g. if a playlist is pushed onto the Home branch),
@@ -490,7 +489,7 @@ class _DesktopTopBarState extends ConsumerState<_DesktopTopBar> {
                         DesktopRightPane.shell;
                     widget.navigationShell.goBranch(4, initialLocation: true);
                   },
-                  child: profileIcon ?? const SizedBox.shrink(),
+                  child: profileIcon,
                 ),
               ],
             ),
