@@ -253,69 +253,57 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
 
   Future<void> _goToAlbum() async {
     setState(() => _loadingAction = 'ALBUM');
-    // Capture router BEFORE any await — context may be invalid after async gap + pop.
     final router = GoRouter.of(context);
     try {
-      final albumId = widget.song.albumBrowseId;
+      final song = widget.song;
       final t = DateTime.now().millisecondsSinceEpoch;
 
-      if (albumId != null && albumId.length > 11) {
-        if (mounted) {
-          Navigator.pop(context);
-          ref.read(playerOverlayProvider.notifier).state = false;
-          // Delay push to next frame — prevents Navigator key-reservation assertion
-          WidgetsBinding.instance.addPostFrameCallback(
-              (_) => router.push('/playlist/$albumId?t=$t'));
-        }
+      // Always fetch fresh search data to get the canonical album ID.
+      // This bypasses any stale/broken albumBrowseId stored in the local DB
+      // or saved playlists (the same accuracy as searching from the Search page).
+      String? freshAlbumId;
+      String freshAlbumName = song.album; // fallback to stored name
+
+      // Step 1: Search by videoId — most precise, finds exact track version.
+      if (song.videoId.isNotEmpty) {
+        try {
+          final byId = await _musicApi.searchSongs(song.videoId);
+          if (byId.isNotEmpty && byId.first.albumBrowseId != null && byId.first.albumBrowseId!.isNotEmpty) {
+            freshAlbumId = byId.first.albumBrowseId;
+            if (byId.first.album.isNotEmpty) freshAlbumName = byId.first.album;
+          }
+        } catch (_) {}
+      }
+
+      // Step 2: Fall back to "Title Artist" search if videoId search gave no album.
+      if (freshAlbumId == null && song.title.isNotEmpty) {
+        try {
+          final query = '${song.title} ${song.artist}'.trim();
+          final byTitle = await _musicApi.searchSongs(query);
+          if (byTitle.isNotEmpty && byTitle.first.albumBrowseId != null && byTitle.first.albumBrowseId!.isNotEmpty) {
+            freshAlbumId = byTitle.first.albumBrowseId;
+            if (byTitle.first.album.isNotEmpty) freshAlbumName = byTitle.first.album;
+          }
+        } catch (_) {}
+      }
+
+      if (!mounted) return;
+
+      if (freshAlbumId != null) {
+        Navigator.pop(context);
+        ref.read(playerOverlayProvider.notifier).state = false;
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => router.push('/playlist/$freshAlbumId?title=${Uri.encodeComponent(freshAlbumName)}'));
         return;
       }
 
-      if (widget.song.album.isNotEmpty) {
-        final bid = await _musicApi.resolveAlbum(widget.song.album);
-        if (mounted) {
-          Navigator.pop(context);
-          ref.read(playerOverlayProvider.notifier).state = false;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (bid != null) {
-              router.push('/playlist/$bid?t=$t');
-            } else {
-              router.push('/search?q=${Uri.encodeComponent(widget.song.album)}&t=$t');
-            }
-          });
-        }
+      // Step 3: Last resort — open a search page for the album name.
+      if (song.album.isNotEmpty) {
+        Navigator.pop(context);
+        ref.read(playerOverlayProvider.notifier).state = false;
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => router.push('/search?q=${Uri.encodeComponent(song.album)}&t=$t'));
         return;
-      }
-      
-      // Fallback for missing album data in Feed/History sections
-      if (widget.song.title.isNotEmpty) {
-        final query = '${widget.song.title} ${widget.song.artist}'.trim();
-        final searchResults = await _musicApi.searchSongs(query);
-        if (searchResults.isNotEmpty) {
-          final first = searchResults.first;
-          if (first.albumBrowseId != null && first.albumBrowseId!.length > 11) {
-            if (mounted) {
-              Navigator.pop(context);
-              ref.read(playerOverlayProvider.notifier).state = false;
-              WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => router.push('/playlist/${first.albumBrowseId}?t=$t'));
-            }
-            return;
-          } else if (first.album.isNotEmpty) {
-            final bid = await _musicApi.resolveAlbum(first.album);
-            if (mounted) {
-              Navigator.pop(context);
-              ref.read(playerOverlayProvider.notifier).state = false;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (bid != null) {
-                  router.push('/playlist/$bid?t=$t');
-                } else {
-                  router.push('/search?q=${Uri.encodeComponent(first.album)}&t=$t');
-                }
-              });
-            }
-            return;
-          }
-        }
       }
 
       if (mounted) Navigator.pop(context);

@@ -148,7 +148,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 pageBuilder: (context, state) => MaterialPage(
                   key: state.pageKey,
                   child: PlayerAwarePopScope(
-                    child: PlaylistScreen(playlistId: state.pathParameters['id']!),
+                    child: PlaylistScreen(
+                      playlistId: state.pathParameters['id']!,
+                      titleOverride: state.uri.queryParameters['title'],
+                    ),
                   ),
                 ),
               ),

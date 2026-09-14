@@ -101,7 +101,12 @@ class YtMusicParser {
                // Only accept album if it's not a duration or year
                if (!RegExp(r'^\d+:\d+$').hasMatch(text) && !RegExp(r'^\d{4}$').hasMatch(text) && !text.toLowerCase().contains('views')) {
                   parsedAlbum += text;
-                  if (rBrowseId != null && parsedAlbumId == null) parsedAlbumId = rBrowseId;
+                  if (rBrowseId != null && parsedAlbumId == null) {
+                    final pageType = nav?['browseEndpoint']?['browseEndpointContextSupportedConfigs']?['browseEndpointContextMusicConfig']?['pageType']?.toString();
+                    if (rBrowseId.startsWith('MPREb_') || pageType == 'MUSIC_PAGE_TYPE_ALBUM') {
+                      parsedAlbumId = rBrowseId;
+                    }
+                  }
                }
             }
           }
@@ -110,6 +115,20 @@ class YtMusicParser {
           if (parsedArtistId != null) artistBrowseId = parsedArtistId;
           if (parsedAlbum.isNotEmpty) album = parsedAlbum;
           if (parsedAlbumId != null) albumBrowseId = parsedAlbumId;
+        }
+      }
+
+      // Overwrite albumBrowseId if present in the menu (more reliable for canonical albums)
+      final menuItems = renderer['menu']?['menuRenderer']?['items'] as List? ?? [];
+      for (final item in menuItems) {
+        final navItem = item['menuNavigationItemRenderer'];
+        if (navItem != null) {
+          final iconType = navItem['icon']?['iconType']?.toString();
+          final targetBrowseId = navItem['navigationEndpoint']?['browseEndpoint']?['browseId']?.toString();
+          if (targetBrowseId != null && (iconType == 'ALBUM' || targetBrowseId.startsWith('MPREb_'))) {
+            albumBrowseId = targetBrowseId;
+            break;
+          }
         }
       }
 
@@ -285,10 +304,30 @@ class YtMusicParser {
               // Album part — skip durations and years
               if (!RegExp(r'^\d+:\d+$').hasMatch(text) && !RegExp(r'^\d{4}$').hasMatch(text)) {
                 if (text.isNotEmpty) album += (album.isEmpty ? '' : ' ') + text;
-                if (runBrowse != null && albumBrowseId == null) albumBrowseId = runBrowse;
+                if (runBrowse != null && albumBrowseId == null) {
+                  final pageType = run['navigationEndpoint']?['browseEndpoint']?['browseEndpointContextSupportedConfigs']?['browseEndpointContextMusicConfig']?['pageType']?.toString();
+                  if (runBrowse.startsWith('MPREb_') || pageType == 'MUSIC_PAGE_TYPE_ALBUM') {
+                    albumBrowseId = runBrowse;
+                  }
+                }
               }
             }
           }
+
+          // Overwrite albumBrowseId if present in the menu
+          final menuItems = renderer['menu']?['menuRenderer']?['items'] as List? ?? [];
+          for (final item in menuItems) {
+            final navItem = item['menuNavigationItemRenderer'];
+            if (navItem != null) {
+              final iconType = navItem['icon']?['iconType']?.toString();
+              final targetBrowseId = navItem['navigationEndpoint']?['browseEndpoint']?['browseId']?.toString();
+              if (targetBrowseId != null && (iconType == 'ALBUM' || targetBrowseId.startsWith('MPREb_'))) {
+                albumBrowseId = targetBrowseId;
+                break;
+              }
+            }
+          }
+
           parsedItems.add(Song(
             id: videoId ?? browseId ?? '',
             videoId: videoId ?? '',
@@ -471,6 +510,7 @@ class YtMusicParser {
     String name = 'Artist';
     String description = '';
     String thumbnail = '';
+    String? topSongsPlaylistId;
     final topSongs = <Song>[];
     final albums = <ArtistAlbum>[];
 
@@ -488,6 +528,12 @@ class YtMusicParser {
         if (shelf != null) {
           final title = _getText(shelf['title'])?.toLowerCase() ?? '';
           if (title.contains('song')) {
+            // Extract the "Show all" playlist ID from the bottomEndpoint
+            final endpoint = shelf['bottomEndpoint']?['browseEndpoint']?['browseId'];
+            if (endpoint != null) {
+              topSongsPlaylistId = endpoint;
+            }
+
             for (var item in shelf['contents'] ?? []) {
               final song = _parseResponsiveListItem(item);
               if (song != null) topSongs.add(song);
@@ -525,6 +571,7 @@ class YtMusicParser {
       description: description,
       thumbnail: thumbnail,
       subscribers: '',
+      topSongsPlaylistId: topSongsPlaylistId,
       topSongs: topSongs,
       albums: albums,
       singles: [],
