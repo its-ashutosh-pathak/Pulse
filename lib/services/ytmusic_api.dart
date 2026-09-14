@@ -4,6 +4,8 @@ import '../data/models/home_section.dart';
 import '../data/models/artist.dart';
 import '../data/models/playlist.dart';
 import 'ytmusic_parser.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// Dart implementation of YouTube Music InnerTube API — called directly.
 ///
@@ -57,13 +59,23 @@ class YtMusicApi {
 
   /// Standard WEB_REMIX client context — required in every Innertube payload.
   Map<String, dynamic> _buildContext() {
+    String hl = 'en';
+    String gl = 'US';
+    try {
+      if (!kIsWeb) {
+        final parts = Platform.localeName.split('_');
+        if (parts.isNotEmpty) hl = parts[0];
+        if (parts.length > 1) gl = parts[1];
+      }
+    } catch (_) {}
+
     return {
       'context': {
         'client': {
           'clientName': 'WEB_REMIX',
           'clientVersion': '1.20240320.00.00',
-          'hl': 'en',
-          'gl': 'US',
+          'hl': hl,
+          'gl': gl,
           'userAgent':
               'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 '
               '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36,gzip(gfe)',
