@@ -87,6 +87,8 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
+  bool _playOnInterruptionEnd = false;
+
   Future<void> _initAudioSession() async {
     if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
       return; // audio_session doesn't support desktop
@@ -98,7 +100,8 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
         switch (event.type) {
           case AudioInterruptionType.pause:
           case AudioInterruptionType.unknown:
-            pause();
+            _playOnInterruptionEnd = _isPlaying;
+            pause(fromInterruption: true);
             break;
           case AudioInterruptionType.duck:
             _activePlayer.setVolume(20.0);
@@ -116,7 +119,7 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
             }
             break;
           case AudioInterruptionType.pause:
-            play();
+            if (_playOnInterruptionEnd) play();
             break;
           case AudioInterruptionType.unknown:
             break;
@@ -206,7 +209,10 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   @override
-  Future<void> pause() async {
+  Future<void> pause({bool fromInterruption = false}) async {
+    if (!fromInterruption) {
+      _playOnInterruptionEnd = false;
+    }
     await _activePlayer.pause();
     if (_crossfadePlayer != null) {
       await _crossfadePlayer!.pause();

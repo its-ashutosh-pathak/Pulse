@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, listEquals;
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/toast_utils.dart';
@@ -77,6 +77,40 @@ class AudioState {
       history: history ?? this.history,
       isShuffled: isShuffled ?? this.isShuffled,
       repeatMode: repeatMode ?? this.repeatMode,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AudioState &&
+        other.currentSong == currentSong &&
+        other.contextPlaylistId == contextPlaylistId &&
+        other.isPlaying == isPlaying &&
+        other.isLoading == isLoading &&
+        other.progress == progress &&
+        other.duration == duration &&
+        listEquals(other.queue, queue) &&
+        listEquals(other.baseQueue, baseQueue) &&
+        listEquals(other.history, history) &&
+        other.isShuffled == isShuffled &&
+        other.repeatMode == repeatMode;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      currentSong,
+      contextPlaylistId,
+      isPlaying,
+      isLoading,
+      progress,
+      duration,
+      Object.hashAll(queue),
+      Object.hashAll(baseQueue),
+      Object.hashAll(history),
+      isShuffled,
+      repeatMode,
     );
   }
 }
