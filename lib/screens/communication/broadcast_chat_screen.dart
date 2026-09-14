@@ -354,6 +354,10 @@ class _BroadcastChatScreenState extends ConsumerState<BroadcastChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      keyboardType: TextInputType.multiline,
+                      minLines: 1,
+                      maxLines: 5,
+                      textInputAction: TextInputAction.newline,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
@@ -382,7 +386,6 @@ class _BroadcastChatScreenState extends ConsumerState<BroadcastChatScreen> {
                           ),
                         ),
                       ),
-                      onSubmitted: (val) => _sendBroadcast(val),
                     ),
                   ),
                   const SizedBox(width: 8),

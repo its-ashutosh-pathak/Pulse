@@ -861,6 +861,10 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: TextInputType.multiline,
+              minLines: 1,
+              maxLines: 5,
+              textInputAction: TextInputAction.newline,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
@@ -887,7 +891,6 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                   ),
                 ),
               ),
-              onSubmitted: (val) => onSend(val),
             ),
           ),
           const SizedBox(width: 8),

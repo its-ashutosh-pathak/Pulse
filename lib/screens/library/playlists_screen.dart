@@ -242,7 +242,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
-                                      color: AppColors.surface,
+                                      border: Border.all(color: AppColors.surface, width: 1.5),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -1352,7 +1352,7 @@ class _SortButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: AppColors.surface,
+            border: Border.all(color: AppColors.surface, width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1411,7 +1411,14 @@ class _PlaylistListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final songs = playlist.songs;
     final thumb = songs.isNotEmpty
         ? ThumbnailUtils.getHighRes(songs.first.thumbnail, size: 200) : '';
@@ -1516,7 +1523,14 @@ class _PlaylistGridCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final songs = playlist.songs;
     final thumb = songs.isNotEmpty
         ? ThumbnailUtils.getHighRes(songs.first.thumbnail, size: 300) : '';

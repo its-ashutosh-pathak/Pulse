@@ -7,6 +7,7 @@ class Artist {
   final String description;
   final String thumbnail;
   final String subscribers;
+  final String? topSongsPlaylistId;
   final List<Song> topSongs;
   final List<ArtistAlbum> albums;
   final List<ArtistAlbum> singles;
@@ -17,6 +18,7 @@ class Artist {
     this.description = '',
     this.thumbnail = '',
     this.subscribers = '',
+    this.topSongsPlaylistId,
     this.topSongs = const [],
     this.albums = const [],
     this.singles = const [],
@@ -29,6 +31,7 @@ class Artist {
       description: json['description']?.toString() ?? '',
       thumbnail: json['thumbnail']?.toString() ?? '',
       subscribers: json['subscribers']?.toString() ?? '',
+      topSongsPlaylistId: json['topSongsPlaylistId']?.toString(),
       topSongs: (json['topSongs'] as List<dynamic>?)
               ?.map((e) => Song.fromJson(e as Map<String, dynamic>))
               .toList() ??

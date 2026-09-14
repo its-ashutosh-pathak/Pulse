@@ -36,8 +36,9 @@ class MiniPlayer extends ConsumerWidget {
     final _ = ref.watch(playlistProvider);
     final isLiked = ref.read(playlistProvider.notifier).isLiked(song.videoId);
 
-    return GestureDetector(
-      onTap: () {
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () {
         if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
           ref.read(desktopRightPaneProvider.notifier).state =
               DesktopRightPane.player;
@@ -221,7 +222,7 @@ class MiniPlayer extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 

@@ -93,9 +93,13 @@ class StatsNotifier extends Notifier<StatsState> {
           .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
       'listeningStats (period)',
     );
+    final oneMonthAgoTimestamp = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 30)));
     final songSnap = await _safeGet(
       _db.collection('users').doc(uid).collection('songStats')
-          .orderBy('playCount', descending: true).limit(10).get(),
+          .where('lastPlayedAt', isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
+          .orderBy('lastPlayedAt', descending: true)
+          .limit(100)
+          .get(),
       'songStats',
     );
     final recentSnap = await _safeGet(
@@ -176,12 +180,15 @@ class StatsNotifier extends Notifier<StatsState> {
     }
 
     // Map top songs — ensure 'thumbnail' key exists for UI compatibility
-    final topSongs = songSnap?.docs.map((d) {
+    final topSongsUnsorted = songSnap?.docs.map((d) {
       final data = Map<String, dynamic>.from(d.data());
       // UI reads s['thumbnail'] first, but we store as 'cover'
       data['thumbnail'] ??= data['cover'] ?? '';
       return data;
     }).toList() ?? [];
+
+    topSongsUnsorted.sort((a, b) => ((b['playCount'] ?? 0) as num).compareTo((a['playCount'] ?? 0) as num));
+    final topSongs = topSongsUnsorted.take(18).toList();
 
     // Map recent songs
     final recentSongsList = recentSnap?.docs.map((d) {

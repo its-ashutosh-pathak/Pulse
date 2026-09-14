@@ -415,6 +415,10 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      keyboardType: TextInputType.multiline,
+                      minLines: 1,
+                      maxLines: 5,
+                      textInputAction: TextInputAction.newline,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
@@ -443,7 +447,6 @@ class _AdminChatScreenState extends ConsumerState<AdminChatScreen> {
                           ),
                         ),
                       ),
-                      onSubmitted: (val) => _sendReply(val),
                     ),
                   ),
                   const SizedBox(width: 8),

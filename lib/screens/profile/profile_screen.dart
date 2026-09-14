@@ -15,6 +15,7 @@ import '../../providers/stats_provider.dart';
 import '../../data/api/music_api.dart';
 import '../../data/models/song.dart';
 import '../../widgets/glass_container.dart';
+import '../../widgets/playing_bars.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 
@@ -96,6 +97,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final stats = ref.watch(statsProvider);
+    final currentSong = ref.watch(audioProvider.select((a) => a.currentSong));
+    final isPlaying = ref.watch(audioProvider.select((a) => a.isPlaying));
     final accent = Theme.of(context).colorScheme.primary;
     final secondary = AppColors.computeSecondary(accent);
 
@@ -166,8 +169,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           alignment: Alignment.centerLeft,
                           child: SizedBox(
                             width: 160,
-                            child: GlassContainer(
-                              borderRadius: 14,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.surface, width: 1.5),
+                              ),
                               child: _actionTile(LucideIcons.pencil, AppLocalizations.of(context)!.profileEditProfile, () {
                                 _showEditProfileBottomSheet(context, displayName, auth.photoURL, initials);
                               }),
@@ -189,8 +195,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             // ── Stats Dashboard ──
             // Timeframe picker
-            GlassContainer(
-              borderRadius: 12,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: ['day', 'week', 'month', 'year'].map((tf) {
@@ -233,8 +242,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // Listening Time
                 Expanded(
                   flex: 3,
-                  child: GlassContainer(
-                    borderRadius: 14,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.surface, width: 1.5),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,8 +283,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // Daily Average
                 Expanded(
                   flex: 2,
-                  child: GlassContainer(
-                    borderRadius: 14,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.surface, width: 1.5),
+                    ),
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,8 +322,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 12),
 
             // Lifetime listening
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,10 +375,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                   )
                 : SizedBox(
-                    height: 200,
+                    height: 218,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      itemCount: stats.topSongs.length,
+                      itemCount: stats.topSongs.length > 10 ? 10 : stats.topSongs.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 12),
                       itemBuilder: (context, i) {
                         final s = stats.topSongs[i];
@@ -376,20 +394,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             }
                           },
                           behavior: HitTestBehavior.opaque,
-                          child: AspectRatio(
-                            aspectRatio: 3 / 4,
-                            child: GlassContainer(
-                              borderRadius: 12,
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('#${i + 1}',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: accent)),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: Center(
-                                      child: ClipRRect(
+                          child: Container(
+                            width: 140,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.surface, width: 1.5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                                  child: Stack(
+                                    children: [
+                                      ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
                                         child: AspectRatio(
                                           aspectRatio: 1,
@@ -399,19 +417,70 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               : Container(color: AppColors.surface),
                                         ),
                                       ),
-                                    ),
+                                      if (currentSong?.videoId == s['id'] || currentSong?.videoId == s['videoId'])
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.black45,
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Center(
+                                              child: PlayingBars(
+                                                color: accent,
+                                                height: 18,
+                                                isPaused: !isPlaying,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: accent,
+                                            borderRadius: const BorderRadius.only(
+                                              topLeft: Radius.circular(8),
+                                              bottomRight: Radius.circular(8),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '#${i + 1}',
+                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(s['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                                  const SizedBox(height: 2),
-                                  Text(s['artist'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                                  const SizedBox(height: 2),
-                                  Text(AppLocalizations.of(context)!.profilePlays(s['playCount'] ?? 0),
-                                      style: TextStyle(fontSize: 10, color: accent.withValues(alpha: 0.8), fontWeight: FontWeight.w500)),
-                                ],
-                              ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        s['title'] ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        s['artist'] ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        AppLocalizations.of(context)!.profilePlays(s['playCount'] ?? 0),
+                                        style: TextStyle(fontSize: 11, color: accent, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -441,11 +510,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                   )
                 : SizedBox(
-                    height: 200,
+                    height: 170,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: stats.topArtists.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      separatorBuilder: (_, __) => const SizedBox(width: 16),
                       itemBuilder: (context, i) {
                         final a = stats.topArtists[i];
                         final name = a['artist'] ?? a['name'] ?? 'Unknown';
@@ -455,43 +524,75 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         return GestureDetector(
                           onTap: () => _goToArtist(a),
                           behavior: HitTestBehavior.opaque,
-                          child: AspectRatio(
-                            aspectRatio: 3 / 4,
-                            child: GlassContainer(
-                              borderRadius: 12,
-                              padding: const EdgeInsets.all(10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('#${i + 1}',
-                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: accent)),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: Center(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: AspectRatio(
-                                          aspectRatio: 1,
+                          child: SizedBox(
+                            width: 104,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 104,
+                                  height: 104,
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      ClipOval(
+                                        child: SizedBox(
+                                          width: 104,
+                                          height: 104,
                                           child: thumb.isNotEmpty
-                                              ? CachedNetworkImage(imageUrl: thumb, fit: BoxFit.cover,
-                                                  errorWidget: (_, __, ___) =>
-                                                      _artistPlaceholder(artistInitials, accent))
+                                              ? CachedNetworkImage(
+                                                  imageUrl: thumb,
+                                                  fit: BoxFit.cover,
+                                                  errorWidget: (_, __, ___) => _artistPlaceholder(artistInitials, accent),
+                                                )
                                               : _artistPlaceholder(artistInitials, accent),
                                         ),
                                       ),
-                                    ),
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: accent,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '#${i + 1}',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                                  const SizedBox(height: 2),
-                                  Text(AppLocalizations.of(context)!.profileArtistLabel, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                                  const SizedBox(height: 2),
-                                  Text(_formatTime((a['totalSeconds'] ?? 0) * 1000),
-                                      style: TextStyle(fontSize: 10, color: accent.withValues(alpha: 0.8), fontWeight: FontWeight.w500)),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatTime((a['totalSeconds'] ?? 0) * 1000),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: accent,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -502,8 +603,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 24),
 
             // ── Action Buttons ──
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               child: Column(
                 children: [
                   _actionTile(LucideIcons.logOut, AppLocalizations.of(context)!.profileSignOut, () async {

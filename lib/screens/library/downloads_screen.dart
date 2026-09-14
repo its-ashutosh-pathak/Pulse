@@ -134,7 +134,14 @@ class _DownloadsScreenState extends ConsumerState<DownloadsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final downloads = ref.watch(downloadProvider);
     final accent = Theme.of(context).colorScheme.primary;
 

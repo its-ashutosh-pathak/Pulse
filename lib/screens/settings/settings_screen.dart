@@ -76,8 +76,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Streaming Quality ──
             _sectionTitle(LucideIcons.volume2, AppLocalizations.of(context)!.settingsStreamingQuality),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               child: Column(
                 children: ['automatic', 'low', 'normal', 'high'].map((q) =>
                   _qualityItem(context, q, settings.streamingQuality, accent, () =>
@@ -91,8 +94,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Download Quality ──
             _sectionTitle(LucideIcons.download, AppLocalizations.of(context)!.settingsDownloadQuality),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               child: Column(
                 children: ['automatic', 'low', 'normal', 'high'].map((q) =>
                   _qualityItem(context, q, settings.downloadQuality, accent, () =>
@@ -106,8 +112,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Playback ──
             _sectionTitle(LucideIcons.music, AppLocalizations.of(context)!.settingsPlayback),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,8 +174,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Data Usage ──
             _sectionTitle(LucideIcons.smartphone, AppLocalizations.of(context)!.settingsDataUsage),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,8 +213,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Appearance ──
             _sectionTitle(LucideIcons.palette, AppLocalizations.of(context)!.settingsAppearance),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
@@ -306,8 +321,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ── Language ──
             _sectionTitle(LucideIcons.globe, AppLocalizations.of(context)!.settingsLanguage),
             const SizedBox(height: 8),
-            GlassContainer(
-              borderRadius: 14,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.surface, width: 1.5),
+              ),
               padding: const EdgeInsets.all(16),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,

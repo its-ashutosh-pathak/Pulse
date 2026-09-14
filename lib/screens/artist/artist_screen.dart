@@ -53,18 +53,30 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
     }
   }
 
-  void _playAll() {
-    if (_artist == null || _artist!.topSongs.isEmpty) return;
-    final notifier = ref.read(audioProvider.notifier);
-    notifier.playSong(_artist!.topSongs.first, clearQueue: true, isManual: true);
-    for (int i = 1; i < _artist!.topSongs.length; i++) {
-      notifier.addToQueue(_artist!.topSongs[i]);
+  void _showAll() {
+    if (_artist == null) return;
+    if (_artist!.topSongsPlaylistId != null) {
+      context.push('/playlist/${_artist!.topSongsPlaylistId}?t=${Uri.encodeComponent(_artist!.name)}');
+    } else if (_artist!.topSongs.isNotEmpty) {
+      // Fallback: just play the songs if no playlist is found
+      final notifier = ref.read(audioProvider.notifier);
+      notifier.playSong(_artist!.topSongs.first, clearQueue: true, isManual: true);
+      for (int i = 1; i < _artist!.topSongs.length; i++) {
+        notifier.addToQueue(_artist!.topSongs[i]);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final accent = Theme.of(context).colorScheme.primary;
 
     if (_loading) return _buildLoading(context);
@@ -235,7 +247,7 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
                         letterSpacing: -0.5)),
                 const SizedBox(height: 12),
                 GestureDetector(
-                  onTap: _playAll,
+                  onTap: _showAll,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
@@ -244,13 +256,13 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
                       ]),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.play_arrow_rounded, size: 20,
+                        Icon(Icons.list_rounded, size: 20,
                             color: AppColors.background),
-                        const SizedBox(width: 6),
-                        Text(AppLocalizations.of(context)!.artistPlayAll, style: TextStyle(
+                        SizedBox(width: 6),
+                        Text('Show all', style: TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w700,
                             color: AppColors.background)),
                       ],

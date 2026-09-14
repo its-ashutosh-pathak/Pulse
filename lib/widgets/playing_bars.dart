@@ -79,9 +79,10 @@ class _PlayingBarsState extends State<PlayingBars>
   @override
   Widget build(BuildContext context) {
     final barColor = widget.color ?? AppColors.defaultAccentCyan;
-    return SizedBox(
-      height: widget.height,
-      child: Row(
+    return RepaintBoundary(
+      child: SizedBox(
+        height: widget.height,
+        child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(_barCount, (i) {
@@ -108,6 +109,6 @@ class _PlayingBarsState extends State<PlayingBars>
           );
         }),
       ),
-    );
+    ));
   }
 }
