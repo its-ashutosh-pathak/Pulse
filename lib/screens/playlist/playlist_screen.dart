@@ -24,7 +24,8 @@ import 'package:pulse/l10n/generated/app_localizations.dart';
 /// Handles both Firestore playlists and YTM playlists/albums.
 class PlaylistScreen extends ConsumerStatefulWidget {
   final String playlistId;
-  const PlaylistScreen({super.key, required this.playlistId});
+  final String? titleOverride;
+  const PlaylistScreen({super.key, required this.playlistId, this.titleOverride});
 
   @override
   ConsumerState<PlaylistScreen> createState() => _PlaylistScreenState();
@@ -107,7 +108,14 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   @override
   Widget build(BuildContext context) {
     final playlistState = ref.watch(playlistProvider);
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final auth = ref.watch(authProvider);
     final accent = Theme.of(context).colorScheme.primary;
 
@@ -134,7 +142,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final isYtm = firestorePlaylist == null && _ytmPlaylist != null;
     final playlist = isOffline ? _offlinePlaylist : (isYtm ? _ytmPlaylist : firestorePlaylist);
 
-    final sourceName = playlist?.name ?? '';
+    final sourceName = widget.titleOverride ?? playlist?.name ?? '';
     final sourceSongs = (playlist?.songs as List<dynamic>?)
         ?.map((s) => s is Song ? s : Song.fromJson(s as Map<String, dynamic>))
         .toList() ?? <Song>[];
@@ -196,9 +204,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                         height: 38,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: AppColors.glassBackground,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.glassBorder),
+                          border: Border.all(color: AppColors.surface, width: 1.5),
                         ),
                         child: Row(
                           children: [
@@ -295,7 +302,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          color: AppColors.surface,
+                          border: Border.all(color: AppColors.surface, width: 1.5),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -317,17 +324,25 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                       ),
                     ),
                     if (!isOffline) ...[
+                      const SizedBox(width: 16),
                       // Download — batch download all songs
                       GestureDetector(
                         onTap: () => _downloadAllSongs(sourceSongs),
                         child: const Icon(LucideIcons.download, size: 20, color: AppColors.textSecondary),
                       ),
-                      if (!isYtm && !isOffline) ...[
+                      if (isOwner) ...[
                         const SizedBox(width: 16),
                         // Share
                         GestureDetector(
                           onTap: () => _sharePlaylist(sourceName, isYtm),
                           child: const Icon(LucideIcons.share2, size: 20, color: AppColors.textSecondary),
+                        ),
+                      ] else ...[
+                        const SizedBox(width: 16),
+                        // Save
+                        GestureDetector(
+                          onTap: () => _savePlaylistToLibrary(sourceName, sourceSongs),
+                          child: const Icon(LucideIcons.bookmark, size: 20, color: AppColors.textSecondary),
                         ),
                       ],
                     ],
@@ -558,6 +573,26 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final id = widget.playlistId;
     final url = 'https://pulse.app/playlist/$id';
     Share.share(AppLocalizations.of(context)!.playlistShareText(name, url));
+  }
+
+  Future<void> _savePlaylistToLibrary(String name, List<Song> songs) async {
+    final auth = ref.read(authProvider);
+    if (auth.user == null) {
+      ToastUtils.show(context, 'Sign in required to save playlists');
+      return;
+    }
+    
+    ToastUtils.show(context, 'Saving playlist...');
+    final newId = await ref.read(playlistProvider.notifier).createPlaylist(
+      name: name,
+      initialSongs: songs,
+    );
+
+    if (newId != null && mounted) {
+      ToastUtils.show(context, 'Saved to your library!');
+    } else if (mounted) {
+      ToastUtils.show(context, 'Failed to save playlist');
+    }
   }
 
   void _showMenu(Song song, int index, bool isOwner) {

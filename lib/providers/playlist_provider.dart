@@ -140,7 +140,7 @@ class PlaylistNotifier extends Notifier<PlaylistState> {
         'members': [auth.user!.uid],
         'songs': initialSongs.map((s) {
           final json = s.toJson();
-          if (s.thumbnail.isNotEmpty && !s.thumbnail.startsWith('http')) {
+          if (s.thumbnail.isEmpty || !s.thumbnail.startsWith('http')) {
             json['thumbnail'] = 'https://i.ytimg.com/vi/${s.videoId}/hqdefault.jpg';
           }
           return <String, dynamic>{
