@@ -17,6 +17,7 @@ import '../../widgets/song_action_sheet.dart';
 import '../../widgets/glass_container.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
+import '../../providers/search_focus_provider.dart';
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -268,11 +269,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final search = ref.watch(searchProvider);
-    final audio = ref.watch(audioProvider);
+    final audio = ref.watch(audioProvider.select((state) => AudioState(
+          currentSong: state.currentSong,
+          isPlaying: state.isPlaying,
+          contextPlaylistId: state.contextPlaylistId,
+          isShuffled: state.isShuffled,
+          repeatMode: state.repeatMode,
+          isLoading: state.isLoading,
+        )));
     final accent = Theme.of(context).colorScheme.primary;
     final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux;
+
+    // Auto-focus search bar when user taps the Search nav tab while already on Search
+    ref.listen(searchFocusRequestProvider, (_, shouldFocus) {
+      if (shouldFocus) {
+        ref.read(searchFocusRequestProvider.notifier).state = false;
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) _focusNode.requestFocus();
+        });
+      }
+    });
 
     return Scaffold(
       extendBody: true,
@@ -294,10 +312,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               child: Container(
                                 height: 46,
                                 decoration: BoxDecoration(
-                                  color: AppColors.glassBackground,
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: AppColors.glassBorder,
+                                    color: AppColors.surface,
+                                    width: 1.5,
                                   ),
                                 ),
                                 child: Row(
@@ -388,10 +406,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 width: 46,
                                 height: 46,
                                 decoration: BoxDecoration(
-                                  color: AppColors.glassBackground,
                                   borderRadius: BorderRadius.circular(14),
                                   border: Border.all(
-                                    color: AppColors.glassBorder,
+                                    color: AppColors.surface,
+                                    width: 1.5,
                                   ),
                                 ),
                                 child: Center(

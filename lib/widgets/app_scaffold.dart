@@ -21,6 +21,7 @@ import '../providers/audio_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
+import '../providers/search_focus_provider.dart';
 
 /// App scaffold — the persistent shell with bottom nav + mini player.
 /// Equivalent to Layout.jsx in the React app.
@@ -303,7 +304,14 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                 icon: LucideIcons.search,
                 label: AppLocalizations.of(context)!.navSearch,
                 isActive: currentIndex == 2,
-                onTap: () => widget.navigationShell.goBranch(2, initialLocation: currentIndex == 2),
+                onTap: () {
+                  if (currentIndex == 2) {
+                    // Already on Search — request keyboard focus
+                    ref.read(searchFocusRequestProvider.notifier).state = true;
+                  } else {
+                    widget.navigationShell.goBranch(2, initialLocation: false);
+                  }
+                },
               ),
               _NavItem(
                 icon: LucideIcons.settings,
