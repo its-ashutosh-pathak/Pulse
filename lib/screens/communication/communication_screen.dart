@@ -53,7 +53,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
 
   Future<void> _cleanUpOldMessages() async {
     final user = ref.read(authProvider).user;
-    if (user == null || user.email != 'ashutoshpathakirctc@gmail.com') return;
+    if (user == null || user.email != 'ashutoshpathakab@gmail.com') return;
 
     try {
       final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
