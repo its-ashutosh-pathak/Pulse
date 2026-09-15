@@ -95,16 +95,16 @@ class YtMusicApi {
 
     // Supplement to reach 10 rows when Innertube returns fewer (unauthenticated)
     const supplementQueries = [
-      ('Bollywood Hits', 'bollywood hits 2024'),
-      ('Trending Now', 'trending music 2024'),
-      ('Global Top Songs', 'top songs global'),
-      ('Pop Hits', 'pop hits 2024'),
-      ('Chill Vibes', 'chill lofi vibes'),
-      ('Workout & Gym', 'workout gym hits'),
-      ('Romantic Hindi Songs', 'romantic songs hindi'),
-      ('Hip-Hop & Rap', 'hip hop rap 2024'),
-      ('Party Bangers', 'party songs dance hits'),
-      ('Indie & Acoustic', 'indie acoustic songs'),
+      ('Top Charts', 'top 100 songs chart'),
+      ('New Releases', 'new music releases hits'),
+      ('Viral Hits', 'viral top trending songs'),
+      ('Pop Perfection', 'top pop hits'),
+      ('Hip-Hop & Rap', 'top hip hop rap'),
+      ('R&B & Soul', 'best rnb soul music'),
+      ('Chill & Lo-Fi', 'chill lofi beats'),
+      ('Workout & Gym', 'gym workout hype music'),
+      ('Acoustic & Indie', 'indie acoustic folk'),
+      ('Party Bangers', 'party dance club hits'),
     ];
 
     final needed = (10 - sections.length).clamp(0, supplementQueries.length);

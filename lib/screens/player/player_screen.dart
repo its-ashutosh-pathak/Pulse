@@ -588,7 +588,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             ),
           ),
           Positioned(
-              bottom: 12,
+              bottom: 40,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

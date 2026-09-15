@@ -111,7 +111,7 @@ class QuickPicksNotifier extends Notifier<QuickPicksState> {
       state = QuickPicksState(groups: groups, loading: false);
       
       if (groups.isNotEmpty) {
-        fetchGroup(0); // Fetch the first page immediately
+        fetchGroup(0, prefetchNext: true); // Fetch the first page immediately
       }
     } catch (e) {
       // Silently fail — just don't show the section
@@ -120,9 +120,14 @@ class QuickPicksNotifier extends Notifier<QuickPicksState> {
     }
   }
 
-  Future<void> fetchGroup(int index) async {
+  Future<void> fetchGroup(int index, {bool prefetchNext = true}) async {
     if (index < 0 || index >= state.groups.length) return;
     
+    // Kick off prefetch for the next page immediately, but tell it NOT to cascade
+    if (prefetchNext && index + 1 < state.groups.length) {
+      fetchGroup(index + 1, prefetchNext: false);
+    }
+
     final group = state.groups[index];
     if (group.songs != null || group.hasError) return; // Already fetched or failed
     
@@ -171,6 +176,8 @@ class FavoriteArtistNotifier extends Notifier<FavoriteArtistState> {
   @override
   FavoriteArtistState build() => const FavoriteArtistState();
 
+  List<String> _pendingArtists = [];
+
   Future<void> loadForRecentSongs(List<Song> recentSongs) async {
     if (state.groups.isNotEmpty) return;
 
@@ -187,21 +194,28 @@ class FavoriteArtistNotifier extends Notifier<FavoriteArtistState> {
     if (artistCounts.isEmpty) return;
 
     final sorted = artistCounts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    final top5 = sorted.take(5).map((e) => e.key).toList();
+    final allTopArtists = sorted.map((e) => e.key).toList();
 
-    if (top5.isEmpty) return;
-    
-    final groups = top5.map((name) => FavoriteArtistGroup(artistName: name)).toList();
+    if (allTopArtists.isEmpty) return;
+
+    _pendingArtists = allTopArtists.skip(5).toList();
+
+    final groups = allTopArtists.take(5).map((name) => FavoriteArtistGroup(artistName: name)).toList();
     state = FavoriteArtistState(groups: groups, loading: false);
     
     if (groups.isNotEmpty) {
-      fetchGroup(0);
+      fetchGroup(0, prefetchNext: true);
     }
   }
 
-  Future<void> fetchGroup(int index) async {
+  Future<void> fetchGroup(int index, {bool prefetchNext = true}) async {
     if (index < 0 || index >= state.groups.length) return;
     
+    // Kick off prefetch for the next page immediately, but tell it NOT to cascade
+    if (prefetchNext && index + 1 < state.groups.length) {
+      fetchGroup(index + 1, prefetchNext: false);
+    }
+
     final group = state.groups[index];
     if (group.artistData != null || group.hasError) return;
     
@@ -213,15 +227,33 @@ class FavoriteArtistNotifier extends Notifier<FavoriteArtistState> {
         newGroups[index] = FavoriteArtistGroup(artistName: group.artistName, artistData: artist);
         state = FavoriteArtistState(groups: newGroups, loading: state.loading);
       } else {
-        final newGroups = List<FavoriteArtistGroup>.from(state.groups);
-        newGroups[index] = FavoriteArtistGroup(artistName: group.artistName, hasError: true);
-        state = FavoriteArtistState(groups: newGroups, loading: state.loading);
+        _replaceGroupWithNext(index);
       }
     } catch (e) {
       debugPrint('[FavoriteArtist] Failed to fetch group $index: $e');
-      final newGroups = List<FavoriteArtistGroup>.from(state.groups);
-      newGroups[index] = FavoriteArtistGroup(artistName: group.artistName, hasError: true);
-      state = FavoriteArtistState(groups: newGroups, loading: state.loading);
+      _replaceGroupWithNext(index);
+    }
+  }
+
+  void _replaceGroupWithNext(int index) {
+    final newGroups = List<FavoriteArtistGroup>.from(state.groups);
+    if (index >= 0 && index < newGroups.length) {
+      if (_pendingArtists.isNotEmpty) {
+        // Replace with the next available artist from the history
+        final nextArtist = _pendingArtists.removeAt(0);
+        newGroups[index] = FavoriteArtistGroup(artistName: nextArtist);
+        state = FavoriteArtistState(groups: newGroups, loading: state.loading);
+        fetchGroup(index, prefetchNext: false);
+      } else {
+        // No more artists left in history to fallback to, just remove this slot
+        newGroups.removeAt(index);
+        state = FavoriteArtistState(groups: newGroups, loading: state.loading);
+        
+        // After removing, the item that shifted left into `index` might need fetching
+        if (index < newGroups.length) {
+          fetchGroup(index, prefetchNext: false);
+        }
+      }
     }
   }
 }

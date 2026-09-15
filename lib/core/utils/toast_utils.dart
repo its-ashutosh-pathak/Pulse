@@ -68,7 +68,8 @@ class ToastUtils {
           }
 
           return Positioned(
-            bottom: bottomPadding + 20,
+            // 60px (nav) + 68px (player) + 20px (spacing) = 148px
+            bottom: bottomPadding + 148,
             left: 16,
             right: 16,
             child: toastContent,

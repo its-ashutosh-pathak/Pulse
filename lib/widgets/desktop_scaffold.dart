@@ -59,8 +59,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
       _router?.routerDelegate.addListener(_onRouteChanged);
     }
 
-    final audio = ref.watch(audioProvider);
-    final hasSong = audio.currentSong != null;
+    final hasSong = ref.watch(audioProvider.select((a) => a.currentSong != null));
 
     // Determine what to show in the right pane
     final rightPaneState = ref.watch(desktopRightPaneProvider);

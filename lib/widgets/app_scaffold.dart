@@ -249,7 +249,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     final bottomNavHeight = 60.0 + bottomPadding;
     final miniPlayerHeight = 68.0;
 
-    final audio = ref.watch(audioProvider);
+    final hasCurrentSong = ref.watch(audioProvider.select((a) => a.currentSong != null));
 
     if (defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.macOS ||
@@ -260,7 +260,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     final scaffold = Scaffold(
       extendBody: true,
       bottomNavigationBar: SizedBox(
-        height: bottomNavHeight + (audio.currentSong != null ? miniPlayerHeight : 0),
+        height: bottomNavHeight + (hasCurrentSong ? miniPlayerHeight : 0),
       ),
       body: widget.navigationShell,
     );
@@ -346,11 +346,11 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
           // 1. SlidingUpPanel
           SlidingUpPanel(
             controller: _panelController,
-            minHeight: audio.currentSong != null ? (miniPlayerHeight + bottomNavHeight) : 0.0,
+            minHeight: hasCurrentSong ? (miniPlayerHeight + bottomNavHeight) : 0.0,
             maxHeight: MediaQuery.of(context).size.height,
             color: Colors.transparent, // Crucial for non-box look
             boxShadow: const [],
-            isDraggable: audio.currentSong != null && !isQueueOpen && _panelPosition < 1.0,
+            isDraggable: hasCurrentSong && !isQueueOpen && _panelPosition < 1.0,
             onPanelSlide: (position) {
               setState(() {
                 _panelPosition = position;
@@ -366,7 +366,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                 ref.read(playerOverlayProvider.notifier).state = true;
               }
             },
-            collapsed: audio.currentSong == null
+            collapsed: !hasCurrentSong
                 ? const SizedBox.shrink()
                 : Column(
                     mainAxisSize: MainAxisSize.min,
@@ -443,13 +443,15 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? Theme.of(context).colorScheme.primary : Colors.white;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 64,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          height: 60,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
           children: [
             customIcon ?? Icon(icon, size: 22, color: color),
             const SizedBox(height: 4),
@@ -463,6 +465,7 @@ class _NavItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
