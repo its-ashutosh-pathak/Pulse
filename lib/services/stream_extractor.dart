@@ -64,7 +64,7 @@ class StreamExtractor {
 
     final cacheKey = '${videoId}_$quality';
     final cached = _cache[cacheKey];
-    
+
     // Use cached URL if less than 2 hours old
     if (cached != null && DateTime.now().difference(cached.timestamp).inHours < 2) {
        return cached.url;
@@ -96,12 +96,17 @@ class StreamExtractor {
       }
 
       final url = chosen.url.toString();
-      debugPrint('[StreamExtractor] ✅ $videoId via visionos: ${chosen.audioCodec} ${chosen.bitrate} (q=$quality)');
-      
+      if (kDebugMode) debugPrint('[StreamExtractor] ✅ $videoId via visionos: ${chosen.audioCodec} ${chosen.bitrate} (q=$quality)');
+
+      // Evict the oldest entry if cache exceeds 150 items to prevent
+      // unbounded RAM growth during long listening sessions.
+      if (_cache.length >= 150) {
+        _cache.remove(_cache.keys.first);
+      }
       _cache[cacheKey] = _CachedStream(url, DateTime.now());
       return url;
     } catch (e) {
-      debugPrint('[StreamExtractor] ⚠️ $videoId visionos failed: $e');
+      if (kDebugMode) debugPrint('[StreamExtractor] ⚠️ $videoId visionos failed: $e');
       _yt?.close();
       _yt = null;
       rethrow;

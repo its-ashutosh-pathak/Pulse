@@ -9,8 +9,16 @@ class SpotifyEmbedScraper {
   /// This is extremely fast and completely bypasses API limits, 
   /// but it ONLY returns a maximum of 100 songs.
   static Future<SpotifyPlaylist> scrapePlaylist(String url) async {
+    // Validate URL is a legitimate Spotify link before making any network request.
+    // Prevents malformed or malicious inputs (e.g. javascript: URIs, internal hosts)
+    // from being passed directly to the HTTP client.
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null || uri.scheme != 'https' || uri.host != 'open.spotify.com') {
+      throw Exception('Invalid Spotify URL: must start with https://open.spotify.com/');
+    }
+
     final match = RegExp(r'playlist/([a-zA-Z0-9]+)').firstMatch(url);
-    if (match == null) throw Exception('Invalid Spotify playlist URL');
+    if (match == null) throw Exception('Invalid Spotify playlist URL: no playlist ID found');
     final playlistId = match.group(1)!;
 
     final embedUrl = 'https://open.spotify.com/embed/playlist/$playlistId';

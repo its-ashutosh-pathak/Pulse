@@ -488,7 +488,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }, SetOptions(merge: true));
 
       await batch.commit();
-      debugPrint('[Auth] Stats written: videoId=$videoId, seconds=$actualSeconds, artist=$artist');
+      if (kDebugMode) debugPrint('[Auth] Stats written: videoId=$videoId, seconds=$actualSeconds, artist=$artist');
       
       // 4. Update History (separately to not fail the stats batch)
       await _db

@@ -62,7 +62,7 @@ class ShazamService {
         }
 
         final audioBytes = await file.readAsBytes();
-        debugPrint(
+        if (kDebugMode) debugPrint(
           'Recorded ${audioBytes.length} bytes of audio data. Generating signature via Rust engine...',
         );
 

@@ -60,7 +60,7 @@ class SpotifyApi {
         }
       }
     } catch (e) {
-      debugPrint('Failed to get Spotify token from HTML: $e');
+      if (kDebugMode) debugPrint('Failed to get Spotify token from HTML: $e');
     }
     
     throw Exception('Could not fetch Spotify token - Cloudflare block active');

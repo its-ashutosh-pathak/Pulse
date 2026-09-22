@@ -38,7 +38,7 @@ class SpotifyAuthService {
 
       await _exchangeCodeForToken(clientId, returnedCode, pkcePair.codeVerifier);
     } catch (e) {
-      debugPrint('[SpotifyAuth] Auth error: $e');
+      if (kDebugMode) debugPrint('[SpotifyAuth] Auth error: $e');
       rethrow;
     }
   }
@@ -65,7 +65,7 @@ class SpotifyAuthService {
       try {
         await _refreshToken(clientId);
       } catch (e) {
-        debugPrint('[SpotifyAuth] Failed to refresh token: $e');
+        if (kDebugMode) debugPrint('[SpotifyAuth] Failed to refresh token: $e');
         return null;
       }
     }

@@ -70,3 +70,7 @@ windows/**/*.lib
 # Secrets and Environment Variables
 .env
 .env.*
+
+# Firebase — contains API keys, should not be committed to public repos.
+# Regenerate locally with: flutterfire configure
+lib/firebase_options.dart
