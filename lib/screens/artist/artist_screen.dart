@@ -256,13 +256,13 @@ class _ArtistScreenState extends ConsumerState<ArtistScreen> {
                       ]),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.list_rounded, size: 20,
+                        const Icon(Icons.list_rounded, size: 20,
                             color: AppColors.background),
-                        SizedBox(width: 6),
-                        Text('Show all', style: TextStyle(
+                        const SizedBox(width: 6),
+                        Text(AppLocalizations.of(context)!.artistShowAll, style: const TextStyle(
                             fontSize: 13, fontWeight: FontWeight.w700,
                             color: AppColors.background)),
                       ],

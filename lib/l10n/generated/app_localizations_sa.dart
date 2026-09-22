@@ -1192,4 +1192,13 @@ class AppLocalizationsSa extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'अत्यधिकाः विफलाः प्रयासाः। कृपया किञ्चित्कालानन्तरं प्रयतताम्।';
+
+  @override
+  String get homeForgottenFavorites => 'विस्मृताः प्रियगानानि';
+
+  @override
+  String get artistShowAll => 'सर्वाणि दर्शयन्तु';
+
+  @override
+  String get homeTopTracks => 'शीर्षगानानि';
 }

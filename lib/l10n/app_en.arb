@@ -570,4 +570,8 @@
   "apiErrorInvalidEmail": "Please enter a valid email address.",
   "apiErrorWeakPassword": "Password is too weak. Use at least 6 characters.",
   "apiErrorTooManyAttempts": "Too many failed attempts. Please try again later."
+,
+  "homeForgottenFavorites": "Forgotten Favourites",
+  "artistShowAll": "Show all",
+  "homeTopTracks": "Top tracks"
 }

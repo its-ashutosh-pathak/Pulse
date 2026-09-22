@@ -639,4 +639,8 @@
   "apiErrorInvalidEmail": "ਕਿਰਪਾ ਕਰਕੇ ਸਹੀ ਈਮੇਲ ਪਤਾ ਟਾਈਪ ਕਰੋ।",
   "apiErrorWeakPassword": "ਪਾਸਵਰਡ ਬਹੁਤ ਕਮਜ਼ੋਰ ਹੈ। ਘੱਟੋ-ਘੱਟ ੬ ਅੱਖਰ ਵਰਤੋ।",
   "apiErrorTooManyAttempts": "ਬਹੁਤ ਜ਼ਿਆਦਾ ਅਸਫਲ ਕੋਸ਼ਿਸ਼ਾਂ। ਕਿਰਪਾ ਕਰਕੇ ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+,
+  "homeForgottenFavorites": "ਭੁੱਲੇ ਹੋਏ ਮਨਪਸੰਦ",
+  "artistShowAll": "ਸਭ ਦਿਖਾਓ",
+  "homeTopTracks": "ਟੌਪ ਟਰੈਕ"
 }

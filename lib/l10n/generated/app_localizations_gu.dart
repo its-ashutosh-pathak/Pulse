@@ -1179,4 +1179,13 @@ class AppLocalizationsGu extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'ઘણી બધી નિષ્ફળ પ્રયાસો. પછીથી ફરી પ્રયાસ કરો.';
+
+  @override
+  String get homeForgottenFavorites => 'ભૂલી ગયેલ મનગમતા';
+
+  @override
+  String get artistShowAll => 'બધા બતાવો';
+
+  @override
+  String get homeTopTracks => 'ટોચના ટ્રેક';
 }

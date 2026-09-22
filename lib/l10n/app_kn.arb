@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "ದಯವಿಟ್ಟು ಸರಿಯಾದ ಇಮೇಲ್ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ.",
   "apiErrorWeakPassword": "ಪಾಸ್‌ವರ್ಡ್ ತುಂಬಾ ದುರ್ಬಲವಾಗಿದೆ. ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ.",
   "apiErrorTooManyAttempts": "ಹಲವು ಬಾರಿ ತಪ್ಪಾಗಿ ಪ್ರಯತ್ನಿಸಲಾಗಿದೆ. ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+,
+  "homeForgottenFavorites": "ಮರೆತ ಮೆಚ್ಚಿನ ಹಾಡುಗಳು",
+  "artistShowAll": "ಎಲ್ಲಾ ತೋರಿಸಿ",
+  "homeTopTracks": "ಟಾಪ್ ಟ್ರ್ಯಾಕ್‌ಗಳು"
 }

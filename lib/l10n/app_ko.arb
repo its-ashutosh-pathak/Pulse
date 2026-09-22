@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "올바른 이메일 주소를 입력하세요.",
   "apiErrorWeakPassword": "비밀번호가 너무 약합니다.",
   "apiErrorTooManyAttempts": "로그인 시도가 너무 많습니다."
+,
+  "homeForgottenFavorites": "잊혀진 즐겨찾기",
+  "artistShowAll": "모두 보기",
+  "homeTopTracks": "인기 트랙"
 }

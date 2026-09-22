@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Vui lòng nhập một địa chỉ email hợp lệ.",
   "apiErrorWeakPassword": "Mật khẩu quá yếu. Sử dụng ít nhất 6 ký tự.",
   "apiErrorTooManyAttempts": "Quá nhiều nỗ lực thất bại. Vui lòng thử lại sau."
+,
+  "homeForgottenFavorites": "Yêu thích bị lãng quên",
+  "artistShowAll": "Xem tất cả",
+  "homeTopTracks": "Bài hát hàng đầu"
 }

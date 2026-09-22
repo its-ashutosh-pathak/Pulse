@@ -1201,4 +1201,13 @@ class AppLocalizationsMl extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'നിരവധി തവണ തെറ്റായി ശ്രമിച്ചു. പിന്നീട് വീണ്ടും ശ്രമിക്കുക.';
+
+  @override
+  String get homeForgottenFavorites => 'മറന്നുപോയ പ്രിയഗാനങ്ങൾ';
+
+  @override
+  String get artistShowAll => 'എല്ലാം കാണുക';
+
+  @override
+  String get homeTopTracks => 'ടോപ്പ് ട്രാക്കുകൾ';
 }

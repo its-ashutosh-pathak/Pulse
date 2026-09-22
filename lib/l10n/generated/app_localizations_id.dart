@@ -1188,4 +1188,13 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'Terlalu banyak percobaan gagal. Coba lagi nanti.';
+
+  @override
+  String get homeForgottenFavorites => 'Favorit yang Terlupakan';
+
+  @override
+  String get artistShowAll => 'Tampilkan semua';
+
+  @override
+  String get homeTopTracks => 'Lagu terbaik';
 }

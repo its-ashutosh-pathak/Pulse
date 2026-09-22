@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "దయచేసి సరైన ఇమెయిల్ అడ్రస్ ఇవ్వండి.",
   "apiErrorWeakPassword": "పాస్‌వర్డ్ చాలా వీక్. కనీసం 6 అక్షరాలు వాడండి.",
   "apiErrorTooManyAttempts": "అనేక విఫల ప్రయత్నాలు. తర్వాత మళ్ళీ ప్రయత్నించండి."
+,
+  "homeForgottenFavorites": "మర్చిపోయిన ఇష్టాలు",
+  "artistShowAll": "అన్నీ చూపించు",
+  "homeTopTracks": "టాప్ ట్రాక్‌లు"
 }

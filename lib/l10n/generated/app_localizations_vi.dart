@@ -1209,4 +1209,13 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'Quá nhiều nỗ lực thất bại. Vui lòng thử lại sau.';
+
+  @override
+  String get homeForgottenFavorites => 'Yêu thích bị lãng quên';
+
+  @override
+  String get artistShowAll => 'Xem tất cả';
+
+  @override
+  String get homeTopTracks => 'Bài hát hàng đầu';
 }

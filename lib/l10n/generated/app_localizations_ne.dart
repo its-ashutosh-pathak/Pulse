@@ -1206,4 +1206,13 @@ class AppLocalizationsNe extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'धेरै असफल प्रयासहरू। कृपया पछि फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get homeForgottenFavorites => 'बिर्सिएका मनपर्ने गीतहरू';
+
+  @override
+  String get artistShowAll => 'सबै देखाउनुस्';
+
+  @override
+  String get homeTopTracks => 'शीर्ष ट्र्याकहरू';
 }

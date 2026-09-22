@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "ദയവായി ശരിയായ ഇമെയിൽ വിലാസം നൽകുക.",
   "apiErrorWeakPassword": "പാസ്‌വേഡ് വളരെ ദുർബലമാണ്. കുറഞ്ഞത് 6 അക്ഷരങ്ങളെങ്കിലും ഉപയോഗിക്കുക.",
   "apiErrorTooManyAttempts": "നിരവധി തവണ തെറ്റായി ശ്രമിച്ചു. പിന്നീട് വീണ്ടും ശ്രമിക്കുക."
+,
+  "homeForgottenFavorites": "മറന്നുപോയ പ്രിയഗാനങ്ങൾ",
+  "artistShowAll": "എല്ലാം കാണുക",
+  "homeTopTracks": "ടോപ്പ് ട്രാക്കുകൾ"
 }

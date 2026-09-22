@@ -2271,6 +2271,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many failed attempts. Please try again later.'**
   String get apiErrorTooManyAttempts;
+
+  /// No description provided for @homeForgottenFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgotten Favourites'**
+  String get homeForgottenFavorites;
+
+  /// No description provided for @artistShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get artistShowAll;
+
+  /// No description provided for @homeTopTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Top tracks'**
+  String get homeTopTracks;
 }
 
 class _AppLocalizationsDelegate

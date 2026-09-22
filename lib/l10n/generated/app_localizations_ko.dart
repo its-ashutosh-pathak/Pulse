@@ -1167,4 +1167,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get apiErrorTooManyAttempts => '로그인 시도가 너무 많습니다.';
+
+  @override
+  String get homeForgottenFavorites => '잊혀진 즐겨찾기';
+
+  @override
+  String get artistShowAll => '모두 보기';
+
+  @override
+  String get homeTopTracks => '인기 트랙';
 }

@@ -1166,4 +1166,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get apiErrorTooManyAttempts => '失败尝试过多。请稍后再试。';
+
+  @override
+  String get homeForgottenFavorites => '遗忘的最爱';
+
+  @override
+  String get artistShowAll => '查看全部';
+
+  @override
+  String get homeTopTracks => '热门曲目';
 }

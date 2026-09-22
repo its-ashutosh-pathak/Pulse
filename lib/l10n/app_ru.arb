@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Введите верный email.",
   "apiErrorWeakPassword": "Слишком простой пароль.",
   "apiErrorTooManyAttempts": "Слишком много попыток входа."
+,
+  "homeForgottenFavorites": "Забытые избранные",
+  "artistShowAll": "Показать все",
+  "homeTopTracks": "Популярные треки"
 }

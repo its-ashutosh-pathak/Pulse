@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Lütfen geçerli bir e-posta adresi girin.",
   "apiErrorWeakPassword": "Şifre çok zayıf. En az 6 karakter kullanın.",
   "apiErrorTooManyAttempts": "Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin."
+,
+  "homeForgottenFavorites": "Unutulan Favoriler",
+  "artistShowAll": "Tümünü göster",
+  "homeTopTracks": "En çok dinlenenler"
 }

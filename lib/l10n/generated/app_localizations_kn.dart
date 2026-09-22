@@ -1190,4 +1190,13 @@ class AppLocalizationsKn extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'ಹಲವು ಬಾರಿ ತಪ್ಪಾಗಿ ಪ್ರಯತ್ನಿಸಲಾಗಿದೆ. ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get homeForgottenFavorites => 'ಮರೆತ ಮೆಚ್ಚಿನ ಹಾಡುಗಳು';
+
+  @override
+  String get artistShowAll => 'ಎಲ್ಲಾ ತೋರಿಸಿ';
+
+  @override
+  String get homeTopTracks => 'ಟಾಪ್ ಟ್ರ್ಯಾಕ್‌ಗಳು';
 }

@@ -1197,4 +1197,13 @@ class AppLocalizationsMai extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'बहुत बेसी विफल प्रयास। कृपया बादमे पुनः प्रयास करू।';
+
+  @override
+  String get homeForgottenFavorites => 'बिसराएल पसंदीदा';
+
+  @override
+  String get artistShowAll => 'सब देखू';
+
+  @override
+  String get homeTopTracks => 'टॉप ट्रैक';
 }

@@ -1185,4 +1185,13 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'অনেকবার ভুল চেষ্টা করা হয়েছে। পরে আবার চেষ্টা করুন।';
+
+  @override
+  String get homeForgottenFavorites => 'ভুলে যাওয়া প্রিয় গান';
+
+  @override
+  String get artistShowAll => 'সব দেখুন';
+
+  @override
+  String get homeTopTracks => 'শীর্ষ ট্র্যাক';
 }

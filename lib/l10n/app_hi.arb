@@ -638,4 +638,8 @@
   "apiErrorInvalidEmail": "कृपया एक मान्य ईमेल पता दर्ज करें।",
   "apiErrorWeakPassword": "पासवर्ड बहुत कमजोर है। कम से कम 6 वर्णों का उपयोग करें।",
   "apiErrorTooManyAttempts": "बहुत सारे विफल प्रयास। कृपया बाद में पुनः प्रयास करें।"
+,
+  "homeForgottenFavorites": "भूले हुए पसंदीदा",
+  "artistShowAll": "सभी दिखाएं",
+  "homeTopTracks": "टॉप ट्रैक"
 }

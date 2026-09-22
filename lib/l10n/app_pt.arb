@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Forneça um endereço de e-mail válido.",
   "apiErrorWeakPassword": "A senha é muito fraca. Use pelo menos 6 caracteres.",
   "apiErrorTooManyAttempts": "Muitas tentativas falhas. Tente mais tarde."
+,
+  "homeForgottenFavorites": "Favoritos esquecidos",
+  "artistShowAll": "Ver tudo",
+  "homeTopTracks": "Músicas mais tocadas"
 }

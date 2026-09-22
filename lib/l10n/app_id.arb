@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Berikan alamat email yang valid.",
   "apiErrorWeakPassword": "Kata sandi terlalu lemah. Gunakan minimal 6 karakter.",
   "apiErrorTooManyAttempts": "Terlalu banyak percobaan gagal. Coba lagi nanti."
+,
+  "homeForgottenFavorites": "Favorit yang Terlupakan",
+  "artistShowAll": "Tampilkan semua",
+  "homeTopTracks": "Lagu terbaik"
 }

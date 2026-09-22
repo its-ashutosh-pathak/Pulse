@@ -95,6 +95,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final recentlyPlayedSongs = stats.recentSongs
         .map((s) => Song.fromJson(s))
         .toList();
+    final forgottenFavSongs = stats.forgottenFavorites
+        .map((s) => Song.fromJson(s))
+        .toList();
     final quickPicks = ref.watch(quickPicksProvider);
     final favArtist = ref.watch(favoriteArtistProvider);
 
@@ -200,6 +203,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                   },
                   onLoadPage: (index) => ref.read(favoriteArtistProvider.notifier).fetchGroup(index),
+                ),
+              ],
+
+              // ── Forgotten Favourites ──
+              if (forgottenFavSongs.isNotEmpty) ...[
+                _buildSection(
+                  HomeSection(
+                    title: AppLocalizations.of(context)!.homeForgottenFavorites,
+                    items: forgottenFavSongs,
+                  ),
+                  audio,
                 ),
               ],
 
@@ -1421,7 +1435,7 @@ class _FavoriteArtistSectionState extends State<_FavoriteArtistSection> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  'Top tracks',
+                                  AppLocalizations.of(context)!.homeTopTracks,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -1540,8 +1554,8 @@ class _FavoriteArtistSectionState extends State<_FavoriteArtistSection> {
                                             Container(
                                               color: Colors.black.withValues(alpha: 0.5),
                                               alignment: Alignment.center,
-                                              child: const Text(
-                                                'Show all',
+                                              child: Text(
+                                                AppLocalizations.of(context)!.artistShowAll,
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 13,

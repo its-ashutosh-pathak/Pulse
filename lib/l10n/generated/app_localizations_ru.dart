@@ -1178,4 +1178,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get apiErrorTooManyAttempts => 'Слишком много попыток входа.';
+
+  @override
+  String get homeForgottenFavorites => 'Забытые избранные';
+
+  @override
+  String get artistShowAll => 'Показать все';
+
+  @override
+  String get homeTopTracks => 'Популярные треки';
 }

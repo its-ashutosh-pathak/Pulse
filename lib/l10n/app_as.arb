@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "অনুগ্ৰহ কৰি এটা বৈধ ইমেইল ঠিকনা দিয়ক।",
   "apiErrorWeakPassword": "পাছৱৰ্ড অতি দুৰ্বল। কমেও ৬ টা আখৰ ব্যৱহাৰ কৰক।",
   "apiErrorTooManyAttempts": "অত্যাধিক বিফল প্ৰচেষ্টা। পিছত পুনৰ চেষ্টা কৰক।"
+,
+  "homeForgottenFavorites": "পাহৰি যোৱা প্ৰিয় গান",
+  "artistShowAll": "সকলো দেখুৱাওক",
+  "homeTopTracks": "শীৰ্ষ ট্ৰেক"
 }

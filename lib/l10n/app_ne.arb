@@ -639,4 +639,8 @@
   "apiErrorInvalidEmail": "कृपया सही ईमेल ठेगाना टाइप गर्नुहोस्।",
   "apiErrorWeakPassword": "पासवर्ड धेरै कमजोर छ। कम्तीमा ६ वर्णहरू प्रयोग गर्नुहोस्।",
   "apiErrorTooManyAttempts": "धेरै असफल प्रयासहरू। कृपया पछि फेरि प्रयास गर्नुहोस्।"
+,
+  "homeForgottenFavorites": "बिर्सिएका मनपर्ने गीतहरू",
+  "artistShowAll": "सबै देखाउनुस्",
+  "homeTopTracks": "शीर्ष ट्र्याकहरू"
 }

@@ -1206,4 +1206,13 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'பல முறை தவறாக முயன்றுள்ளீர்கள். பின்னர் மீண்டும் முயலவும்.';
+
+  @override
+  String get homeForgottenFavorites => 'மறந்த விருப்பங்கள்';
+
+  @override
+  String get artistShowAll => 'அனைத்தையும் காட்டு';
+
+  @override
+  String get homeTopTracks => 'சிறந்த பாடல்கள்';
 }

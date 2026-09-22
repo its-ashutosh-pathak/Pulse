@@ -1203,4 +1203,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'Zu viele fehlgeschlagene Versuche. Bitte versuche es später.';
+
+  @override
+  String get homeForgottenFavorites => 'Vergessene Favoriten';
+
+  @override
+  String get artistShowAll => 'Alle anzeigen';
+
+  @override
+  String get homeTopTracks => 'Top-Tracks';
 }

@@ -639,4 +639,8 @@
   "apiErrorInvalidEmail": "कृपया मान्य इमेल ठेगाना दर्ज करू।",
   "apiErrorWeakPassword": "पासवर्ड बहुत कमजोर अछि। कम सँ कम ६ क्यारेक्टरक उपयोग करू।",
   "apiErrorTooManyAttempts": "बहुत बेसी विफल प्रयास। कृपया बादमे पुनः प्रयास करू।"
+,
+  "homeForgottenFavorites": "बिसराएल पसंदीदा",
+  "artistShowAll": "सब देखू",
+  "homeTopTracks": "टॉप ट्रैक"
 }

@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "براہ کرم ایک درست ای میل ایڈریس درج کریں۔",
   "apiErrorWeakPassword": "پاس ورڈ بہت کمزور ہے۔ کم از کم 6 حروف استعمال کریں۔",
   "apiErrorTooManyAttempts": "بہت زیادہ ناکام کوششیں۔ بعد میں دوبارہ کوشش کریں۔"
+,
+  "homeForgottenFavorites": "بھولے ہوئے پسندیدہ",
+  "artistShowAll": "سب دیکھیں",
+  "homeTopTracks": "ٹاپ ٹریکس"
 }

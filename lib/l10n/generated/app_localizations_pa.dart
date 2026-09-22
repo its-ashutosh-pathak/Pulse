@@ -1200,4 +1200,13 @@ class AppLocalizationsPa extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'ਬਹੁਤ ਜ਼ਿਆਦਾ ਅਸਫਲ ਕੋਸ਼ਿਸ਼ਾਂ। ਕਿਰਪਾ ਕਰਕੇ ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।';
+
+  @override
+  String get homeForgottenFavorites => 'ਭੁੱਲੇ ਹੋਏ ਮਨਪਸੰਦ';
+
+  @override
+  String get artistShowAll => 'ਸਭ ਦਿਖਾਓ';
+
+  @override
+  String get homeTopTracks => 'ਟੌਪ ਟਰੈਕ';
 }

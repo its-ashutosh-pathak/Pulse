@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "કૃપા કરીને માન્ય ઇમેઇલ સરનામું આપો.",
   "apiErrorWeakPassword": "પાસવર્ડ ખૂબ નબળો છે. ઓછામાં ઓછા 6 અક્ષરોનો ઉપયોગ કરો.",
   "apiErrorTooManyAttempts": "ઘણી બધી નિષ્ફળ પ્રયાસો. પછીથી ફરી પ્રયાસ કરો."
+,
+  "homeForgottenFavorites": "ભૂલી ગયેલ મનગમતા",
+  "artistShowAll": "બધા બતાવો",
+  "homeTopTracks": "ટોચના ટ્રેક"
 }

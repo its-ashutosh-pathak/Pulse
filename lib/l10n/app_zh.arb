@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "请提供有效的邮箱地址。",
   "apiErrorWeakPassword": "密码太简单。请至少使用 6 个字符。",
   "apiErrorTooManyAttempts": "失败尝试过多。请稍后再试。"
+,
+  "homeForgottenFavorites": "遗忘的最爱",
+  "artistShowAll": "查看全部",
+  "homeTopTracks": "热门曲目"
 }

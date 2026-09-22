@@ -1192,4 +1192,13 @@ class AppLocalizationsTe extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'అనేక విఫల ప్రయత్నాలు. తర్వాత మళ్ళీ ప్రయత్నించండి.';
+
+  @override
+  String get homeForgottenFavorites => 'మర్చిపోయిన ఇష్టాలు';
+
+  @override
+  String get artistShowAll => 'అన్నీ చూపించు';
+
+  @override
+  String get homeTopTracks => 'టాప్ ట్రాక్‌లు';
 }

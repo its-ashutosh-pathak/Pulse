@@ -1223,4 +1223,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'Trop de tentatives infructueuses. Veuillez réessayer plus tard.';
+
+  @override
+  String get homeForgottenFavorites => 'Favoris oubliés';
+
+  @override
+  String get artistShowAll => 'Tout afficher';
+
+  @override
+  String get homeTopTracks => 'Titres populaires';
 }

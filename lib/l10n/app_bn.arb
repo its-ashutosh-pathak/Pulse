@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "একটি সঠিক ইমেল ঠিকানা লিখুন।",
   "apiErrorWeakPassword": "পাসওয়ার্ড খুব দুর্বল। অন্তত ৬টি অক্ষর ব্যবহার করুন।",
   "apiErrorTooManyAttempts": "অনেকবার ভুল চেষ্টা করা হয়েছে। পরে আবার চেষ্টা করুন।"
+,
+  "homeForgottenFavorites": "ভুলে যাওয়া প্রিয় গান",
+  "artistShowAll": "সব দেখুন",
+  "homeTopTracks": "শীর্ষ ট্র্যাক"
 }

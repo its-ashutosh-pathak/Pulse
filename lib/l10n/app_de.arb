@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Bitte gib eine gültige E-Mail-Adresse an.",
   "apiErrorWeakPassword": "Das Passwort ist zu schwach. Verwende mindestens 6 Zeichen.",
   "apiErrorTooManyAttempts": "Zu viele fehlgeschlagene Versuche. Bitte versuche es später."
+,
+  "homeForgottenFavorites": "Vergessene Favoriten",
+  "artistShowAll": "Alle anzeigen",
+  "homeTopTracks": "Top-Tracks"
 }

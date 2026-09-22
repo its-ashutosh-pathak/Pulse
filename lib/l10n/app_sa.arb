@@ -639,4 +639,8 @@
   "apiErrorInvalidEmail": "कृपया मान्य-ईमेल-सङ्केतं लिखतु।",
   "apiErrorWeakPassword": "कूटशब्दः दुर्बलः अस्ति। न्यूनातिन्यूनं ६ अक्षराणि प्रयुङ्क्त।",
   "apiErrorTooManyAttempts": "अत्यधिकाः विफलाः प्रयासाः। कृपया किञ्चित्कालानन्तरं प्रयतताम्।"
+,
+  "homeForgottenFavorites": "विस्मृताः प्रियगानानि",
+  "artistShowAll": "सर्वाणि दर्शयन्तु",
+  "homeTopTracks": "शीर्षगानानि"
 }

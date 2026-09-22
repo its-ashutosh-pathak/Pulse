@@ -638,4 +638,8 @@
   "apiErrorInvalidEmail": "Voer asseblief 'n geldige e-posadres in.",
   "apiErrorWeakPassword": "Wagwoord is te swak. Gebruik ten minste 6 karakters.",
   "apiErrorTooManyAttempts": "Te veel mislukte pogings. Probeer asseblief later weer."
+,
+  "homeForgottenFavorites": "Vergete Gunstelinge",
+  "artistShowAll": "Wys alles",
+  "homeTopTracks": "Top snitte"
 }

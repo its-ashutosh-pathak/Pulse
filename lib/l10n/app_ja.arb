@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "有効なメールアドレスを入力してください。",
   "apiErrorWeakPassword": "パスワードが弱すぎます。",
   "apiErrorTooManyAttempts": "ログイン試行回数が多すぎます。"
+,
+  "homeForgottenFavorites": "忘れられたお気に入り",
+  "artistShowAll": "すべて表示",
+  "homeTopTracks": "トップトラック"
 }

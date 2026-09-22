@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "يرجى تقديم عنوان بريد إلكتروني صالح.",
   "apiErrorWeakPassword": "كلمة المرور ضعيفة جداً. استخدم 6 أحرف على الأقل.",
   "apiErrorTooManyAttempts": "محاولات فشل كثيرة. يرجى المحاولة لاحقاً."
+,
+  "homeForgottenFavorites": "المفضلة المنسية",
+  "artistShowAll": "عرض الكل",
+  "homeTopTracks": "أفضل المقاطع"
 }

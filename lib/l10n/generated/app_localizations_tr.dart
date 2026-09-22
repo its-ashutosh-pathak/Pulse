@@ -1205,4 +1205,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'Çok fazla başarısız deneme. Lütfen daha sonra tekrar deneyin.';
+
+  @override
+  String get homeForgottenFavorites => 'Unutulan Favoriler';
+
+  @override
+  String get artistShowAll => 'Tümünü göster';
+
+  @override
+  String get homeTopTracks => 'En çok dinlenenler';
 }

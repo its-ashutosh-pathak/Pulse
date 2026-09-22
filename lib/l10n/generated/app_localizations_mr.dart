@@ -1192,4 +1192,13 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'खूप जास्त अयशस्वी प्रयत्न. कृपया नंतर पुन्हा प्रयत्न करा.';
+
+  @override
+  String get homeForgottenFavorites => 'विसरलेले आवडते';
+
+  @override
+  String get artistShowAll => 'सर्व दाखवा';
+
+  @override
+  String get homeTopTracks => 'शीर्ष ट्रॅक';
 }

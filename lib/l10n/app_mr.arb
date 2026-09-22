@@ -639,4 +639,8 @@
   "apiErrorInvalidEmail": "कृपया योग्य ईमेल पत्ता एंटर करा.",
   "apiErrorWeakPassword": "पासवर्ड खूप कमकुवत आहे. किमान ६ अक्षरे वापरा.",
   "apiErrorTooManyAttempts": "खूप जास्त अयशस्वी प्रयत्न. कृपया नंतर पुन्हा प्रयत्न करा."
+,
+  "homeForgottenFavorites": "विसरलेले आवडते",
+  "artistShowAll": "सर्व दाखवा",
+  "homeTopTracks": "शीर्ष ट्रॅक"
 }

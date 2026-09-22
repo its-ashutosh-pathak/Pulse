@@ -1180,4 +1180,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'محاولات فشل كثيرة. يرجى المحاولة لاحقاً.';
+
+  @override
+  String get homeForgottenFavorites => 'المفضلة المنسية';
+
+  @override
+  String get artistShowAll => 'عرض الكل';
+
+  @override
+  String get homeTopTracks => 'أفضل المقاطع';
 }

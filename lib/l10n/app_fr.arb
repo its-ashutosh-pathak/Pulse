@@ -638,4 +638,8 @@
   "apiErrorInvalidEmail": "Veuillez saisir une adresse e-mail valide.",
   "apiErrorWeakPassword": "Votre mot de passe est trop faible. Veuillez utiliser au moins 6 caractères.",
   "apiErrorTooManyAttempts": "Trop de tentatives infructueuses. Veuillez réessayer plus tard."
+,
+  "homeForgottenFavorites": "Favoris oubliés",
+  "artistShowAll": "Tout afficher",
+  "homeTopTracks": "Titres populaires"
 }

@@ -1200,4 +1200,13 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get apiErrorTooManyAttempts =>
       'बहुत सारे विफल प्रयास। कृपया बाद में पुनः प्रयास करें।';
+
+  @override
+  String get homeForgottenFavorites => 'भूले हुए पसंदीदा';
+
+  @override
+  String get artistShowAll => 'सभी दिखाएं';
+
+  @override
+  String get homeTopTracks => 'टॉप ट्रैक';
 }

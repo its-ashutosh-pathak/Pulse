@@ -1167,4 +1167,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get apiErrorTooManyAttempts => 'ログイン試行回数が多すぎます。';
+
+  @override
+  String get homeForgottenFavorites => '忘れられたお気に入り';
+
+  @override
+  String get artistShowAll => 'すべて表示';
+
+  @override
+  String get homeTopTracks => 'トップトラック';
 }

@@ -12,6 +12,7 @@ class StatsState {
   final List<Map<String, dynamic>> topSongs;
   final List<Map<String, dynamic>> recentSongs;
   final List<Map<String, dynamic>> topArtists;
+  final List<Map<String, dynamic>> forgottenFavorites;
   final bool loading;
 
   const StatsState({
@@ -21,6 +22,7 @@ class StatsState {
     this.topSongs = const [],
     this.recentSongs = const [],
     this.topArtists = const [],
+    this.forgottenFavorites = const [],
     this.loading = false,
   });
 
@@ -31,6 +33,7 @@ class StatsState {
     List<Map<String, dynamic>>? topSongs,
     List<Map<String, dynamic>>? recentSongs,
     List<Map<String, dynamic>>? topArtists,
+    List<Map<String, dynamic>>? forgottenFavorites,
     bool? loading,
   }) {
     return StatsState(
@@ -40,6 +43,7 @@ class StatsState {
       topSongs: topSongs ?? this.topSongs,
       recentSongs: recentSongs ?? this.recentSongs,
       topArtists: topArtists ?? this.topArtists,
+      forgottenFavorites: forgottenFavorites ?? this.forgottenFavorites,
       loading: loading ?? this.loading,
     );
   }
@@ -93,7 +97,7 @@ class StatsNotifier extends Notifier<StatsState> {
           .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
       'listeningStats (period)',
     );
-    final oneMonthAgoTimestamp = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 30)));
+    final oneMonthAgoTimestamp = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 15)));
     final songSnap = await _safeGet(
       _db.collection('users').doc(uid).collection('songStats')
           .where('lastPlayedAt', isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
@@ -106,6 +110,15 @@ class StatsNotifier extends Notifier<StatsState> {
       _db.collection('users').doc(uid).collection('songStats')
           .orderBy('lastPlayedAt', descending: true).limit(15).get(),
       'recentStats',
+    );
+    // Fetch a broad pool of all-time songs for forgotten favourites calculation.
+    // We need play counts across all songs the user has ever listened to.
+    final allSongsSnap = await _safeGet(
+      _db.collection('users').doc(uid).collection('songStats')
+          .orderBy('playCount', descending: true)
+          .limit(200)
+          .get(),
+      'allSongStats (forgotten)',
     );
     final artistSnap = await _safeGet(
       _db.collection('users').doc(uid).collection('artistStats')
@@ -204,6 +217,59 @@ class StatsNotifier extends Notifier<StatsState> {
       return data;
     }).toList() ?? [];
 
+    // ── Forgotten Favourites ───────────────────────────────────────────────
+    // A song is a "forgotten favourite" if:
+    //   1. It hasn't been played in the last 30 days
+    //   2. Its play count is above the user's personal average
+    // Fallback: if fewer than 15 qualify, relax the recency window to 15 days.
+    final List<Map<String, dynamic>> forgottenFavorites;
+    final allSongDocs = allSongsSnap?.docs ?? [];
+    if (allSongDocs.isNotEmpty) {
+      final allSongMaps = allSongDocs.map((d) {
+        final data = Map<String, dynamic>.from(d.data());
+        data['thumbnail'] ??= data['cover'] ?? '';
+        return data;
+      }).toList();
+
+      // Compute the user's average play count across all their songs
+      final totalPlayCount = allSongMaps.fold<num>(
+        0, (sum, s) => sum + ((s['playCount'] ?? 0) as num));
+      final avgPlayCount = totalPlayCount / allSongMaps.length;
+
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      final fifteenDaysAgo = DateTime.now().subtract(const Duration(days: 15));
+
+      // Helper: extract lastPlayedAt as DateTime from a song map
+      DateTime? lastPlayed(Map<String, dynamic> s) {
+        final raw = s['lastPlayedAt'];
+        if (raw is Timestamp) return raw.toDate();
+        return null;
+      }
+
+      // Primary: above average + not played in 30 days
+      var forgotten = allSongMaps.where((s) {
+        final lp = lastPlayed(s);
+        final count = (s['playCount'] ?? 0) as num;
+        return lp != null && lp.isBefore(thirtyDaysAgo) && count >= avgPlayCount;
+      }).toList();
+
+      // Fallback: relax to 15 days if we don't have enough
+      if (forgotten.length < 15) {
+        forgotten = allSongMaps.where((s) {
+          final lp = lastPlayed(s);
+          final count = (s['playCount'] ?? 0) as num;
+          return lp != null && lp.isBefore(fifteenDaysAgo) && count >= avgPlayCount;
+        }).toList();
+      }
+
+      // Sort by play count descending, take top 15
+      forgotten.sort((a, b) =>
+          ((b['playCount'] ?? 0) as num).compareTo((a['playCount'] ?? 0) as num));
+      forgottenFavorites = forgotten.take(15).toList();
+    } else {
+      forgottenFavorites = [];
+    }
+
     _lastLoaded = DateTime.now();
     _lastTimeframe = timeframe;
 
@@ -214,6 +280,7 @@ class StatsNotifier extends Notifier<StatsState> {
       topSongs: topSongs,
       recentSongs: recentSongsList,
       topArtists: topArtists,
+      forgottenFavorites: forgottenFavorites,
       loading: false,
     );
 

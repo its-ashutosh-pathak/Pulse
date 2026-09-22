@@ -571,4 +571,8 @@
   "apiErrorInvalidEmail": "Inserisci un indirizzo email valido.",
   "apiErrorWeakPassword": "La password è troppo debole. Usa almeno 6 caratteri.",
   "apiErrorTooManyAttempts": "Troppi tentativi falliti. Riprova più tardi."
+,
+  "homeForgottenFavorites": "Preferiti dimenticati",
+  "artistShowAll": "Mostra tutto",
+  "homeTopTracks": "Brani più ascoltati"
 }
