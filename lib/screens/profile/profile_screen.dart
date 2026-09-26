@@ -417,7 +417,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               : Container(color: AppColors.surface),
                                         ),
                                       ),
-                                      if (currentSong?.videoId == s['id'] || currentSong?.videoId == s['videoId'])
+                                      if (currentSong != null && (currentSong.videoId == s['id'] || currentSong.videoId == s['videoId']))
                                         Positioned.fill(
                                           child: Container(
                                             decoration: BoxDecoration(
