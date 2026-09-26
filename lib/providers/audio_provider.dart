@@ -478,6 +478,7 @@ class AudioNotifier extends Notifier<AudioState> {
         }
         await player.open(Media(offlineFilePath), play: shouldPlay);
         if (isStale()) return;
+        state = state.copyWith(isLoading: false);
         return;
       }
 
@@ -499,6 +500,7 @@ class AudioNotifier extends Notifier<AudioState> {
             }
             await player.open(Media(localPath), play: shouldPlay);
             if (isStale()) return;
+            state = state.copyWith(isLoading: false);
             return;
           }
         }
