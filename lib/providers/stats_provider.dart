@@ -92,39 +92,48 @@ class StatsNotifier extends Notifier<StatsState> {
       debugPrint('[Stats] user doc error: $e');
     }
 
-    final periodSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('listeningStats')
-          .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
-      'listeningStats (period)',
-    );
     final oneMonthAgoTimestamp = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 15)));
-    final songSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('songStats')
-          .where('lastPlayedAt', isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
-          .orderBy('lastPlayedAt', descending: true)
-          .limit(100)
-          .get(),
-      'songStats',
-    );
-    final recentSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('songStats')
-          .orderBy('lastPlayedAt', descending: true).limit(15).get(),
-      'recentStats',
-    );
-    // Fetch a broad pool of all-time songs for forgotten favourites calculation.
-    // We need play counts across all songs the user has ever listened to.
-    final allSongsSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('songStats')
-          .orderBy('playCount', descending: true)
-          .limit(200)
-          .get(),
-      'allSongStats (forgotten)',
-    );
-    final artistSnap = await _safeGet(
-      _db.collection('users').doc(uid).collection('artistStats')
-          .orderBy('totalSeconds', descending: true).limit(10).get(),
-      'artistStats',
-    );
+
+    // Fire all 5 independent Firestore reads in parallel for maximum speed.
+    final results = await Future.wait([
+      _safeGet(
+        _db.collection('users').doc(uid).collection('listeningStats')
+            .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
+        'listeningStats (period)',
+      ),
+      _safeGet(
+        _db.collection('users').doc(uid).collection('songStats')
+            .where('lastPlayedAt', isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
+            .orderBy('lastPlayedAt', descending: true)
+            .limit(100)
+            .get(),
+        'songStats',
+      ),
+      _safeGet(
+        _db.collection('users').doc(uid).collection('songStats')
+            .orderBy('lastPlayedAt', descending: true).limit(15).get(),
+        'recentStats',
+      ),
+      _safeGet(
+        _db.collection('users').doc(uid).collection('songStats')
+            .orderBy('playCount', descending: true)
+            .limit(200)
+            .get(),
+        'allSongStats (forgotten)',
+      ),
+      _safeGet(
+        _db.collection('users').doc(uid).collection('artistStats')
+            .orderBy('totalSeconds', descending: true).limit(10).get(),
+        'artistStats',
+      ),
+    ]);
+
+    final periodSnap   = results[0];
+    final songSnap     = results[1];
+    final recentSnap   = results[2];
+    final allSongsSnap = results[3];
+    final artistSnap   = results[4];
+
 
     debugPrint('[Stats] Results — period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
 
@@ -233,7 +242,7 @@ class StatsNotifier extends Notifier<StatsState> {
 
       // Compute the user's average play count across all their songs
       final totalPlayCount = allSongMaps.fold<num>(
-        0, (sum, s) => sum + ((s['playCount'] ?? 0) as num));
+        0, (acc, s) => acc + ((s['playCount'] ?? 0) as num));
       final avgPlayCount = totalPlayCount / allSongMaps.length;
 
       final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));

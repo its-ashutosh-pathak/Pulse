@@ -52,8 +52,7 @@ class HomeNotifier extends Notifier<HomeState> {
         error: false,
       );
     } catch (e) {
-      // ignore: avoid_print
-      print('[HomeProvider] Failed to load home feed: $e');
+      debugPrint('[HomeProvider] Failed to load home feed: $e');
       state = state.copyWith(loading: false, error: true);
     }
   }
