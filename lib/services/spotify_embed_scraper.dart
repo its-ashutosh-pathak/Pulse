@@ -18,7 +18,7 @@ class SpotifyEmbedScraper {
     }
 
     final match = RegExp(r'playlist/([a-zA-Z0-9]+)').firstMatch(url);
-    if (match == null) throw Exception('Invalid Spotify playlist URL: no playlist ID found');
+    if (match == null) throw Exception('Invalid Spotify playlist URL');
     final playlistId = match.group(1)!;
 
     final embedUrl = 'https://open.spotify.com/embed/playlist/$playlistId';

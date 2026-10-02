@@ -777,88 +777,80 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
                 // ── Scrollable Queue List ──
                 Expanded(
-                  child: CustomScrollView(
-                    controller: scrollController,
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Opacity(
-                          opacity: ((sheetExtent - 0.11) / 0.12).clamp(0.0, 1.0),
-                          child: queue.isEmpty
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 32),
-                                child: Center(
-                                  child: Text(AppLocalizations.of(context)!.playerNoTracksInQueue,
-                                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                                ),
-                              )
-                            : Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                ReorderableListView.builder(
-                                shrinkWrap: true,
-                                buildDefaultDragHandles: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? false : true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: const EdgeInsets.only(top: 16),
-                                itemCount: visibleQueue.length,
-                                onReorder: (oldIndex, newIndex) {
-                                  ref.read(audioProvider.notifier).reorderQueue(oldIndex, newIndex);
-                                },
-                                itemBuilder: (_, i) {
-                                  final s = visibleQueue[i];
-                                  return Dismissible(
-                                    key: ValueKey('${s.id}_$i'),
-                                    direction: DismissDirection.horizontal,
-                                    onDismissed: (_) {
-                                      ref.read(audioProvider.notifier).removeFromQueue(i);
-                                    },
-                                    background: ClipRect(
-                                      child: BackdropFilter(
-                                        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                                        child: Container(
-                                          color: Colors.red.withValues(alpha: 0.1),
-                                          alignment: Alignment.centerLeft,
-                                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                                          child: const Icon(LucideIcons.trash2, color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                    secondaryBackground: ClipRect(
-                                      child: BackdropFilter(
-                                        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                                        child: Container(
-                                          color: Colors.red.withValues(alpha: 0.1),
-                                          alignment: Alignment.centerRight,
-                                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                                          child: const Icon(LucideIcons.trash2, color: Colors.white),
-                                        ),
-                                      ),
-                                    ),
-                                    child: SongTile(
-                                      song: s,
-                                      onTap: () => ref.read(audioProvider.notifier).playFromQueue(i),
-                                      onLongPress: () => showModalBottomSheet(useRootNavigator: true, 
-                                        context: context,
-                                        backgroundColor: Colors.transparent,
-                                        isScrollControlled: true,
-                                        builder: (_) => SongActionSheet(song: s),
-                                      ),
-                                      trailing: ReorderableDragStartListener(
-                                        index: i,
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(8),
-                                          child: Icon(LucideIcons.equal,
-                                              size: 20, color: AppColors.textSecondary),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
+                  child: Opacity(
+                    opacity: ((sheetExtent - 0.11) / 0.12).clamp(0.0, 1.0),
+                    child: queue.isEmpty
+                      ? ListView(
+                          controller: scrollController,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 32),
+                              child: Center(
+                                child: Text(AppLocalizations.of(context)!.playerNoTracksInQueue,
+                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
                               ),
-                                const SizedBox(height: 32),
-                              ]),
+                            )
+                          ],
+                        )
+                      : ReorderableListView.builder(
+                          scrollController: scrollController,
+                          buildDefaultDragHandles: (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? false : true,
+                          padding: const EdgeInsets.only(top: 16, bottom: 32),
+                          itemCount: visibleQueue.length,
+                          onReorder: (oldIndex, newIndex) {
+                            ref.read(audioProvider.notifier).reorderQueue(oldIndex, newIndex);
+                          },
+                          itemBuilder: (_, i) {
+                            final s = visibleQueue[i];
+                            return Dismissible(
+                              key: ValueKey('${s.id}_$i'),
+                              direction: DismissDirection.horizontal,
+                              onDismissed: (_) {
+                                ref.read(audioProvider.notifier).removeFromQueue(i);
+                              },
+                              background: ClipRect(
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                                  child: Container(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    alignment: Alignment.centerLeft,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    child: const Icon(LucideIcons.trash2, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              secondaryBackground: ClipRect(
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                                  child: Container(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    child: const Icon(LucideIcons.trash2, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              child: SongTile(
+                                song: s,
+                                onTap: () => ref.read(audioProvider.notifier).playFromQueue(i),
+                                onLongPress: () => showModalBottomSheet(useRootNavigator: true, 
+                                  context: context,
+                                  backgroundColor: Colors.transparent,
+                                  isScrollControlled: true,
+                                  builder: (_) => SongActionSheet(song: s),
+                                ),
+                                trailing: ReorderableDragStartListener(
+                                  index: i,
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(8),
+                                    child: Icon(LucideIcons.equal,
+                                        size: 20, color: AppColors.textSecondary),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                    ],
                   ),
                 ),
               ],
