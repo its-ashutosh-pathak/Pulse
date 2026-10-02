@@ -1,14 +1,14 @@
 [Setup]
 ; Basic App Info
 AppName=Pulse
-AppVersion=3.2.0
+AppVersion=3.5.0
 AppPublisher=Ashutosh Pathak
 ; Output Settings
 DefaultDirName={autopf}\Pulse
 DisableProgramGroupPage=yes
 ; This is where the setup.exe will be saved
 OutputDir=build\installer
-OutputBaseFilename=Pulse_Installer_v3.2.0
+OutputBaseFilename=Pulse_Installer_v3.5.0
 SetupIconFile=windows\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\pulse.exe
 Compression=lzma
