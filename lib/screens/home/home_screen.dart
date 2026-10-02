@@ -758,10 +758,13 @@ class _SpeedDialSectionState extends State<_SpeedDialSection> {
     const int perPage = 6;
     final pageCount = (widget.songs.length / perPage).ceil();
 
-    return Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentWidth = constraints.maxWidth;
+        return Column(
       children: [
         SizedBox(
-          height: (MediaQuery.of(context).size.width - 40) / 3 * 2 + 12,
+          height: contentWidth / 3 * 2 + 12,
           child: PageView.builder(
             controller: _controller,
             itemCount: pageCount,
@@ -823,6 +826,8 @@ class _SpeedDialSectionState extends State<_SpeedDialSection> {
         ],
         const SizedBox(height: 8),
       ],
+        );
+      },
     );
   }
 }
@@ -1314,12 +1319,21 @@ class _FavoriteArtistSectionState extends State<_FavoriteArtistSection> {
   Widget build(BuildContext context) {
     if (widget.groups.isEmpty) return const SizedBox.shrink();
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Each card = 1/3 of available width (minus two 10px cross-axis gaps)
+        final cardW = (constraints.maxWidth - 20) / 3;
+        final gridH = 2 * cardW + 10; // 2 rows + 1 mainAxisSpacing
+        // Header (~60) + gap(16) + tabs (~36) + gap(16) = 128px overhead
+        const overhead = 128.0;
+        final pageH = gridH + overhead;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         children: [
           SizedBox(
-            height: 380, // Adjusted height for 2x3 grid
+            height: pageH,
             child: PageView.builder(
               controller: _pageController,
               itemCount: widget.groups.length,
@@ -1505,7 +1519,7 @@ class _FavoriteArtistSectionState extends State<_FavoriteArtistSection> {
                           )
                         else
                           SizedBox(
-                            height: 250, // Enough for 2 rows of squares
+                            height: gridH, // Dynamically sized from LayoutBuilder
                             child: GridView.builder(
                               padding: EdgeInsets.zero,
                               shrinkWrap: true,
@@ -1624,6 +1638,8 @@ class _FavoriteArtistSectionState extends State<_FavoriteArtistSection> {
         ],
       ),
     );
+      }, // end LayoutBuilder builder
+    ); // end LayoutBuilder
   }
 }
 
