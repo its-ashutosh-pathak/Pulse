@@ -460,10 +460,10 @@ Future<PulseAudioHandler> initAudioService() async {
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.pulse.music.channel',
       androidNotificationChannelName: 'Pulse Music',
-      androidNotificationOngoing: true,
       // Keep the foreground service (and notification) alive even when paused.
       // Without this, Android is free to kill the process the moment music
       // pauses during a phone call, losing the notification panel entirely.
+      // Note: androidNotificationOngoing cannot be true when this is false.
       androidStopForegroundOnPause: false,
       androidNotificationIcon: 'drawable/ic_logo',
     ),

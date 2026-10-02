@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show pi, cos, sin;
 import 'package:media_kit/media_kit.dart';
 
 /// Dual-player crossfade engine — replaces the Web Audio GainNode crossfade
@@ -109,7 +110,7 @@ class CrossfadeEngine {
       final startTime = DateTime.now().millisecondsSinceEpoch;
 
       _rampTimer?.cancel();
-      _rampTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      _rampTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
         if (!_isCrossfading) {
           timer.cancel();
           return;
@@ -118,9 +119,12 @@ class CrossfadeEngine {
         final elapsed = DateTime.now().millisecondsSinceEpoch - startTime;
         final progress = (elapsed / fadeMs).clamp(0.0, 1.0);
 
-        // Primary fades out, crossfade fades in (linear ramp, scaled 0-100)
-        _primaryPlayer.setVolume((1.0 - progress) * 100.0);
-        _crossfadePlayer.setVolume(progress * 100.0);
+        // Equal-power crossfade (cos/sin curve) — keeps perceived loudness
+        // constant throughout the fade, eliminating the audible dip that a
+        // linear ramp produces at the midpoint due to logarithmic hearing.
+        final angle = progress * pi / 2.0;
+        _primaryPlayer.setVolume(cos(angle) * 100.0);
+        _crossfadePlayer.setVolume(sin(angle) * 100.0);
 
         if (!_midpointFired && progress >= 0.5) {
           _midpointFired = true;
