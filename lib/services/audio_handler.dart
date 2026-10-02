@@ -102,6 +102,9 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
           case AudioInterruptionType.unknown:
             _playOnInterruptionEnd = _isPlaying;
             pause(fromInterruption: true);
+            // Keep the audio session active so Android doesn't kill the
+            // foreground service while we're paused during a phone call.
+            _session!.setActive(true);
             break;
           case AudioInterruptionType.duck:
             _activePlayer.setVolume(20.0);
@@ -458,7 +461,10 @@ Future<PulseAudioHandler> initAudioService() async {
       androidNotificationChannelId: 'com.pulse.music.channel',
       androidNotificationChannelName: 'Pulse Music',
       androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
+      // Keep the foreground service (and notification) alive even when paused.
+      // Without this, Android is free to kill the process the moment music
+      // pauses during a phone call, losing the notification panel entirely.
+      androidStopForegroundOnPause: false,
       androidNotificationIcon: 'drawable/ic_logo',
     ),
   );
