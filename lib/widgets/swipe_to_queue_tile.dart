@@ -50,7 +50,8 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
   double _dragOffset = 0.0;
   bool _triggered = false;
   late AnimationController _snapController;
-  double _snapStart = 0.0;
+  Animation<double>? _snapAnimation;
+  VoidCallback? _snapListener;
 
   @override
   void initState() {
@@ -59,20 +60,6 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
-    // Single persistent listener — no accumulation across swipes.
-    _snapController.addListener(() {
-      final curved = Curves.elasticOut.transform(_snapController.value);
-      setState(() => _dragOffset = _snapStart * (1.0 - curved));
-    });
-    // Guarantee tile returns to exactly 0 with a setState at completion.
-    _snapController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        setState(() {
-          _dragOffset = 0.0;
-          _triggered = false;
-        });
-      }
-    });
   }
 
   @override
@@ -100,8 +87,22 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
 
   void _onHorizontalDragEnd(DragEndDetails _) {
     if (_dragOffset == 0.0) return;
-    _snapStart = _dragOffset;
-    _snapController.forward(from: 0.0);
+    // Remove previous listener before creating a new animation,
+    // preventing listener accumulation across multiple swipes.
+    if (_snapListener != null && _snapAnimation != null) {
+      _snapAnimation!.removeListener(_snapListener!);
+    }
+    final startOffset = _dragOffset;
+    _snapAnimation = Tween<double>(begin: startOffset, end: 0.0).animate(
+      CurvedAnimation(parent: _snapController, curve: Curves.elasticOut),
+    );
+    _snapListener = () {
+      if (mounted) setState(() => _dragOffset = _snapAnimation!.value);
+    };
+    _snapAnimation!.addListener(_snapListener!);
+    _snapController.forward(from: 0.0).then((_) {
+      if (mounted) setState(() => _triggered = false);
+    });
   }
 
   void _showQueueSnackbar() {
