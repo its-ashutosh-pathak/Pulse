@@ -135,7 +135,8 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
           // blurred solid container with the icon centered.
           if (_dragOffset.abs() > 4)
             Positioned.fill(
-              child: ClipRect(
+              child: ClipPath(
+                clipper: _SwipeClipper(_dragOffset),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
                   child: Container(
@@ -174,4 +175,23 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
       ),
     );
   }
+}
+
+class _SwipeClipper extends CustomClipper<Path> {
+  final double offset;
+  _SwipeClipper(this.offset);
+
+  @override
+  Path getClip(Size size) {
+    if (offset > 0) {
+      return Path()..addRect(Rect.fromLTWH(0, 0, offset, size.height));
+    } else {
+      return Path()
+        ..addRect(
+            Rect.fromLTWH(size.width + offset, 0, -offset, size.height));
+    }
+  }
+
+  @override
+  bool shouldReclip(_SwipeClipper oldClipper) => offset != oldClipper.offset;
 }

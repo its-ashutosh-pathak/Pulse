@@ -568,7 +568,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         // History list
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 0),
+            padding: const EdgeInsets.only(bottom: 160),
             itemCount: search.history.length,
             itemBuilder: (context, i) {
               final song = search.history[i];
