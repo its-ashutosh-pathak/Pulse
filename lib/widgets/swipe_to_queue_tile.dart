@@ -64,6 +64,15 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
       final curved = Curves.elasticOut.transform(_snapController.value);
       setState(() => _dragOffset = _snapStart * (1.0 - curved));
     });
+    // Guarantee tile returns to exactly 0 with a setState at completion.
+    _snapController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _dragOffset = 0.0;
+          _triggered = false;
+        });
+      }
+    });
   }
 
   @override
@@ -90,11 +99,9 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
   }
 
   void _onHorizontalDragEnd(DragEndDetails _) {
-    _snapStart = _dragOffset; // capture where snap starts from
-    _snapController.forward(from: 0.0).then((_) {
-      _dragOffset = 0.0;
-      _triggered = false;
-    });
+    if (_dragOffset == 0.0) return;
+    _snapStart = _dragOffset;
+    _snapController.forward(from: 0.0);
   }
 
   void _showQueueSnackbar() {
