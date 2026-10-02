@@ -64,7 +64,6 @@ class SearchNotifier extends Notifier<SearchState> {
   final Map<String, Map<String, List<Song>>> _resultCache = {};
 
   static const _historyKey = 'pulse_search_history';
-  static const _maxHistory = 10;
 
   @override
   SearchState build() {
@@ -198,7 +197,7 @@ class SearchNotifier extends Notifier<SearchState> {
     final filtered = state.history
         .where((s) => (s.videoId.isNotEmpty ? s.videoId : s.id) != vid)
         .toList();
-    final newHistory = [song, ...filtered].take(_maxHistory).toList();
+    final newHistory = [song, ...filtered];
     state = state.copyWith(history: newHistory);
     _saveHistory();
   }

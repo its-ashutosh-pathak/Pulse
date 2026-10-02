@@ -13,6 +13,7 @@ import '../../providers/audio_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/song_tile.dart';
+import '../../widgets/swipe_to_queue_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import '../../widgets/glass_container.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
@@ -573,7 +574,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               final song = search.history[i];
               final isPlaying = audio.currentSong?.videoId == song.videoId;
 
-              return SongTile(
+              return SwipeToQueueTile(
                 song: song,
                 isPlaying: isPlaying,
                 onTap: () => _handlePlay(song),
@@ -675,7 +676,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (songs.isNotEmpty) ...[
           _sectionLabel(AppLocalizations.of(context)!.searchSongsLabel),
           ...songs.map(
-            (song) => SongTile(
+            (song) => SwipeToQueueTile(
               song: song,
               isPlaying: audio.currentSong?.videoId == song.videoId,
               onTap: () => _handlePlay(song),

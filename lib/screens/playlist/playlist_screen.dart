@@ -17,6 +17,7 @@ import '../../providers/download_provider.dart';
 import '../../providers/desktop_layout_provider.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/song_tile.dart';
+import '../../widgets/swipe_to_queue_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
@@ -427,7 +428,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                               final songWithThumb = song.thumbnail.isEmpty && coverThumb.isNotEmpty
                                   ? song.copyWith(thumbnail: coverThumb)
                                   : song;
-                              return SongTile(
+                              return SwipeToQueueTile(
                                 song: songWithThumb,
                                 isPlaying: isActive,
                                 index: i,

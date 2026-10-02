@@ -803,7 +803,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           itemBuilder: (_, i) {
                             final s = visibleQueue[i];
                             return Dismissible(
-                              key: ValueKey('${s.id}_$i'),
+                              key: ValueKey(s.id),
                               direction: DismissDirection.horizontal,
                               onDismissed: (_) {
                                 ref.read(audioProvider.notifier).removeFromQueue(i);
