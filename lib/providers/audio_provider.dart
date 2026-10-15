@@ -384,6 +384,8 @@ class AudioNotifier extends Notifier<AudioState> {
       _crossfadeEngine.cancelCrossfade();
     }
     _isCrossfadePending = false;
+    _pendingCrossfadeSong = null;
+    _pendingLoopQueue = null;
 
     // Reset state for new song
     _statsThresholdReached = false;
@@ -668,6 +670,19 @@ class AudioNotifier extends Notifier<AudioState> {
       id: song.videoId.isNotEmpty ? song.videoId : song.id,
       videoId: song.videoId.isNotEmpty ? song.videoId : song.id,
     );
+
+    // If a new song is inserted at the front of the queue, any preloaded or
+    // active crossfade was targeting the old next song — cancel immediately.
+    final prevFirst = state.queue.isNotEmpty ? state.queue.first.videoId : null;
+    if (prevFirst != normalized.videoId) {
+      _crossfadeEngine.cancelCrossfade();
+      _preloadedNextSongId = null;
+      _hasEagerPreloaded = false;
+      _pendingCrossfadeSong = null;
+      _pendingLoopQueue = null;
+      _isCrossfadePending = false;
+    }
+
     state = state.copyWith(
       queue: [normalized, ...state.queue],
       baseQueue: [normalized, ...state.baseQueue],
@@ -693,6 +708,14 @@ class AudioNotifier extends Notifier<AudioState> {
   /// Replace the entire queue.
   /// Mirrors replaceQueue in AudioContext.jsx (lines 878-885).
   void replaceQueue(List<Song> newQueue) {
+    // Replacing the queue completely invalidates any pending or active crossfade.
+    _crossfadeEngine.cancelCrossfade();
+    _preloadedNextSongId = null;
+    _hasEagerPreloaded = false;
+    _pendingCrossfadeSong = null;
+    _pendingLoopQueue = null;
+    _isCrossfadePending = false;
+
     state = state.copyWith(baseQueue: newQueue);
     if (state.isShuffled) {
       final shuffled = [...newQueue]..shuffle();
@@ -718,12 +741,16 @@ class AudioNotifier extends Notifier<AudioState> {
 
     state = state.copyWith(queue: updatedQueue);
 
-    // If the first item changed, the preloaded audio is now for the wrong song
+    // If the first item changed, any preloaded/in-progress crossfade is for the wrong song
     final newFirst = updatedQueue.isNotEmpty ? updatedQueue.first.videoId : null;
-    if (prevFirst != newFirst && _preloadedNextSongId != null) {
+    if (prevFirst != newFirst) {
       _crossfadeEngine.cancelCrossfade();
       _preloadedNextSongId = null;
       _hasEagerPreloaded = false;
+      // Invalidate pending crossfade so midpoint/swap callbacks are no-ops
+      _pendingCrossfadeSong = null;
+      _pendingLoopQueue = null;
+      _isCrossfadePending = false;
     }
   }
 
@@ -731,11 +758,22 @@ class AudioNotifier extends Notifier<AudioState> {
   void removeFromQueue(int index) {
     if (index < 0 || index >= state.queue.length) return;
 
-    // If removing the first item, the preloaded audio is now for the wrong song
-    if (index == 0 && _preloadedNextSongId != null) {
-      _crossfadeEngine.cancelCrossfade();
-      _preloadedNextSongId = null;
-      _hasEagerPreloaded = false;
+    // If removing the first item, any preload or active crossfade is now for the wrong song.
+    // Cancel everything so Song B doesn't sneak through after being removed.
+    if (index == 0) {
+      final removedId = state.queue[index].videoId;
+      // Cancel if preloaded OR actively crossfading into this song
+      if (_preloadedNextSongId == removedId ||
+          _pendingCrossfadeSong?.videoId == removedId ||
+          _crossfadeEngine.isCrossfading) {
+        _crossfadeEngine.cancelCrossfade();
+        _preloadedNextSongId = null;
+        _hasEagerPreloaded = false;
+        // Null out pending crossfade so midpoint/swap callbacks become no-ops
+        _pendingCrossfadeSong = null;
+        _pendingLoopQueue = null;
+        _isCrossfadePending = false;
+      }
     }
 
     final updatedQueue = List<Song>.from(state.queue);
@@ -747,6 +785,7 @@ class AudioNotifier extends Notifier<AudioState> {
   // Port of toggleShuffle (line 887) and toggleRepeat (line 903).
 
   void toggleShuffle() {
+    final prevFirst = state.queue.isNotEmpty ? state.queue.first.videoId : null;
     final newShuffled = !state.isShuffled;
     List<Song> newQueue;
 
@@ -765,6 +804,17 @@ class AudioNotifier extends Notifier<AudioState> {
           .toList();
     }
 
+    // If first item in the queue changed due to shuffle, cancel active/preloaded crossfade
+    final newFirst = newQueue.isNotEmpty ? newQueue.first.videoId : null;
+    if (prevFirst != newFirst) {
+      _crossfadeEngine.cancelCrossfade();
+      _preloadedNextSongId = null;
+      _hasEagerPreloaded = false;
+      _pendingCrossfadeSong = null;
+      _pendingLoopQueue = null;
+      _isCrossfadePending = false;
+    }
+
     state = state.copyWith(isShuffled: newShuffled, queue: newQueue);
 
     // Report to OS
@@ -781,6 +831,14 @@ class AudioNotifier extends Notifier<AudioState> {
       RepeatMode.all => RepeatMode.one,
       RepeatMode.one => RepeatMode.off,
     };
+
+    // Changing repeat mode changes which song plays next — cancel pending crossfade
+    _crossfadeEngine.cancelCrossfade();
+    _preloadedNextSongId = null;
+    _hasEagerPreloaded = false;
+    _pendingCrossfadeSong = null;
+    _pendingLoopQueue = null;
+    _isCrossfadePending = false;
 
     var newQueue = state.queue;
     var newBaseQueue = state.baseQueue;
@@ -903,30 +961,30 @@ class AudioNotifier extends Notifier<AudioState> {
   Future<void> _triggerCrossfade(int fadeSeconds) async {
     final myGen = _loadGeneration;
 
-    // Determine the next song to crossfade into
+    // Snapshot the target song at trigger time
     Song? nextSong;
-    List<Song> remainingQueue = state.queue;
-
+    List<Song>? loopQueue;
     if (state.repeatMode == RepeatMode.one) {
       nextSong = state.currentSong;
-      remainingQueue = state.queue;
     } else if (state.queue.isNotEmpty) {
       nextSong = state.queue.first;
-      remainingQueue = state.queue.sublist(1);
     } else if (state.repeatMode == RepeatMode.all &&
         state.baseQueue.isNotEmpty) {
-      // Rebuild queue for repeat-all (mirrors lines 535-543)
-      var rebuilt = state.isShuffled
-          ? ([...state.baseQueue]..shuffle())
-          : [...state.baseQueue];
-      nextSong = rebuilt.first;
-      remainingQueue = rebuilt.sublist(1);
+      final playlistBase = state.baseQueue.where((s) => s.playlistId != '__suggested__').toList();
+      if (playlistBase.isNotEmpty) {
+        var rebuilt = state.isShuffled
+            ? ([...playlistBase]..shuffle())
+            : [...playlistBase];
+        nextSong = rebuilt.first;
+        loopQueue = rebuilt.sublist(1);
+      }
     }
 
     if (nextSong == null || nextSong.videoId.isEmpty) return;
 
     // Set pending flag immediately so _onTrackEnded backs off during async work
     _isCrossfadePending = true;
+    _pendingLoopQueue = loopQueue;
 
     String? localPath;
     String? streamUrl;
@@ -949,6 +1007,7 @@ class AudioNotifier extends Notifier<AudioState> {
         StreamExtractor.invalidateCache(nextSong.videoId);
         if (_loadGeneration == myGen) {
           _isCrossfadePending = false;
+          _pendingLoopQueue = null;
           playNext();
         }
         return;
@@ -959,6 +1018,34 @@ class AudioNotifier extends Notifier<AudioState> {
 
     if (_loadGeneration != myGen) {
       _isCrossfadePending = false;
+      _pendingLoopQueue = null;
+      return;
+    }
+
+    // If removeFromQueue or reorderQueue cancelled us during the async gap,
+    // _isCrossfadePending will have been cleared — abort immediately.
+    if (!_isCrossfadePending) {
+      debugPrint('[AudioProvider] Crossfade was cancelled during extraction — aborting.');
+      _pendingLoopQueue = null;
+      return;
+    }
+
+    // ── Post-async guard: re-verify the target is still the next song ──
+    // The queue may have changed (e.g. replaceQueue or swipe removal) while we were awaiting.
+    // For repeat-all with an empty queue, the target was derived from baseQueue
+    // (which can't be mutated via queue UI), so trust original only if queue is STILL empty.
+    Song? liveNext;
+    if (state.repeatMode == RepeatMode.one) {
+      liveNext = state.currentSong;
+    } else if (state.queue.isNotEmpty) {
+      liveNext = state.queue.first;
+    } else if (state.repeatMode == RepeatMode.all && state.baseQueue.isNotEmpty && state.queue.isEmpty) {
+      liveNext = nextSong; // baseQueue loop — trust original target only if queue is still empty
+    }
+    if (liveNext == null || liveNext.videoId != nextSong.videoId) {
+      debugPrint('[AudioProvider] Crossfade target changed during extraction — aborting crossfade.');
+      _isCrossfadePending = false;
+      _pendingLoopQueue = null;
       return;
     }
 
@@ -973,13 +1060,14 @@ class AudioNotifier extends Notifier<AudioState> {
 
       if (success) {
         _pendingCrossfadeSong = nextSong;
-        _pendingCrossfadeQueue = remainingQueue;
         // Metadata update is deferred to onMidpointReached (50% of fade)
       } else {
+        _pendingLoopQueue = null;
         if (_loadGeneration == myGen) playNext();
       }
     } catch (e) {
       debugPrint('[AudioProvider] startCrossfade threw: $e');
+      _pendingLoopQueue = null;
       if (_loadGeneration == myGen) playNext();
     } finally {
       if (_loadGeneration == myGen) {
@@ -989,7 +1077,7 @@ class AudioNotifier extends Notifier<AudioState> {
   }
 
   Song? _pendingCrossfadeSong;
-  List<Song>? _pendingCrossfadeQueue;
+  List<Song>? _pendingLoopQueue;
   
   /// Set to true as soon as _triggerCrossfade begins extracting/loading,
   /// to prevent _onTrackEnded from firing playNext() during the async gap.
@@ -999,8 +1087,31 @@ class AudioNotifier extends Notifier<AudioState> {
   /// Both songs are equally audible here — the ideal moment to switch everything to Song B.
   void _onCrossfadeMidpoint() {
     final nextSong = _pendingCrossfadeSong;
-    final remainingQueue = _pendingCrossfadeQueue;
     if (nextSong == null) return;
+
+    // Guard: if the user removed the crossfade target from the queue since
+    // the crossfade started, abort — cancel the fade and stay on current song.
+    // (removeFromQueue already called cancelCrossfade, so audio is sorted;
+    //  we just need to make sure we don't flip metadata.)
+    final liveQueueFirstId = state.queue.isNotEmpty ? state.queue.first.videoId : null;
+    final isRepeatOne = state.repeatMode == RepeatMode.one;
+    final isRepeatAllLoop = state.repeatMode == RepeatMode.all && _pendingLoopQueue != null && state.queue.isEmpty;
+
+    if (!isRepeatOne && !isRepeatAllLoop && liveQueueFirstId != nextSong.videoId) {
+      debugPrint('[AudioProvider] Crossfade midpoint: target song no longer at queue[0] — discarding metadata flip.');
+      _pendingCrossfadeSong = null;
+      _pendingLoopQueue = null;
+      return;
+    }
+
+    // Derive the remaining queue from LIVE state (not the stale snapshot) so
+    // that any removals/reorders since crossfade started are reflected correctly.
+    final remainingQueue = isRepeatOne
+        ? state.queue
+        : isRepeatAllLoop
+            ? (_pendingLoopQueue ?? <Song>[])
+            : (state.queue.isNotEmpty ? state.queue.sublist(1) : <Song>[]);
+    _pendingLoopQueue = null;
 
     // Song B player reference (still crossfadePlayer until swap completes at t=end)
     final songBPlayer = _crossfadeEngine.crossfadePlayer;
@@ -1021,7 +1132,7 @@ class AudioNotifier extends Notifier<AudioState> {
       currentSong: nextSong,
       clearContextPlaylistId: nextSong.playlistId == '__suggested__',
       isPlaying: true,
-      queue: remainingQueue ?? state.queue,
+      queue: remainingQueue,
       duration: songBPlayer.state.duration,
       progress: songBPlayer.state.position,
     );
@@ -1036,13 +1147,19 @@ class AudioNotifier extends Notifier<AudioState> {
   /// players are swapped. All metadata and listeners were already moved to
   /// Song B at the midpoint, so this just does final cleanup.
   void _onCrossfadeSwapComplete(Player newPrimary) {
+    // If the midpoint was aborted (e.g. song removed mid-fade), _pendingCrossfadeSong
+    // is null — don't re-attach listeners to avoid polluting a cancelled transition.
+    if (_pendingCrossfadeSong == null) {
+      return;
+    }
+
     // Re-attach to the now-official primary player (same object as crossfadePlayer
     // at midpoint, but engine has swapped references — safe to re-attach).
     _attachPlayerListeners(newPrimary);
     _handler.setPrimaryPlayer(newPrimary);
 
     _pendingCrossfadeSong = null;
-    _pendingCrossfadeQueue = null;
+    _pendingLoopQueue = null;
   }
 
   // ── Watch-next queue fetching ──────────────────────────────────────────────

@@ -648,7 +648,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             borderRadius: 20,
             blur: 20,
             child: _lyricsState == 'loading'
-                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                ? Center(child: CircularProgressIndicator(color: accent))
                 : _lyricsState == 'error' || _parsedLines == null || _parsedLines!.isEmpty
                     ? Center(child: Text(AppLocalizations.of(context)!.playerNoLyrics, style: const TextStyle(color: Colors.white70)))
                     : SingleChildScrollView(
