@@ -98,19 +98,22 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
     _session!.interruptionEventStream.listen((event) {
       if (event.begin) {
         switch (event.type) {
-          case AudioInterruptionType.pause:
-          case AudioInterruptionType.unknown:
-            _playOnInterruptionEnd = _isPlaying;
-            pause(fromInterruption: true);
-            // Keep the audio session active so Android doesn't kill the
-            // foreground service while we're paused during a phone call.
-            _session!.setActive(true);
-            break;
           case AudioInterruptionType.duck:
             _activePlayer.setVolume(20.0);
             if (_crossfadePlayer != null) {
               _crossfadePlayer!.setVolume(20.0);
             }
+            break;
+          case AudioInterruptionType.pause:
+            // Transient interruption (e.g. Phone call, Instagram reel)
+            _playOnInterruptionEnd = _isPlaying;
+            pause(fromInterruption: true);
+            break;
+          case AudioInterruptionType.unknown:
+            // Permanent focus loss (e.g. YouTube, Spotify)
+            // Surrender focus cleanly: do NOT re-claim focus, do NOT auto-resume.
+            _playOnInterruptionEnd = false;
+            pause(fromInterruption: false);
             break;
         }
       } else {
@@ -122,12 +125,22 @@ class PulseAudioHandler extends BaseAudioHandler with SeekHandler {
             }
             break;
           case AudioInterruptionType.pause:
-            if (_playOnInterruptionEnd) play();
+            // Transient interruption ended (e.g. finished phone call, scrolled past Reel)
+            if (_playOnInterruptionEnd) {
+              _playOnInterruptionEnd = false;
+              play();
+            }
             break;
           case AudioInterruptionType.unknown:
+            _playOnInterruptionEnd = false;
             break;
         }
       }
+    });
+
+    _session!.becomingNoisyEventStream.listen((_) {
+      _playOnInterruptionEnd = false;
+      pause();
     });
   }
 

@@ -121,8 +121,6 @@ class _SwipeToQueueTileState extends ConsumerState<SwipeToQueueTile>
   Widget build(BuildContext context) {
     final maxDrag = MediaQuery.of(context).size.width * _triggerFraction;
     final progress = (_dragOffset.abs() / maxDrag).clamp(0.0, 1.0);
-    final accent = Theme.of(context).colorScheme.primary;
-    final isLeft = _dragOffset < 0;
 
     return GestureDetector(
       onHorizontalDragUpdate: _onHorizontalDragUpdate,

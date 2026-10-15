@@ -12,7 +12,6 @@ import '../../data/models/song.dart';
 import '../../providers/audio_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../widgets/skeleton_loader.dart';
-import '../../widgets/song_tile.dart';
 import '../../widgets/swipe_to_queue_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import '../../widgets/glass_container.dart';

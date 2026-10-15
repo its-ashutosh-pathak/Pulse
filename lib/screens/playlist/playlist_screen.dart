@@ -16,7 +16,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/download_provider.dart';
 import '../../providers/desktop_layout_provider.dart';
 import '../../widgets/glass_container.dart';
-import '../../widgets/song_tile.dart';
 import '../../widgets/swipe_to_queue_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import 'package:share_plus/share_plus.dart';
