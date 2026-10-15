@@ -10,6 +10,7 @@ class StatsState {
   final int dailyAvgMinutes;
   final int lifetimeMs;
   final List<Map<String, dynamic>> topSongs;
+  final List<Map<String, dynamic>> speedDialSongs;
   final List<Map<String, dynamic>> recentSongs;
   final List<Map<String, dynamic>> topArtists;
   final List<Map<String, dynamic>> forgottenFavorites;
@@ -20,6 +21,7 @@ class StatsState {
     this.dailyAvgMinutes = 0,
     this.lifetimeMs = 0,
     this.topSongs = const [],
+    this.speedDialSongs = const [],
     this.recentSongs = const [],
     this.topArtists = const [],
     this.forgottenFavorites = const [],
@@ -31,6 +33,7 @@ class StatsState {
     int? dailyAvgMinutes,
     int? lifetimeMs,
     List<Map<String, dynamic>>? topSongs,
+    List<Map<String, dynamic>>? speedDialSongs,
     List<Map<String, dynamic>>? recentSongs,
     List<Map<String, dynamic>>? topArtists,
     List<Map<String, dynamic>>? forgottenFavorites,
@@ -41,6 +44,7 @@ class StatsState {
       dailyAvgMinutes: dailyAvgMinutes ?? this.dailyAvgMinutes,
       lifetimeMs: lifetimeMs ?? this.lifetimeMs,
       topSongs: topSongs ?? this.topSongs,
+      speedDialSongs: speedDialSongs ?? this.speedDialSongs,
       recentSongs: recentSongs ?? this.recentSongs,
       topArtists: topArtists ?? this.topArtists,
       forgottenFavorites: forgottenFavorites ?? this.forgottenFavorites,
@@ -92,23 +96,71 @@ class StatsNotifier extends Notifier<StatsState> {
       debugPrint('[Stats] user doc error: $e');
     }
 
-    final oneMonthAgoTimestamp = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 15)));
+    final isLifetime = timeframe == 'day';
+    final cutoffTimestamp = Timestamp.fromDate(DateTime.now().subtract(Duration(days: days)));
 
-    // Fire all 5 independent Firestore reads in parallel for maximum speed.
+    // Top Songs query:
+    // If 'day': show lifetime most played songs (ordered by playCount descending)
+    // If 'week'/'month'/'year': show songs played within that timeframe (ordered by lastPlayedAt)
+    final Future<QuerySnapshot<Map<String, dynamic>>?> songStatsFuture = isLifetime
+        ? _safeGet(
+            _db.collection('users').doc(uid).collection('songStats')
+                .orderBy('playCount', descending: true)
+                .limit(50)
+                .get(),
+            'songStats (lifetime)',
+          )
+        : _safeGet(
+            _db.collection('users').doc(uid).collection('songStats')
+                .where('lastPlayedAt', isGreaterThanOrEqualTo: cutoffTimestamp)
+                .orderBy('lastPlayedAt', descending: true)
+                .limit(100)
+                .get(),
+            'songStats ($timeframe)',
+          );
+
+    // Top Artists query:
+    // If 'day': show lifetime most listened artists (ordered by totalSeconds descending)
+    // If 'week'/'month'/'year': show artists listened to within that timeframe
+    final Future<QuerySnapshot<Map<String, dynamic>>?> artistStatsFuture = isLifetime
+        ? _safeGet(
+            _db.collection('users').doc(uid).collection('artistStats')
+                .orderBy('totalSeconds', descending: true)
+                .limit(10)
+                .get(),
+            'artistStats (lifetime)',
+          )
+        : _safeGet(
+            _db.collection('users').doc(uid).collection('artistStats')
+                .where('lastPlayedAt', isGreaterThanOrEqualTo: cutoffTimestamp)
+                .orderBy('lastPlayedAt', descending: true)
+                .limit(50)
+                .get(),
+            'artistStats ($timeframe)',
+          );
+
+    // Speed Dial query: ALWAYS top songs of last 15 days, completely decoupled from profile timeframe
+    final fifteenDaysAgo = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 15)));
+    final Future<QuerySnapshot<Map<String, dynamic>>?> speedDialFuture =
+        state.speedDialSongs.isNotEmpty && !force
+            ? Future.value(null)
+            : _safeGet(
+                _db.collection('users').doc(uid).collection('songStats')
+                    .where('lastPlayedAt', isGreaterThanOrEqualTo: fifteenDaysAgo)
+                    .orderBy('lastPlayedAt', descending: true)
+                    .limit(100)
+                    .get(),
+                'speedDialStats (15 days)',
+              );
+
+    // Fire all 6 independent Firestore reads in parallel for maximum speed.
     final results = await Future.wait([
       _safeGet(
         _db.collection('users').doc(uid).collection('listeningStats')
             .where('date', isGreaterThanOrEqualTo: cutoffString).get(),
         'listeningStats (period)',
       ),
-      _safeGet(
-        _db.collection('users').doc(uid).collection('songStats')
-            .where('lastPlayedAt', isGreaterThanOrEqualTo: oneMonthAgoTimestamp)
-            .orderBy('lastPlayedAt', descending: true)
-            .limit(100)
-            .get(),
-        'songStats',
-      ),
+      songStatsFuture,
       _safeGet(
         _db.collection('users').doc(uid).collection('songStats')
             .orderBy('lastPlayedAt', descending: true).limit(15).get(),
@@ -121,18 +173,16 @@ class StatsNotifier extends Notifier<StatsState> {
             .get(),
         'allSongStats (forgotten)',
       ),
-      _safeGet(
-        _db.collection('users').doc(uid).collection('artistStats')
-            .orderBy('totalSeconds', descending: true).limit(10).get(),
-        'artistStats',
-      ),
+      artistStatsFuture,
+      speedDialFuture,
     ]);
 
-    final periodSnap   = results[0];
-    final songSnap     = results[1];
-    final recentSnap   = results[2];
-    final allSongsSnap = results[3];
-    final artistSnap   = results[4];
+    final periodSnap    = results[0];
+    final songSnap      = results[1];
+    final recentSnap    = results[2];
+    final allSongsSnap  = results[3];
+    final artistSnap    = results[4];
+    final speedDialSnap = results[5];
 
 
     debugPrint('[Stats] Results — period:${periodSnap?.docs.length ?? 'null'}, songs:${songSnap?.docs.length ?? 'null'}, artists:${artistSnap?.docs.length ?? 'null'}');
@@ -212,6 +262,20 @@ class StatsNotifier extends Notifier<StatsState> {
     topSongsUnsorted.sort((a, b) => ((b['playCount'] ?? 0) as num).compareTo((a['playCount'] ?? 0) as num));
     final topSongs = topSongsUnsorted.take(18).toList();
 
+    // Map Speed Dial songs (ALWAYS top songs of last 15 days)
+    final List<Map<String, dynamic>> speedDialSongs;
+    if (speedDialSnap != null) {
+      final list = speedDialSnap.docs.map((d) {
+        final data = Map<String, dynamic>.from(d.data());
+        data['thumbnail'] ??= data['cover'] ?? '';
+        return data;
+      }).toList();
+      list.sort((a, b) => ((b['playCount'] ?? 0) as num).compareTo((a['playCount'] ?? 0) as num));
+      speedDialSongs = list.take(18).toList();
+    } else {
+      speedDialSongs = state.speedDialSongs;
+    }
+
     // Map recent songs
     final recentSongsList = recentSnap?.docs.map((d) {
       final data = Map<String, dynamic>.from(d.data());
@@ -220,11 +284,15 @@ class StatsNotifier extends Notifier<StatsState> {
     }).toList() ?? [];
 
     // Map top artists — ensure 'thumbnail' key exists for UI compatibility
-    final topArtists = artistSnap?.docs.map((d) {
+    final topArtistsUnsorted = artistSnap?.docs.map((d) {
       final data = Map<String, dynamic>.from(d.data());
       data['thumbnail'] ??= data['cover'] ?? '';
       return data;
     }).toList() ?? [];
+
+    topArtistsUnsorted.sort((a, b) =>
+        ((b['totalSeconds'] ?? 0) as num).compareTo((a['totalSeconds'] ?? 0) as num));
+    final topArtists = topArtistsUnsorted.take(10).toList();
 
     // ── Forgotten Favourites ───────────────────────────────────────────────
     // A song is a "forgotten favourite" if:
@@ -287,6 +355,7 @@ class StatsNotifier extends Notifier<StatsState> {
       dailyAvgMinutes: dailyAvgMinutes,
       lifetimeMs: lifetimeSeconds * 1000,
       topSongs: topSongs,
+      speedDialSongs: speedDialSongs,
       recentSongs: recentSongsList,
       topArtists: topArtists,
       forgottenFavorites: forgottenFavorites,

@@ -91,7 +91,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             .first;
 
     final stats = ref.watch(statsProvider);
-    final speedDialSongs = stats.topSongs.map((s) => Song.fromJson(s)).toList();
+    final speedDialSongs = (stats.speedDialSongs.isNotEmpty ? stats.speedDialSongs : stats.topSongs)
+        .map((s) => Song.fromJson(s))
+        .toList();
     final recentlyPlayedSongs = stats.recentSongs
         .map((s) => Song.fromJson(s))
         .toList();
