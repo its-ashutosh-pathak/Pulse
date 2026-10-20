@@ -20,6 +20,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
 import 'l10n/fallback_localizations.dart';
+import 'services/shorebird_update_service.dart';
 
 /// Global key for showing snackbars from anywhere (e.g. Providers)
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -108,6 +109,11 @@ class _PulseAppState extends ConsumerState<PulseApp> with WidgetsBindingObserver
         // Request notification permission for Android 13+ lock screen / media controls
         // Safely done here so it doesn't block background headless launches
         Permission.notification.request();
+
+        // Check for Shorebird code push updates in background
+        ShorebirdUpdateService.instance.checkForUpdates(
+          messengerKey: scaffoldMessengerKey,
+        );
       }
     });
   }

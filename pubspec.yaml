@@ -72,6 +72,7 @@ dependencies:
   uuid: ^4.6.0
   sqflite_common_ffi: ^2.4.0+3
   desktop_webview_auth: ^0.0.16
+  shorebird_code_push: ^2.0.7
                                  # v2.5.3 is the last version with built-in Dart JSEngine
 
 dev_dependencies:
@@ -102,6 +103,7 @@ flutter:
     - assets/spotify.logo.png
     - assets/ytmusic.logo.png
     - assets/avatars/
+    - shorebird.yaml
 
 flutter_native_splash:
   color: "#000000"
