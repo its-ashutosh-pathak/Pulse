@@ -99,6 +99,13 @@ class StatsNotifier extends Notifier<StatsState> {
     final isLifetime = timeframe == 'day';
     final cutoffTimestamp = Timestamp.fromDate(DateTime.now().subtract(Duration(days: days)));
 
+    // Set appropriate document limits based on timeframe window:
+    // week (7d): 150 songs / 75 artists
+    // month (30d): 300 songs / 150 artists
+    // year (365d): 1000 songs / 500 artists
+    final int songFetchLimit = timeframe == 'year' ? 1000 : timeframe == 'month' ? 300 : 150;
+    final int artistFetchLimit = timeframe == 'year' ? 500 : timeframe == 'month' ? 150 : 75;
+
     // Top Songs query:
     // If 'day': show lifetime most played songs (ordered by playCount descending)
     // If 'week'/'month'/'year': show songs played within that timeframe (ordered by lastPlayedAt)
@@ -114,7 +121,7 @@ class StatsNotifier extends Notifier<StatsState> {
             _db.collection('users').doc(uid).collection('songStats')
                 .where('lastPlayedAt', isGreaterThanOrEqualTo: cutoffTimestamp)
                 .orderBy('lastPlayedAt', descending: true)
-                .limit(100)
+                .limit(songFetchLimit)
                 .get(),
             'songStats ($timeframe)',
           );
@@ -134,7 +141,7 @@ class StatsNotifier extends Notifier<StatsState> {
             _db.collection('users').doc(uid).collection('artistStats')
                 .where('lastPlayedAt', isGreaterThanOrEqualTo: cutoffTimestamp)
                 .orderBy('lastPlayedAt', descending: true)
-                .limit(50)
+                .limit(artistFetchLimit)
                 .get(),
             'artistStats ($timeframe)',
           );
