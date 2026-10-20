@@ -64,6 +64,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         ref.read(unreadBadgeTimeProvider.notifier).state = prefs.getInt('lastOpenedSupportTime') ?? 0;
       }
     });
+  }
 
   @override
   void dispose() {
