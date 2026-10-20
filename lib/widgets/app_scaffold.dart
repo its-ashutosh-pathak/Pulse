@@ -14,7 +14,6 @@ import '../screens/player/player_screen.dart';
 import 'mini_player.dart';
 import 'desktop_scaffold.dart';
 import 'package:flutter/foundation.dart';
-import '../providers/update_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/player_overlay_provider.dart';
 import '../providers/audio_provider.dart';
@@ -65,122 +64,6 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         ref.read(unreadBadgeTimeProvider.notifier).state = prefs.getInt('lastOpenedSupportTime') ?? 0;
       }
     });
-
-    // Schedule update check after first frame so context is valid
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final updateState = ref.read(updateNotifierProvider);
-      if (updateState.value?.isUpdateAvailable == true) {
-        // Already resolved — show dialog immediately
-        _showUpdateDialog(updateState.value!);
-      } else {
-        // Still loading — listen for when it resolves
-        ProviderSubscription? sub;
-        sub = ref.listenManual<AsyncValue<AppUpdateInfo?>>(
-          updateNotifierProvider,
-          (previous, next) {
-            if (next.value?.isUpdateAvailable == true) {
-              sub?.close();
-              _showUpdateDialog(next.value!);
-            }
-          },
-        );
-      }
-    });
-  }
-
-  void _showUpdateDialog(AppUpdateInfo info) {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.75),
-      builder: (context) => PopScope(
-        canPop: false,
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            clipBehavior: Clip.antiAlias,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  color: const Color(0xCC0A0A0A),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // App logo
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      AppLocalizations.of(context)!.appUpdateAvailable,
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      AppLocalizations.of(context)!.appUpdateDesc(info.latestVersion),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.6),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Centered button — wraps its own content
-                    ElevatedButton(
-                      onPressed: () {
-                        launchUrl(Uri.parse(info.downloadUrl),
-                            mode: LaunchMode.externalApplication);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.defaultAccentCyan,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context)!.appUpdateDownload,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   void dispose() {

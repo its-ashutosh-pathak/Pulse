@@ -21,6 +21,7 @@ import 'package:pulse/l10n/generated/app_localizations.dart';
 import 'package:pulse/core/utils/error_mapper.dart';
 import 'l10n/fallback_localizations.dart';
 import 'services/shorebird_update_service.dart';
+import 'services/github_update_service.dart';
 
 /// Global key for showing snackbars from anywhere (e.g. Providers)
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -110,10 +111,18 @@ class _PulseAppState extends ConsumerState<PulseApp> with WidgetsBindingObserver
         // Safely done here so it doesn't block background headless launches
         Permission.notification.request();
 
-        // Check for Shorebird code push updates in background
+        // Check for Shorebird code push updates in background (Android/iOS)
         ShorebirdUpdateService.instance.checkForUpdates(
           messengerKey: scaffoldMessengerKey,
         );
+
+        // Check for full GitHub binary updates (Android APK & Windows Exe)
+        if (mounted) {
+          GitHubUpdateService.instance.checkForUpdates(
+            context: context,
+            silentIfUpToDate: true,
+          );
+        }
       }
     });
   }
