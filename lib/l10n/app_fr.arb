@@ -389,7 +389,7 @@
   "playlistNoSongsYet": "Pas encore de titres.",
   "playlistSortRecentlyAdded": "Ajoutés récemment",
   "playlistSortAlphabetical": "Par ordre alphabétique",
-  "playlistDownloadingSongs": "Téléchargement {count} {count, plural, =1{titre} other{titres}}",
+  "playlistDownloadingSongs": "Téléchargement {count} {count, plural, one {}=1{titre} other{titres}}",
   "@playlistDownloadingSongs": {
     "placeholders": {
       "count": {
@@ -433,7 +433,7 @@
   "profileTotalTimeListened": "Durée totale d'écoute de musique sur Pulse",
   "profileYourTopSongs": "Vos titres préférés",
   "profileListeningHistoryEmpty": "L'historique d'écoute s'affichera ici.",
-  "profilePlays": "{count} {count, plural, =1{écoute} other{écoutes}}",
+  "profilePlays": "{count} {count, plural, one {}=1{écoute} other{écoutes}}",
   "@profilePlays": {
     "placeholders": {
       "count": {
@@ -519,7 +519,7 @@
   "playlistSheetTitle": "Ajouter à la playlist",
   "playlistSheetNewPlaylist": "Nouvelle playlist",
   "playlistSheetNoPlaylists": "Aucune playlist pour le moment",
-  "playlistSheetSongsCount": "{count} {count, plural, =1{titre} other{titres}}",
+  "playlistSheetSongsCount": "{count} {count, plural, one {}=1{titre} other{titres}}",
   "@playlistSheetSongsCount": {
     "placeholders": {
       "count": {
@@ -637,9 +637,8 @@
   "apiErrorServerError": "Erreur serveur. Veuillez réessayer plus tard.",
   "apiErrorInvalidEmail": "Veuillez saisir une adresse e-mail valide.",
   "apiErrorWeakPassword": "Votre mot de passe est trop faible. Veuillez utiliser au moins 6 caractères.",
-  "apiErrorTooManyAttempts": "Trop de tentatives infructueuses. Veuillez réessayer plus tard."
-,
-  "homeForgottenFavorites": "Favoris oubliés",
-  "artistShowAll": "Tout afficher",
-  "homeTopTracks": "Titres populaires"
+  "apiErrorTooManyAttempts": "Trop de tentatives infructueuses. Veuillez réessayer plus tard.",
+  "homeForgottenFavorites": "Forgotten Favourites",
+  "artistShowAll": "Show all",
+  "homeTopTracks": "Top tracks"
 }
