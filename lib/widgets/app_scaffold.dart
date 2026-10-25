@@ -1,14 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import '../core/theme/app_colors.dart';
 import '../screens/offline/offline_screen.dart';
 import '../screens/player/player_screen.dart';
 import 'mini_player.dart';
@@ -84,6 +81,12 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         
     final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
     if (!isDesktop && _isOffline && !isDownloadsRoute && !isOfflinePlaylist) {
+      if (_panelPosition != 0.0) {
+        _panelPosition = 0.0;
+      }
+      if (ref.read(playerOverlayProvider)) {
+        Future.microtask(() => ref.read(playerOverlayProvider.notifier).state = false);
+      }
       return const OfflineScreen();
     }
 
@@ -119,6 +122,11 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
 
     final showPlayer = ref.watch(playerOverlayProvider);
 
+    // Safeguard: if player overlay is closed, panel position must not stay stuck at 1.0
+    if (!showPlayer && _panelPosition > 0.0 && (!_panelController.isAttached || !_panelController.isPanelAnimating)) {
+      _panelPosition = 0.0;
+    }
+
     ref.listen(playerOverlayProvider, (previous, next) {
       if (_panelController.isAttached) {
         if (next) {
@@ -126,6 +134,11 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         } else {
           _panelController.close();
         }
+      }
+      if (!next && _panelPosition != 0.0) {
+        setState(() {
+          _panelPosition = 0.0;
+        });
       }
     });
 
@@ -217,6 +230,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     );
 
     final isQueueOpen = ref.watch(playerQueueOpenProvider);
+    final effectivePanelPosition = showPlayer ? _panelPosition.clamp(0.0, 1.0) : 0.0;
 
     return PopScope(
       canPop: !showPlayer,
@@ -230,22 +244,33 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
           // 1. SlidingUpPanel
           SlidingUpPanel(
             controller: _panelController,
+            defaultPanelState: showPlayer ? PanelState.OPEN : PanelState.CLOSED,
             minHeight: hasCurrentSong ? (miniPlayerHeight + bottomNavHeight) : 0.0,
             maxHeight: MediaQuery.of(context).size.height,
             color: Colors.transparent, // Crucial for non-box look
             boxShadow: const [],
-            isDraggable: hasCurrentSong && !isQueueOpen && _panelPosition < 1.0,
+            isDraggable: hasCurrentSong && !isQueueOpen && effectivePanelPosition < 1.0,
             onPanelSlide: (position) {
               setState(() {
                 _panelPosition = position;
               });
             },
             onPanelClosed: () {
+              if (_panelPosition != 0.0) {
+                setState(() {
+                  _panelPosition = 0.0;
+                });
+              }
               if (ref.read(playerOverlayProvider)) {
                 ref.read(playerOverlayProvider.notifier).state = false;
               }
             },
             onPanelOpened: () {
+              if (_panelPosition != 1.0) {
+                setState(() {
+                  _panelPosition = 1.0;
+                });
+              }
               if (!ref.read(playerOverlayProvider)) {
                 ref.read(playerOverlayProvider.notifier).state = true;
               }
@@ -279,9 +304,13 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                     ],
                   ),
             panelBuilder: (sc) {
-              return Opacity(
-                opacity: _panelPosition,
-                child: const PlayerScreen(),
+              return Visibility(
+                visible: effectivePanelPosition > 0.0,
+                maintainState: true,
+                child: Opacity(
+                  opacity: effectivePanelPosition,
+                  child: const PlayerScreen(),
+                ),
               );
             },
             body: scaffold,
@@ -293,9 +322,9 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
             right: 0,
             bottom: 0,
             child: IgnorePointer(
-              ignoring: _panelPosition > 0.0,
+              ignoring: effectivePanelPosition > 0.0,
               child: Transform.translate(
-                offset: Offset(0, _panelPosition * bottomNavHeight),
+                offset: Offset(0, effectivePanelPosition * bottomNavHeight),
                 child: Material(
                   type: MaterialType.transparency,
                   child: bottomNavWidget,
