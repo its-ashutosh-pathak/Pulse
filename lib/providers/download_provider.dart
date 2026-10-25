@@ -177,7 +177,7 @@ class DownloadNotifier extends Notifier<DownloadState> {
       String? directUrl;
       String ext = 'm4a';
       try {
-        directUrl = await StreamExtractor.getAudioStreamUrl(videoId, quality: dlQuality)
+        directUrl = await StreamExtractor.getAudioStreamUrl(videoId, quality: dlQuality, isDownload: true)
             .timeout(const Duration(seconds: 20));
         if (directUrl.contains('mime=audio%2Fwebm') || directUrl.contains('mime=audio/webm')) {
           ext = 'webm';
@@ -511,3 +511,6 @@ class _DownloadTask {
 final downloadProvider = NotifierProvider<DownloadNotifier, DownloadState>(
   DownloadNotifier.new,
 );
+
+/// Incrementing trigger that signals PlaylistsScreen to navigate to the Downloading tab (tab index 2).
+final downloadingTabRequestProvider = StateProvider<int>((ref) => 0);

@@ -104,6 +104,30 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     }
   }
 
+  @override
+  void didUpdateWidget(PlaylistsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTabIndex != widget.initialTabIndex || _currentIndex != widget.initialTabIndex) {
+      _currentIndex = widget.initialTabIndex;
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_currentIndex);
+      }
+      if (_chipsScrollController.hasClients) {
+        double offset = 0;
+        if (_currentIndex == 1) {
+          offset = 80;
+        } else if (_currentIndex == 2) {
+          offset = _chipsScrollController.position.maxScrollExtent;
+        }
+        _chipsScrollController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    }
+  }
+
   bool _prefsLoaded = false;
 
   Future<void> _loadPrefs() async {
@@ -160,6 +184,14 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     ref.listen<int>(desktopLibraryTabProvider, (previous, next) {
       if (next != _currentIndex && _pageController.hasClients) {
         _pageController.animateToPage(next, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      }
+    });
+
+    ref.listen<int>(downloadingTabRequestProvider, (previous, next) {
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(2, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      } else {
+        _currentIndex = 2;
       }
     });
 
@@ -477,9 +509,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
                         _currentIndex = index;
                         _showSortDropdown = false;
                       });
-                      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-                        Future.microtask(() => ref.read(desktopLibraryTabProvider.notifier).state = index);
-                      }
+                      Future.microtask(() => ref.read(desktopLibraryTabProvider.notifier).state = index);
                       if (_chipsScrollController.hasClients) {
                         double offset = 0;
                         if (index == 1) {

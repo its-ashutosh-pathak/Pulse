@@ -18,6 +18,7 @@ import 'glass_container.dart';
 import 'add_to_playlist_sheet.dart';
 import 'multi_artist_sheet.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
+import '../main.dart' show navigatorKey;
 
 /// Song action bottom sheet — port of SongActionMenu.jsx.
 /// Shows: Add to Queue, Add to Playlist, Go to Album, Go to Artist, Download.
@@ -233,20 +234,36 @@ class _SongActionSheetState extends ConsumerState<SongActionSheet> {
     if (_downloadState != 'idle' && _downloadState != 'error') return;
     ref.read(downloadProvider.notifier).downloadSong(widget.song, contextPlaylist: widget.contextPlaylist);
     final accent = Theme.of(context).colorScheme.primary;
-    final router = GoRouter.of(context);
     Navigator.pop(context);
     ToastUtils.show(
-      context,
-      AppLocalizations.of(context)!.songActionDownloadingSnack,
+      navigatorKey.currentContext,
+      AppLocalizations.of(navigatorKey.currentContext ?? context)!.songActionDownloadingSnack,
       action: TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         onPressed: () {
-          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-            ref.read(desktopLibraryTabProvider.notifier).state = 2;
-          } else {
-            router.push('/downloading');
+          ToastUtils.dismiss();
+          final navContext = navigatorKey.currentContext;
+          if (navContext != null) {
+            final container = ProviderScope.containerOf(navContext, listen: false);
+            // Minimize the full-screen player if open
+            container.read(playerOverlayProvider.notifier).state = false;
+
+            // Trigger tab navigation to Downloading tab (tab index 2)
+            container.read(downloadingTabRequestProvider.notifier).state++;
+            container.read(desktopLibraryTabProvider.notifier).state = 2;
+            if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) {
+              GoRouter.of(navContext).go('/downloading');
+            }
           }
         },
-        child: Text(AppLocalizations.of(context)!.songActionView, style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        child: Text(
+          AppLocalizations.of(navigatorKey.currentContext ?? context)!.songActionView,
+          style: TextStyle(color: accent, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

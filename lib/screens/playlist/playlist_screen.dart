@@ -20,6 +20,8 @@ import '../../widgets/swipe_to_queue_tile.dart';
 import '../../widgets/song_action_sheet.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pulse/l10n/generated/app_localizations.dart';
+import '../../providers/player_overlay_provider.dart';
+import '../../main.dart' show navigatorKey;
 /// Playlist/Album screen — pixel-perfect port of PlaylistView.jsx.
 /// Handles both Firestore playlists and YTM playlists/albums.
 class PlaylistScreen extends ConsumerStatefulWidget {
@@ -547,18 +549,34 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     if (!mounted) return;
 
     if (newDownloadsCount > 0) {
+      final accent = Theme.of(context).colorScheme.primary;
       ToastUtils.show(
         context,
         AppLocalizations.of(context)!.playlistDownloadingSongs(newDownloadsCount),
         action: TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
           onPressed: () {
-            if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-              ref.read(desktopLibraryTabProvider.notifier).state = 2;
-            } else {
-              context.push('/downloading');
+            ToastUtils.dismiss();
+            final navContext = navigatorKey.currentContext ?? context;
+            final container = ProviderScope.containerOf(navContext, listen: false);
+            // Minimize the full-screen player if open
+            container.read(playerOverlayProvider.notifier).state = false;
+
+            // Trigger tab navigation to Downloading tab (tab index 2)
+            container.read(downloadingTabRequestProvider.notifier).state++;
+            container.read(desktopLibraryTabProvider.notifier).state = 2;
+            if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) {
+              GoRouter.of(navContext).go('/downloading');
             }
           },
-          child: Text(AppLocalizations.of(context)!.playlistView, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+          child: Text(
+            AppLocalizations.of(context)!.playlistView,
+            style: TextStyle(color: accent, fontWeight: FontWeight.bold),
+          ),
         ),
       );
     } else {
