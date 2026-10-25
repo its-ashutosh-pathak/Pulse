@@ -122,8 +122,8 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
 
     final showPlayer = ref.watch(playerOverlayProvider);
 
-    // Safeguard: if player overlay is closed, panel position must not stay stuck at 1.0
-    if (!showPlayer && _panelPosition > 0.0 && (!_panelController.isAttached || !_panelController.isPanelAnimating)) {
+    // Safeguard: if player overlay was closed externally while unmounted, reset panel position
+    if (!showPlayer && _panelPosition == 1.0) {
       _panelPosition = 0.0;
     }
 
@@ -134,11 +134,6 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         } else {
           _panelController.close();
         }
-      }
-      if (!next && _panelPosition != 0.0) {
-        setState(() {
-          _panelPosition = 0.0;
-        });
       }
     });
 
@@ -230,7 +225,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     );
 
     final isQueueOpen = ref.watch(playerQueueOpenProvider);
-    final effectivePanelPosition = showPlayer ? _panelPosition.clamp(0.0, 1.0) : 0.0;
+    final panelPosition = _panelPosition.clamp(0.0, 1.0);
 
     return PopScope(
       canPop: !showPlayer,
@@ -249,7 +244,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
             maxHeight: MediaQuery.of(context).size.height,
             color: Colors.transparent, // Crucial for non-box look
             boxShadow: const [],
-            isDraggable: hasCurrentSong && !isQueueOpen && effectivePanelPosition < 1.0,
+            isDraggable: hasCurrentSong && !isQueueOpen && panelPosition < 1.0,
             onPanelSlide: (position) {
               setState(() {
                 _panelPosition = position;
@@ -305,10 +300,10 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                   ),
             panelBuilder: (sc) {
               return Visibility(
-                visible: effectivePanelPosition > 0.0,
+                visible: panelPosition > 0.0,
                 maintainState: true,
                 child: Opacity(
-                  opacity: effectivePanelPosition,
+                  opacity: panelPosition,
                   child: const PlayerScreen(),
                 ),
               );
@@ -322,9 +317,9 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
             right: 0,
             bottom: 0,
             child: IgnorePointer(
-              ignoring: effectivePanelPosition > 0.0,
+              ignoring: panelPosition > 0.0,
               child: Transform.translate(
-                offset: Offset(0, effectivePanelPosition * bottomNavHeight),
+                offset: Offset(0, panelPosition * bottomNavHeight),
                 child: Material(
                   type: MaterialType.transparency,
                   child: bottomNavWidget,
